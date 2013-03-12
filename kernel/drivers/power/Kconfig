@@ -22,6 +22,14 @@ config PDA_POWER
 	  one or two external power supplies (AC/USB) connected to main and
 	  backup batteries, and optional builtin charger.
 
+# {PS} BEGIN:
+config TCBIN_SYSTEM_POWER
+	tristate "TCBIN system power driver"
+	depends on MACH_OMAP3_BEAGLE
+	help
+	  TCBIN system power driver.
+# {PS} END:
+
 config APM_POWER
 	tristate "APM emulation for class batteries"
 	depends on APM_EMULATION

@@ -1,0 +1,17 @@
+# {PK} BEGIN:
+
+#
+# CP430 multifunction devices
+#
+
+menu "CP430 Multifunction Drivers"
+	depends on HAS_IOMEM && SPI_OMAP24XX
+
+config MFD_CP430_CORE
+	tristate "Support for CP430 Multifunction Device"
+	default m
+	 ---help---
+	  This is the core driver for CP430 multifunction device.
+endmenu
+
+# {PK} END:

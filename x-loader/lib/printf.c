@@ -284,7 +284,7 @@ static int vsprintf(char *buf, const char *fmt, va_list args)
 	return str-buf;
 }
 
-void serial_printf (const char *fmt, ...)
+int serial_printf (const char *fmt, ...)
 {
 	va_list args;
 	uint i;
@@ -300,5 +300,6 @@ void serial_printf (const char *fmt, ...)
 
 	/* Print the string */
 	serial_puts (printbuffer);
+	return i;
 }
 #endif

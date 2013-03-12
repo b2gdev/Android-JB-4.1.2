@@ -270,9 +270,14 @@ int power_supply_uevent(struct device *dev, struct kobj_uevent_env *env)
 		attr = &power_supply_attrs[psy->properties[j]];
 
 		ret = power_supply_show_property(dev, attr, prop_buf);
-		if (ret == -ENODEV) {
+		if (ret == -ENODEV || ret == -ENODATA) {
 			/* When a battery is absent, we expect -ENODEV. Don't abort;
 			   send the uevent with at least the the PRESENT=0 property */
+			   
+			/* {KW}: When register values are not availble (eg: time params)
+			 * we do not create an entry for that parameter
+			 * */
+			
 			ret = 0;
 			continue;
 		}

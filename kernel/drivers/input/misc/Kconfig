@@ -464,6 +464,16 @@ config INPUT_ADXL34X_SPI
 	  To compile this driver as a module, choose M here: the
 	  module will be called adxl34x-spi.
 
+# {PS} BEGIN:
+config INPUT_LIS331DLH
+	tristate "LIS331DLH Accelerometer"
+	depends on I2C
+	select INPUT_POLLDEV
+	help
+	If you say yes here you get support for the 
+	LIS331DLH accelerometer sensor
+# {PS} END:
+
 config INPUT_LIS331DLH
         tristate "LIS331DLH Accelerometer"
         depends on I2C && MACH_FLASHBOARD
@@ -482,4 +492,3 @@ config SENSORS_L3G4200DH
 	This driver provides support for the L3G4200DH gyroscope connected via I2C.
 
 endif
-

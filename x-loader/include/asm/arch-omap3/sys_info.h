@@ -49,22 +49,6 @@
 #define CPU_3430_ES1		1
 #define CPU_3430_ES2		2
 
-/*
- * Hawkeye values
- */
-#define HAWKEYE_OMAP34XX        0xb7ae
-#define HAWKEYE_AM35XX          0xb868
-#define HAWKEYE_OMAP36XX        0xb891
-
-#define HAWKEYE_SHIFT           12
-
-/*
- * Define CPU families
- */
-#define CPU_OMAP34XX            0x3400  /* OMAP34xx/OMAP35 devices */
-#define CPU_AM35XX              0x3500  /* AM35xx devices          */
-#define CPU_OMAP36XX            0x3600  /* OMAP36xx devices        */
-
 /* Currently Virtio models this one */
 #define CPU_3430_CHIPID		0x0B68A000
 

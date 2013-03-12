@@ -133,12 +133,8 @@ fat_register_device(block_dev_desc_t *dev_desc, int part_no)
 		part_offset=0;
 	}
 	else {
-
-#if defined(CFG_CMD_IDE)	|| \
-    defined(CFG_CMD_SCSI)	|| \
-    defined(CFG_CMD_USB)	|| \
-    defined(CFG_CMD_MMC)	|| \
-    defined(CONFIG_SYSTEMACE)
+#if (CONFIG_COMMANDS & CFG_CMD_IDE) || (CONFIG_COMMANDS & CFG_CMD_SCSI) || \
+    (CONFIG_COMMANDS & CFG_CMD_USB) || (CONFIG_COMMANDS & CFG_CMD_MMC) || defined(CONFIG_SYSTEMACE)
 		disk_partition_t info;
 		if(!get_partition_info(dev_desc, part_no, &info)) {
 			part_offset = info.start;
@@ -186,7 +182,7 @@ static int
 compare_sign(char *str1, char *str2)
 {
 	char *end = str1+SIGNLEN;
-
+	
 	while (str1 != end) {
 		if (*str1 != *str2) {
 			return -1;
@@ -434,36 +430,7 @@ getit:
 
 
 #ifdef CONFIG_SUPPORT_VFAT
-#if 0
-/*
- * Extract the file name information from 'slotptr' into 'l_name',
- * starting at l_name[*idx].
- * Return 1 if terminator (zero byte) is found, 0 otherwise.
- */
-static int
-slot2str(dir_slot *slotptr, char *l_name, int *idx)
-{
-	int j;
 
-	for (j = 0; j <= 8; j += 2) {
-		l_name[*idx] = slotptr->name0_4[j];
-		if (l_name[*idx] == 0x00) return 1;
-		(*idx)++;
-	}
-	for (j = 0; j <= 10; j += 2) {
-		l_name[*idx] = slotptr->name5_10[j];
-		if (l_name[*idx] == 0x00) return 1;
-		(*idx)++;
-	}
-	for (j = 0; j <= 2; j += 2) {
-		l_name[*idx] = slotptr->name11_12[j];
-		if (l_name[*idx] == 0x00) return 1;
-		(*idx)++;
-	}
-
-	return 0;
-}
-#endif
 /* Calculate short name checksum */
 static __u8
 mkcksum(const char *str)
@@ -604,6 +571,7 @@ read_bootsectandvi(boot_sector *bs, volume_info *volinfo, int *fatsize)
 {
 	__u8 block[FS_BLOCK_SIZE];
 	volume_info *vistart;
+	char *p;
 
 	printf("Reading boot sector\n");
 
@@ -640,7 +608,8 @@ read_bootsectandvi(boot_sector *bs, volume_info *volinfo, int *fatsize)
 
 	/* Terminate fs_type string. Writing past the end of vistart
 	   is ok - it's just the buffer. */
-	vistart->fs_type[7] = '\0';
+	p = (char *)&vistart->fs_type[0];
+	p[8] = '\0';
 
 	if (*fatsize == 32) {
 		if (compare_sign(FAT32_SIGN, vistart->fs_type) == 0) {
@@ -727,15 +696,15 @@ do_fat_read(const char *filename, void *buffer, unsigned long maxsize,
     while (ISDIRDELIM (*filename))
 	filename++;
     /* Make a copy of the filename and convert it to lowercase */
-    strcpy((char *)fnamecopy, filename);
-    downcase((char *)fnamecopy);
+    strcpy ((char *)fnamecopy, filename);
+    downcase ((char *)fnamecopy);
     if (*fnamecopy == '\0') {
 	if (!dols){
 		printf("\n not there\n");
 	    return -1;
 	}
 	dols = LS_ROOT;
-    } else if((idx = dirdelim((char *)fnamecopy)) >= 0) {
+    } else if ((idx = dirdelim ((char *)fnamecopy)) >= 0) {
 	isdir = 1;
 	fnamecopy[idx] = '\0';
 	subname = (char *)fnamecopy + idx + 1;
@@ -808,8 +777,8 @@ do_fat_read(const char *filename, void *buffer, unsigned long maxsize,
 		dentptr++;
 		continue;
 	    }
-	    if (strcmp((char *)fnamecopy, s_name) &&
-		strcmp((char *)fnamecopy, l_name)) {
+	    if (strcmp ((char *)fnamecopy, s_name) &&
+					   strcmp ((char *)fnamecopy, l_name)) {
 		FAT_DPRINT ("RootMismatch: |%s|%s|\n", s_name, l_name);
 		dentptr++;
 		continue;
@@ -895,11 +864,8 @@ file_fat_detectfs(void)
 		printf("No current device\n");
 		return 1;
 	}
-
-#if defined (CFG_CMD_IDE)	|| \
-    defined (CFG_CMD_SCSI)	|| \
-    defined (CFG_CMD_USB)	|| \
-    defined (CONFIG_MMC)
+#if (CONFIG_COMMANDS & CFG_CMD_IDE) || (CONFIG_COMMANDS & CFG_CMD_SCSI) || \
+    (CONFIG_COMMANDS & CFG_CMD_USB) || (CONFIG_MMC)
 	printf("Interface:  ");
 	switch(cur_dev->if_type) {
 		case IF_TYPE_IDE :	printf("IDE"); break;
@@ -940,4 +906,4 @@ file_fat_read(const char *filename, void *buffer, unsigned long maxsize)
 	return ret;
 }
 
-#endif /* CFG_CMD_FAT */
+#endif /* #if (CONFIG_COMMANDS & CFG_CMD_FAT) */

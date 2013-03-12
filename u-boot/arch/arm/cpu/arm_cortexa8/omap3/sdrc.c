@@ -99,7 +99,7 @@ u32 get_sdr_cs_offset(u32 cs)
 		return 0;
 
 	offset = readl(&sdrc_base->cs_cfg);
-	offset = (offset & 15) << 27 | (offset & 0x30) >> 17;
+	offset = (offset & 15) << 27 | (offset & 0x30) << 17;
 
 	return offset;
 }
@@ -113,12 +113,7 @@ u32 get_sdr_cs_offset(u32 cs)
  */
 void do_sdrc_init(u32 cs, u32 early)
 {
-	struct sdrc_actim *sdrc_actim_base;
-
-	if (cs)
-		sdrc_actim_base = (struct sdrc_actim *)SDRC_ACTIM_CTRL1_BASE;
-	else
-		sdrc_actim_base = (struct sdrc_actim *)SDRC_ACTIM_CTRL0_BASE;
+	struct sdrc_actim *sdrc_actim_base0, *sdrc_actim_base1;
 
 	if (early) {
 		/* reset sdrc controller */
@@ -138,29 +133,36 @@ void do_sdrc_init(u32 cs, u32 early)
 		sdelay(0x20000);
 	}
 
-	writel(RASWIDTH_13BITS | CASWIDTH_10BITS | ADDRMUXLEGACY |
-			RAMSIZE_128 | BANKALLOCATION | B32NOT16 | B32NOT16 |
-			DEEPPD | DDR_SDRAM, &sdrc_base->cs[cs].mcfg);
-	writel(ARCV | ARE_ARCV_1, &sdrc_base->cs[cs].rfr_ctrl);
-	if (is_cpu_family(CPU_OMAP36XX)) {
-		writel(V_ACTIMA_200, &sdrc_actim_base->ctrla);
-		writel(V_ACTIMB_200, &sdrc_actim_base->ctrlb);
-	} else {
-		writel(V_ACTIMA_165, &sdrc_actim_base->ctrla);
-		writel(V_ACTIMB_165, &sdrc_actim_base->ctrlb);
+	/*
+	 * SDRC timings are set up by x-load or config header
+	 * We don't need to redo them here.
+	 * Older x-loads configure only CS0
+	 * configure CS1 to handle this ommission
+	 */
+	if (cs) {
+		sdrc_actim_base0 = (struct sdrc_actim *)SDRC_ACTIM_CTRL0_BASE;
+		sdrc_actim_base1 = (struct sdrc_actim *)SDRC_ACTIM_CTRL1_BASE;
+		writel(readl(&sdrc_base->cs[CS0].mcfg),
+			&sdrc_base->cs[CS1].mcfg);
+		writel(readl(&sdrc_base->cs[CS0].rfr_ctrl),
+			&sdrc_base->cs[CS1].rfr_ctrl);
+		writel(readl(&sdrc_actim_base0->ctrla),
+			&sdrc_actim_base1->ctrla);
+		writel(readl(&sdrc_actim_base0->ctrlb),
+			&sdrc_actim_base1->ctrlb);
+
+		writel(CMD_NOP, &sdrc_base->cs[cs].manual);
+		writel(CMD_PRECHARGE, &sdrc_base->cs[cs].manual);
+		writel(CMD_AUTOREFRESH, &sdrc_base->cs[cs].manual);
+		writel(CMD_AUTOREFRESH, &sdrc_base->cs[cs].manual);
+		writel(readl(&sdrc_base->cs[CS0].mr),
+			&sdrc_base->cs[CS1].mr);
 	}
 
-	writel(CMD_NOP, &sdrc_base->cs[cs].manual);
-	writel(CMD_PRECHARGE, &sdrc_base->cs[cs].manual);
-	writel(CMD_AUTOREFRESH, &sdrc_base->cs[cs].manual);
-	writel(CMD_AUTOREFRESH, &sdrc_base->cs[cs].manual);
-
 	/*
-	 * CAS latency 3, Write Burst = Read Burst, Serial Mode,
-	 * Burst length = 4
+	 * Test ram in this bank
+	 * Disable if bad or not present
 	 */
-	writel(CASL3 | BURSTLENGTH4, &sdrc_base->cs[cs].mr);
-
 	if (!mem_ok(cs))
 		writel(0, &sdrc_base->cs[cs].mcfg);
 }
@@ -181,6 +183,7 @@ int dram_init(void)
 	 * memory on CS0.
 	 */
 	if ((sysinfo.mtype == DDR_COMBO) || (sysinfo.mtype == DDR_STACKED)) {
+		do_sdrc_init(CS1, NOT_EARLY);
 		make_cs1_contiguous();
 
 		size1 = get_sdr_cs_size(CS1);

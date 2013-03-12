@@ -31,9 +31,12 @@
 #define onenand_writew(v, a)	((*(volatile unsigned short *)(a)) = (u16) (v))
 
 #define SAMSUNG_MFR_ID		0xEC
+#define NUMONYX_MFR_ID		0x20
 #define KFM1G16Q2A_DEV_ID	0x30
 #define KFN2G16Q2A_DEV_ID	0x40
-
+#define NAND01GR4E_DEV_ID	0x30
+#define NAND02GR4E_DEV_ID	0x40
+#define NAND04GR4E_DEV_ID	0x58
 
 #define THIS_ONENAND(a)		(ONENAND_ADDR + (a))
 
@@ -123,13 +126,26 @@ onenand_chip()
 			printf(" ONENAND Flash unsupported\r\n");
                         return 1;
 		}
+	} else if (mf_id == NUMONYX_MFR_ID) {
+		if (dev_id == NAND01GR4E_DEV_ID) {
+			printf("Detected Numonyx OneNAND 1G Flash \r\n");
+			return 0;
+		} else if (dev_id == NAND02GR4E_DEV_ID) {
+			printf("Detected Numonyx OneNAND 2G Flash \r\n");
+			return 0;
+		} else if (dev_id == NAND04GR4E_DEV_ID) {
+			printf("Detected Numonyx OneNAND 4G Flash \r\n");
+			return 0;
+		} else {
+			printf("Numonyx OneNAND Flash unsupported \r\n");
+			return 1;
+		}
 	} else {
 		printf("ONENAND Flash Unsupported\r\n");
 		return 1;
 	}
 }
 
-#ifdef CFG_ONENAND
 /* read a page with ECC */
 static inline int onenand_read_page(ulong block, ulong page, u_char *buf)
 {
@@ -165,17 +181,6 @@ static inline int onenand_read_page(ulong block, ulong page, u_char *buf)
 
 	while (!(READ_INTERRUPT() & ONENAND_INT_MASTER))
 		continue;
-	/* Check if the block is bad. Bad block markers    */
-	/* are stored in spare area of 1st or 2nd page */
-	if ((page == 0) || (page == 1))
-	{
-	    unsigned long *spareArea = (unsigned long *) (ONENAND_ADDR + ONENAND_SPARERAM);
-	    bbmarker = *spareArea;
-            /* for bad block markers */
-            if (bbmarker != 0xFFFF){
-                return 1;
-            }
-	}
 
 	ctrl = READ_CTRL_STATUS();
 	
@@ -188,6 +193,18 @@ static inline int onenand_read_page(ulong block, ulong page, u_char *buf)
 		ecc = READ_ECC_STATUS();
 		if (ecc & ONENAND_ECC_2BIT_ALL) {
 			hang();
+		}
+
+		/* Check if the block is bad. Bad block markers    */
+		/* are stored in spare area of 1st or 2nd page */
+		if ((page == 0) || (page == 1))
+		{
+		    unsigned long *spareArea = (unsigned long *) (ONENAND_ADDR + ONENAND_SPARERAM);
+		    bbmarker = *spareArea;
+        	    /* for bad block markers */
+        	    if (bbmarker != 0xFFFF){
+        	        return 1;
+        	    }
 		}
 	}
 	
@@ -235,4 +252,4 @@ int onenand_read_block(unsigned char *buf, ulong block)
 
 	return 0;
 }
-#endif /* CFG_ONENAND */
+

@@ -34,11 +34,11 @@
 #define PRINTF(fmt,args...)
 #endif
 
-#if (defined(CFG_CMD_IDE)	|| \
-     defined(CFG_CMD_SCSI)	|| \
-     defined(CFG_CMD_USB)	|| \
-     defined(CONFIG_MMC)	|| \
-     defined(CONFIG_SYSTEMACE))
+#if ((CONFIG_COMMANDS & CFG_CMD_IDE)	|| \
+     (CONFIG_COMMANDS & CFG_CMD_SCSI)	|| \
+     (CONFIG_COMMANDS & CFG_CMD_USB)	|| \
+     defined(CONFIG_MMC) || \
+     defined(CONFIG_SYSTEMACE) )
 
 /* ------------------------------------------------------------------------- */
 /*
@@ -120,11 +120,11 @@ void dev_print (block_dev_desc_t *dev_desc)
 }
 #endif	/* CFG_CMD_IDE || CFG_CMD_SCSI || CFG_CMD_USB || CONFIG_MMC */
 
-#if (defined(CFG_CMD_IDE)	|| \
-     defined(CFG_CMD_SCSI)	|| \
-     defined(CFG_CMD_USB)	|| \
-     defined(CFG_CMD_MMC)	|| \
-     defined(CONFIG_SYSTEMACE))
+#if ((CONFIG_COMMANDS & CFG_CMD_IDE)	|| \
+     (CONFIG_COMMANDS & CFG_CMD_SCSI)	|| \
+     (CONFIG_COMMANDS & CFG_CMD_USB)	|| \
+     (CONFIG_COMMANDS & CFG_CMD_MMC)	|| \
+     defined(CONFIG_SYSTEMACE)          )
 
 #if defined(CONFIG_MAC_PARTITION) || \
     defined(CONFIG_DOS_PARTITION) || \

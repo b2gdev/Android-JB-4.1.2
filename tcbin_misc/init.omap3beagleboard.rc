@@ -1,0 +1,180 @@
+
+on early-init
+    mount debugfs debugfs /sys/kernel/debug    
+	   
+    # for backwards compatibility
+    export EXTERNAL_STORAGE /storage/sdcard0
+    export SECONDARY_STORAGE /storage/sdcard1
+    mkdir /storage 0050 system sdcard_r
+    mkdir /storage/sdcard0 0000 system system
+	mkdir /storage/sdcard1 0000 system system
+    symlink /storage/sdcard0 /sdcard
+	symlink /storage/sdcard1 /sdcard2
+    symlink /storage/sdcard0 /mnt/sdcard
+    symlink /storage/sdcard1 /mnt/sdcard2
+
+    # create directory for mounting usb drives
+    mkdir /storage/usb1 0666 system system
+    symlink /storage/usb1 /usbdrive
+    symlink /storage/usb1 /mnt/usb1
+    mkdir /storage/usb2 0666 system system
+    symlink /storage/usb2 /usbdrive2
+    symlink /storage/usb2 /mnt/usb2
+    
+on post-fs-data
+    mkdir /data/misc/dhcp 0770 dhcp dhcp
+    mkdir /data/misc/camera 0770 media media
+    chown dhcp dhcp /data/misc/dhcp
+
+    # we will remap this as /storage/sdcard0 with the sdcard fuse tool
+    mkdir /data/media 0770 media_rw media_rw
+    chown media_rw media_rw /data/media
+
+
+    # Set indication (checked by vold) that we have finished this action
+    setprop vold.post_fs_data_done 1
+
+    # V4L2 Camera device nodes
+    chmod 666 /dev/video2
+    chmod 666 /dev/media0
+    chmod 666 /dev/v4l-subdev2
+    chmod 666 /dev/v4l-subdev8
+    chmod 666 /dev/v4l-subdev9
+    
+
+on boot
+
+	# Default Read Ahead value for sdcards
+    write /sys/block/mmcblk0/queue/read_ahead_kb 2048
+
+ 	# {RD} BEGIN: Setting up audio
+    chmod 666 /system/etc/sound/beagleboard.xml
+	# {RD} END:
+	
+	# wi-fi
+    mkdir /data/misc/wifi/sockets 0770 wifi wifi
+    mkdir /data/misc/dhcp 0770 dhcp dhcp
+    insmod /system/lib/modules/compat.ko
+    insmod /system/lib/modules/cfg80211.ko
+    insmod /system/lib/modules/mac80211.ko    
+    insmod /system/lib/modules/wl12xx.ko
+    
+	# {KW} BEGIN: Load TCBIN drivers
+	insmod /usr/modules/cp430_core.ko
+	insmod /usr/modules/cp430_keypad.ko
+	insmod /usr/modules/metec_flat20.ko
+	insmod /usr/modules/lm3553.ko
+	insmod /usr/modules/bq27x00_battery.ko
+	chmod 666 /dev/braille0
+	# {KW} END:
+
+	# {RD} BEGIN: BT configuration
+   chmod 0660 /dev/ttyO1
+   chown bluetooth bluetooth /dev/ttyO1
+   chmod 0660 /sys/class/rfkill/rfkill0/state
+   chown bluetooth bluetooth /sys/class/rfkill/rfkill0/state
+	# {RD} END
+
+	# {RD} BEGIN: Vibrator   
+    chmod 666 /dev/vibrator
+    chown system system /dev/vibrator
+	# {RD} END 
+   
+	# {RD} BEGIN: Setting up GPS
+    chmod 0660 /dev/ttyO0
+    chown system system /dev/ttyO0
+    chmod 0660 /dev/gps
+    chown system system /dev/gps
+	# {RD} END:
+	
+on fs
+
+    # This board does not have battery, force battery-level to 100%
+    setprop hw.nobattery false
+
+	# Power Management Patches
+    setprop hw.nopm true
+    
+	# Using landscape lcd
+    setprop lcd.landscape true
+		
+	service pvr /system/bin/sgx/rc.pvr start
+		class core
+		oneshot
+
+	service dhcpcd_usb0 /system/bin/dhcpcd -ABKL -f/system/etc/dhcpcd/dhcpcd.conf
+		class main
+		disabled
+		oneshot
+
+	service iprenew_usb0 /system/bin/dhcpcd -n
+		class main
+		disabled
+		oneshot
+
+	# {RD} BEGIN: WLAN configuration
+	service wpa_supplicant /system/bin/wpa_supplicant \
+		   -iwlan0 -Dnl80211 -c/data/misc/wifi/wpa_supplicant.conf \
+		   -e/data/misc/wifi/entropy.bin
+		   class main
+		   socket wpa_wlan0 dgram 660 wifi wifi
+		   disabled
+		   oneshot
+		   
+	service dhcpcd_wlan0 /system/bin/dhcpcd -ABKL
+		   class main
+		   disabled
+		   oneshot
+		   
+	service iprenew_wlan0 /system/bin/dhcpcd -n
+		   class main
+		   disabled
+		   oneshot
+	# {RD} END   
+
+	
+# adb only USB configuration
+# This should only be used during device bringup
+# and as a fallback if the USB manager fails to set a standard configuration
+on property:sys.usb.config=adb
+    start adbd
+    setprop sys.usb.state ${sys.usb.config}
+
+on property:sys.usb.config=mass_storage,adb
+    start adbd
+    setprop sys.usb.state ${sys.usb.config}
+
+on property:sys.usb.config=mass_storage
+    setprop sys.usb.state ${sys.usb.config}
+
+# create virtual SD card at /storage/sdcard0, based on the /data/media directory
+# deamon will drop to user/group system/media_rw after initializing
+# underlying files in /data/media wil be created with user and group media_rw (1023)
+service sdcard /system/bin/sdcard /data/media 1023 1023
+    class late_start
+
+
+# {RD} BEGIN: BT configuration
+
+service dbus /system/bin/dbus-daemon --system --nofork
+	class main
+	socket dbus stream 660 bluetooth bluetooth
+	user bluetooth
+	group bluetooth net_bt_admin
+
+service bluetoothd /system/bin/bluetoothd -n
+   class main
+   socket bluetooth stream 660 bluetooth bluetooth
+   socket dbus_bluetooth stream 660 bluetooth bluetooth
+   # init.rc does not yet support applying capabilities, so run as root and
+   # let bluetoothd drop uid to bluetooth with the right linux capabilities
+   group bluetooth net_bt_admin misc
+   disabled  
+   
+ # shared transport user space mgr service for Bluetooth, FM and GPS
+ service uim /system/bin/uim-sysfs
+   class core
+   user bluetooth
+   group bluetooth net_bt_admin
+     
+# {RD} END   

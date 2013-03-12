@@ -76,34 +76,6 @@ int board_init (void)
 	return 0;
 }
 
-/*************************************************************
- *  get_device_type(): tell if GP/HS/EMU/TST
- *************************************************************/
-u32 get_device_type(void)
-{
-        int mode;
-        mode = __raw_readl(CONTROL_STATUS) & (DEVICE_MASK);
-        return(mode >>= 8);
-}
-
-/******************************************
- * get_cpu_rev(void) - extract version info
- ******************************************/
-u32 get_cpu_rev(void)
-{
-	u32 cpuid=0;
-	/* On ES1.0 the IDCODE register is not exposed on L4
-	 * so using CPU ID to differentiate
-	 * between ES2.0 and ES1.0.
-	 */
-	__asm__ __volatile__("mrc p15, 0, %0, c0, c0, 0":"=r" (cpuid));
-	if((cpuid  & 0xf) == 0x0)
-		return CPU_3430_ES1;
-	else
-		return CPU_3430_ES2;
-
-}
-
 /******************************************
  * cpu_is_3410(void) - returns true for 3410
  ******************************************/
@@ -123,36 +95,6 @@ u32 cpu_is_3410(void)
 		else
 			return 0;
 	}
-}
-
-/*****************************************************************
- * sr32 - clear & set a value in a bit range for a 32 bit address
- *****************************************************************/
-void sr32(u32 addr, u32 start_bit, u32 num_bits, u32 value)
-{
-	u32 tmp, msk = 0;
-	msk = 1 << num_bits;
-	--msk;
-	tmp = __raw_readl(addr) & ~(msk << start_bit);
-	tmp |=  value << start_bit;
-	__raw_writel(tmp, addr);
-}
-
-/*********************************************************************
- * wait_on_value() - common routine to allow waiting for changes in
- *   volatile regs.
- *********************************************************************/
-u32 wait_on_value(u32 read_bit_mask, u32 match_value, u32 read_addr, u32 bound)
-{
-	u32 i = 0, val;
-	do {
-		++i;
-		val = __raw_readl(read_addr) & read_bit_mask;
-		if (val == match_value)
-			return (1);
-		if (i == bound)
-			return (0);
-	} while (1);
 }
 
 #ifdef CFG_3430SDRAM_DDR
@@ -245,25 +187,6 @@ u32 get_osc_clk_speed(void)
 }
 
 /******************************************************************************
- * get_sys_clkin_sel() - returns the sys_clkin_sel field value based on
- *   -- input oscillator clock frequency.
- *
- *****************************************************************************/
-void get_sys_clkin_sel(u32 osc_clk, u32 *sys_clkin_sel)
-{
-	if(osc_clk == S38_4M)
-		*sys_clkin_sel=  4;
-	else if(osc_clk == S26M)
-		*sys_clkin_sel = 3;
-	else if(osc_clk == S19_2M)
-		*sys_clkin_sel = 2;
-	else if(osc_clk == S13M)
-		*sys_clkin_sel = 1;
-	else if(osc_clk == S12M)
-		*sys_clkin_sel = 0;
-}
-
-/******************************************************************************
  * prcm_init() - inits clocks for PRCM as defined in clocks.h
  *   -- called from SRAM, or Flash (using temp SRAM stack).
  *****************************************************************************/
@@ -303,7 +226,7 @@ void prcm_init(void)
 			sil_index = 0;
 		else if(get_cpu_rev() == CPU_3430_ES2)
 			sil_index = 1;
-	}
+	}	
 
 	/* Unlock MPU DPLL (slows things down, and needed later) */
 	sr32(CM_CLKEN_PLL_MPU, 0, 3, PLL_LOW_POWER_BYPASS);
@@ -383,58 +306,6 @@ void prcm_init(void)
 	delay(5000);
 }
 
-/*****************************************
- * Routine: secure_unlock
- * Description: Setup security registers for access
- * (GP Device only)
- *****************************************/
-void secure_unlock(void)
-{
-	/* Permission values for registers -Full fledged permissions to all */
-	#define UNLOCK_1 0xFFFFFFFF
-	#define UNLOCK_2 0x00000000
-	#define UNLOCK_3 0x0000FFFF
-	/* Protection Module Register Target APE (PM_RT)*/
-	__raw_writel(UNLOCK_1, RT_REQ_INFO_PERMISSION_1);
-	__raw_writel(UNLOCK_1, RT_READ_PERMISSION_0);
-	__raw_writel(UNLOCK_1, RT_WRITE_PERMISSION_0);
-	__raw_writel(UNLOCK_2, RT_ADDR_MATCH_1);
-
-	__raw_writel(UNLOCK_3, GPMC_REQ_INFO_PERMISSION_0);
-	__raw_writel(UNLOCK_3, GPMC_READ_PERMISSION_0);
-	__raw_writel(UNLOCK_3, GPMC_WRITE_PERMISSION_0);
-
-	__raw_writel(UNLOCK_3, OCM_REQ_INFO_PERMISSION_0);
-	__raw_writel(UNLOCK_3, OCM_READ_PERMISSION_0);
-	__raw_writel(UNLOCK_3, OCM_WRITE_PERMISSION_0);
-	__raw_writel(UNLOCK_2, OCM_ADDR_MATCH_2);
-
-	/* IVA Changes */
-	__raw_writel(UNLOCK_3, IVA2_REQ_INFO_PERMISSION_0);
-	__raw_writel(UNLOCK_3, IVA2_READ_PERMISSION_0);
-	__raw_writel(UNLOCK_3, IVA2_WRITE_PERMISSION_0);
-
-	__raw_writel(UNLOCK_1, SMS_RG_ATT0); /* SDRC region 0 public */
-}
-
-/**********************************************************
- * Routine: try_unlock_sram()
- * Description: If chip is GP type, unlock the SRAM for
- *  general use.
- ***********************************************************/
-void try_unlock_memory(void)
-{
-	int mode;
-
-	/* if GP device unlock device SRAM for general use */
-	/* secure code breaks for Secure/Emulation device - HS/E/T*/
-	mode = get_device_type();
-	if (mode == GP_DEVICE) {
-		secure_unlock();
-	}
-	return;
-}
-
 /**********************************************************
  * Routine: s_init
  * Description: Does early system init of muxing and clocks.
@@ -445,7 +316,7 @@ void s_init(void)
 {
 	watchdog_init();
 #ifdef CONFIG_3430_AS_3410
-	/* setup the scalability control register for
+	/* setup the scalability control register for 
 	 * 3430 to work in 3410 mode
 	 */
 	__raw_writel(0x5ABF,CONTROL_SCALABLE_OMAP_OCP);
@@ -672,11 +543,6 @@ void per_clocks_enable(void)
 void set_muxconf_regs(void)
 {
 	MUX_DEFAULT();
-}
-
-int nor_read_boot(unsigned char *buf)
-{
-	return 0;
 }
 
 /**********************************************************

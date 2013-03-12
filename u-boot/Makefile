@@ -3170,9 +3170,6 @@ SMN42_config	:	unconfig
 flashboard_config :	unconfig
 	@$(MKCONFIG) $(@:_config=) arm arm_cortexa8 evm ti omap3
 
-am3517_crane_config :	unconfig
-	@$(MKCONFIG) $(@:_config=) arm arm_cortexa8 am3517crane ti omap3
-
 am3517_evm_config :	unconfig
 	@$(MKCONFIG) $(@:_config=) arm arm_cortexa8 am3517evm logicpd omap3
 

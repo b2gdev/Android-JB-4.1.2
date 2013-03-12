@@ -44,6 +44,9 @@ obj-$(CONFIG_INPUT_WINBOND_CIR)		+= winbond-cir.o
 obj-$(CONFIG_INPUT_WISTRON_BTNS)	+= wistron_btns.o
 obj-$(CONFIG_INPUT_WM831X_ON)		+= wm831x-on.o
 obj-$(CONFIG_INPUT_YEALINK)		+= yealink.o
+#{PS} BEGIN:
+obj-$(CONFIG_INPUT_LIS331DLH)		+= lis331dlh.o
+#{PS} END:
 obj-$(CONFIG_INPUT_LIS331DLH)		+= lis331dlh.o
 obj-$(CONFIG_SENSORS_L3G4200DH)		+= l3g4200dh.o l3g4200dh.o l3g4200dh_i2c.o
 

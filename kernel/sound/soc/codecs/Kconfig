@@ -296,8 +296,16 @@ config SND_SOC_WM8990
 config SND_SOC_WM8993
 	tristate
 
+# {PS} BEGIN:
 config SND_SOC_WM8994
-	tristate
+        tristate "Build WM8994 ASoC CODEC driver"
+        help
+          Build WM8994 codec driver.
+
+#config SND_SOC_WM8994
+#	tristate
+          
+# {PS} END:
 
 config SND_SOC_WM9081
 	tristate

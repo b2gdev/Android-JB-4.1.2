@@ -30,4 +30,22 @@ config A11Y_BRAILLE_CONSOLE
 
 	  If unsure, say N.
 
+# {PS} BEGIN:
+#
+# Metec Flat 20 Braille Display
+#
+menu "Metec Flat 20 Braille Display"
+	depends on MFD_CP430_CORE
+
+config METEC_FLAT20_BRAILLE_DISPLAY
+        tristate "Support for Metec Flat 20 Braille Display"
+        default m
+         ---help---
+	  Provides support for Metec Flat 20 Braille Display. For this
+	  driver to work, CP430 Multi-function device is required.
+
+	  If unsure, say N.
+endmenu
+# {PS} END:
+
 endif # ACCESSIBILITY

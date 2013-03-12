@@ -438,6 +438,8 @@ struct input_keymap_entry {
 #define BTN_8			0x108
 #define BTN_9			0x109
 
+/* {KW} 0x10a - 0x10f woking range */
+
 #define BTN_MOUSE		0x110
 #define BTN_LEFT		0x110
 #define BTN_RIGHT		0x111
@@ -448,7 +450,9 @@ struct input_keymap_entry {
 #define BTN_BACK		0x116
 #define BTN_TASK		0x117
 
-#define BTN_JOYSTICK		0x120
+/* {KW} 0x24c -  0x253 working range */
+
+#define BTN_JOYSTICK	0x120
 #define BTN_TRIGGER		0x120
 #define BTN_THUMB		0x121
 #define BTN_THUMB2		0x122
@@ -499,6 +503,8 @@ struct input_keymap_entry {
 #define BTN_WHEEL		0x150
 #define BTN_GEAR_DOWN		0x150
 #define BTN_GEAR_UP		0x151
+
+/* {KW} 0x254 - 0x261 working range */
 
 #define KEY_OK			0x160
 #define KEY_SELECT		0x161
@@ -591,10 +597,14 @@ struct input_keymap_entry {
 #define KEY_CONTEXT_MENU	0x1b6	/* GenDesc - system context menu */
 #define KEY_MEDIA_REPEAT	0x1b7	/* Consumer - transport control */
 
-#define KEY_DEL_EOL		0x1c0
-#define KEY_DEL_EOS		0x1c1
+/* {KW} 0x1b8 - 0x1bf working range */
+
+#define KEY_DEL_EOL			0x1c0
+#define KEY_DEL_EOS			0x1c1
 #define KEY_INS_LINE		0x1c2
 #define KEY_DEL_LINE		0x1c3
+
+/* {KW} 0x1c4 - 0x1cf working range */
 
 #define KEY_FN			0x1d0
 #define KEY_FN_ESC		0x1d1
@@ -618,6 +628,8 @@ struct input_keymap_entry {
 #define KEY_FN_S		0x1e3
 #define KEY_FN_B		0x1e4
 
+/* {KW} 0x1e5 - 0x1ef working range */
+
 #define KEY_BRL_DOT1		0x1f1
 #define KEY_BRL_DOT2		0x1f2
 #define KEY_BRL_DOT3		0x1f3
@@ -627,7 +639,9 @@ struct input_keymap_entry {
 #define KEY_BRL_DOT7		0x1f7
 #define KEY_BRL_DOT8		0x1f8
 #define KEY_BRL_DOT9		0x1f9
-#define KEY_BRL_DOT10		0x1fa
+#define KEY_BRL_DOT10		0x1fa  /*{KW} this is not used. only 9 Braille keys available */
+
+/* {KW} 0x1fb - 0x1ff working range */
 
 #define KEY_NUMERIC_0		0x200	/* used by phones, remote controls, */
 #define KEY_NUMERIC_1		0x201	/* and other keypads */
@@ -642,7 +656,62 @@ struct input_keymap_entry {
 #define KEY_NUMERIC_STAR	0x20a
 #define KEY_NUMERIC_POUND	0x20b
 
+/* {KW} 0x20c - 0x20f working range */
+
 #define KEY_CAMERA_FOCUS	0x210
+
+/* {KW} 0x211 - 0x24b working range */
+
+/* {KW} 0x118 - 0x11f, 0x152 - 0x15f NOT working range ?? */
+
+/* {KW} 0x262 - 0x2cb working range */
+
+/* {PK} New Scan codes for cursor keys */
+/* {PK} Block 1 */
+#define KEY_BRL_CURSOR_0	0x2d0
+#define KEY_BRL_CURSOR_1	0x2d1
+#define KEY_BRL_CURSOR_2	0x2d2
+#define KEY_BRL_CURSOR_3	0x2d3
+#define KEY_BRL_CURSOR_4	0x2d4
+#define KEY_BRL_CURSOR_5	0x2d5
+#define KEY_BRL_CURSOR_6	0x2d6
+#define KEY_BRL_CURSOR_7	0x2d7
+#define KEY_BRL_CURSOR_8	0x2d8
+#define KEY_BRL_CURSOR_9	0x2d9
+#define KEY_BRL_CURSOR_10	0x2da
+#define KEY_BRL_CURSOR_11	0x2db
+#define KEY_BRL_CURSOR_12	0x2dc
+#define KEY_BRL_CURSOR_13	0x2dd
+#define KEY_BRL_CURSOR_14	0x2de
+#define KEY_BRL_CURSOR_15	0x2df
+#define KEY_BRL_CURSOR_16	0x2e0
+#define KEY_BRL_CURSOR_17	0x2e1
+#define KEY_BRL_CURSOR_18	0x2e2
+#define KEY_BRL_CURSOR_19	0x2e3
+
+/* {PK} Block 2 */
+#define KEY_BRL_CURSOR_20	0x2e4
+#define KEY_BRL_CURSOR_21	0x2e5
+#define KEY_BRL_CURSOR_22	0x2e6
+#define KEY_BRL_CURSOR_23	0x2e7
+#define KEY_BRL_CURSOR_24	0x2e8
+#define KEY_BRL_CURSOR_25	0x2e9
+#define KEY_BRL_CURSOR_26	0x2ea
+#define KEY_BRL_CURSOR_27	0x2eb
+#define KEY_BRL_CURSOR_28	0x2ec
+#define KEY_BRL_CURSOR_29	0x2ed
+#define KEY_BRL_CURSOR_30	0x2ee
+#define KEY_BRL_CURSOR_31	0x2ef
+#define KEY_BRL_CURSOR_32	0x2f0
+#define KEY_BRL_CURSOR_33	0x2f1
+#define KEY_BRL_CURSOR_34	0x2f2
+#define KEY_BRL_CURSOR_35	0x2f3
+#define KEY_BRL_CURSOR_36	0x2f4
+#define KEY_BRL_CURSOR_37	0x2f5
+#define KEY_BRL_CURSOR_38	0x2f6
+#define KEY_BRL_CURSOR_39	0x2f7
+/* {PK} End */
+
 #define KEY_WPS_BUTTON		0x211	/* WiFi Protected Setup key */
 
 #define KEY_TOUCHPAD_TOGGLE	0x212	/* Request switch touchpad on or off */
@@ -691,9 +760,525 @@ struct input_keymap_entry {
 #define BTN_TRIGGER_HAPPY39		0x2e6
 #define BTN_TRIGGER_HAPPY40		0x2e7
 
+
+/*{KW} 256 Braille key combinations */
+#define KEY_BRL_COMB_1			0x301
+#define KEY_BRL_COMB_2			0x302	/* punctuation ' */
+#define KEY_BRL_COMB_3			0x303
+#define KEY_BRL_COMB_4			0x304	/* digit 1 */
+#define KEY_BRL_COMB_5			0x305
+#define KEY_BRL_COMB_6			0x306	/* digit 2 */
+#define KEY_BRL_COMB_7			0x307
+#define KEY_BRL_COMB_8			0x308	/* a */
+#define KEY_BRL_COMB_9			0x309	/* A */
+#define KEY_BRL_COMB_10			0x30a	/* k */
+#define KEY_BRL_COMB_11			0x30b	/* K */
+#define KEY_BRL_COMB_12			0x30c	/* b */
+#define KEY_BRL_COMB_13			0x30d	/* B */
+#define KEY_BRL_COMB_14			0x30e	/* l */
+#define KEY_BRL_COMB_15			0x30f	/* L */
+#define KEY_BRL_COMB_16			0x310	/* sign ` */ 
+#define KEY_BRL_COMB_17			0x311	/* sign @ */
+#define KEY_BRL_COMB_18			0x312	/* math / */
+#define KEY_BRL_COMB_19			0x313
+#define KEY_BRL_COMB_20			0x314	/* i */
+#define KEY_BRL_COMB_21			0x315	/* I */
+#define KEY_BRL_COMB_22			0x316	/* s */
+#define KEY_BRL_COMB_23			0x317	/* S */
+#define KEY_BRL_COMB_24			0x318	/* c */
+#define KEY_BRL_COMB_25			0x319	/* C */
+#define KEY_BRL_COMB_26			0x31a	/* m */
+#define KEY_BRL_COMB_27			0x31b	/* M */
+#define KEY_BRL_COMB_28			0x31c	/* f */
+#define KEY_BRL_COMB_29			0x31d	/* F */
+#define KEY_BRL_COMB_30			0x31e	/* p */
+#define KEY_BRL_COMB_31			0x31f	/* P */
+#define KEY_BRL_COMB_32			0x320	/* punctuation " */  
+#define KEY_BRL_COMB_33			0x321
+#define KEY_BRL_COMB_34			0x322	/* digit 9 */
+#define KEY_BRL_COMB_35			0x323
+#define KEY_BRL_COMB_36			0x324	/* digit 3 */
+#define KEY_BRL_COMB_37			0x325
+#define KEY_BRL_COMB_38			0x326	/* digit 6 */
+#define KEY_BRL_COMB_39			0x327
+#define KEY_BRL_COMB_40			0x328	/* e */
+#define KEY_BRL_COMB_41			0x329	/* E */
+#define KEY_BRL_COMB_42			0x32a	/* o */
+#define KEY_BRL_COMB_43			0x32b	/* O */
+#define KEY_BRL_COMB_44			0x32c	/* h */
+#define KEY_BRL_COMB_45			0x32d	/* H */
+#define KEY_BRL_COMB_46			0x32e	/* r */
+#define KEY_BRL_COMB_47			0x32f	/* R */
+#define KEY_BRL_COMB_48			0x330	/* math ~ */ 
+#define KEY_BRL_COMB_49			0x331	/* sign ^ */
+#define KEY_BRL_COMB_50			0x332	/* math > */ 
+#define KEY_BRL_COMB_51			0x333
+#define KEY_BRL_COMB_52			0x334	/* j */
+#define KEY_BRL_COMB_53			0x335	/* J */
+#define KEY_BRL_COMB_54			0x336	/* t */
+#define KEY_BRL_COMB_55			0x337	/* T */
+#define KEY_BRL_COMB_56			0x338	/* d */
+#define KEY_BRL_COMB_57			0x339	/* D */
+#define KEY_BRL_COMB_58			0x33a	/* n */
+#define KEY_BRL_COMB_59			0x33b	/* N */
+#define KEY_BRL_COMB_60			0x33c	/* g */
+#define KEY_BRL_COMB_61			0x33d	/* G */
+#define KEY_BRL_COMB_62			0x33e	/* q */
+#define KEY_BRL_COMB_63			0x33f	/* Q */
+#define KEY_BRL_COMB_64			0x340	/* punctuation , */ 
+#define KEY_BRL_COMB_65			0x341
+#define KEY_BRL_COMB_66			0x342	/* punctuation - */
+#define KEY_BRL_COMB_67			0x343
+#define KEY_BRL_COMB_68			0x344	/* digit 5 */ 
+#define KEY_BRL_COMB_69			0x345
+#define KEY_BRL_COMB_70			0x346	/* digit 8 */
+#define KEY_BRL_COMB_71			0x347
+#define KEY_BRL_COMB_72			0x348	/* sign * */ 
+#define KEY_BRL_COMB_73			0x349
+#define KEY_BRL_COMB_74			0x34a	/* u */
+#define KEY_BRL_COMB_75			0x34b	/* U */
+#define KEY_BRL_COMB_76			0x34c	/* math < */ 
+#define KEY_BRL_COMB_77			0x34d
+#define KEY_BRL_COMB_78			0x34e	/* v */
+#define KEY_BRL_COMB_79			0x34f	/* V */
+#define KEY_BRL_COMB_80			0x350	/* punctuation . */ 
+#define KEY_BRL_COMB_81			0x351
+#define KEY_BRL_COMB_82			0x352	/* math + */ 
+#define KEY_BRL_COMB_83			0x353
+#define KEY_BRL_COMB_84			0x354	/* punctuation { */ 
+#define KEY_BRL_COMB_85			0x355	/* punctuation [ */
+#define KEY_BRL_COMB_86			0x356	/* punctuation ! */
+#define KEY_BRL_COMB_87			0x357
+#define KEY_BRL_COMB_88			0x358	/* sign % */ 
+#define KEY_BRL_COMB_89			0x359
+#define KEY_BRL_COMB_90			0x35a	/* x */
+#define KEY_BRL_COMB_91			0x35b	/* X */
+#define KEY_BRL_COMB_92			0x35c	/* sign $ */ 
+#define KEY_BRL_COMB_93			0x35d
+#define KEY_BRL_COMB_94			0x35e	/* sign & */ 
+#define KEY_BRL_COMB_95			0x35f
+#define KEY_BRL_COMB_96			0x360	/* punctuation ; */ 
+#define KEY_BRL_COMB_97			0x361
+#define KEY_BRL_COMB_98			0x362	/* digit 0 */ 
+#define KEY_BRL_COMB_99			0x363
+#define KEY_BRL_COMB_100		0x364	/* digit 4 */
+#define KEY_BRL_COMB_101		0x365
+#define KEY_BRL_COMB_102		0x366	/* digit 7 */
+#define KEY_BRL_COMB_103		0x367
+#define KEY_BRL_COMB_104		0x368	/* punctuation : */ 
+#define KEY_BRL_COMB_105		0x369
+#define KEY_BRL_COMB_106		0x36a	/* z */
+#define KEY_BRL_COMB_107		0x36b	/* Z */
+#define KEY_BRL_COMB_108		0x36c	/* sign | */ 
+#define KEY_BRL_COMB_109		0x36d	/* sign (backslash) */
+#define KEY_BRL_COMB_110		0x36e	/* punctuation ( */ 
+#define KEY_BRL_COMB_111		0x36f
+#define KEY_BRL_COMB_112		0x370	/* sign _ */ 
+#define KEY_BRL_COMB_113		0x371
+#define KEY_BRL_COMB_114		0x372	/* sign # */ 
+#define KEY_BRL_COMB_115		0x373
+#define KEY_BRL_COMB_116		0x374	/* w */
+#define KEY_BRL_COMB_117		0x375	/* W */
+#define KEY_BRL_COMB_118		0x376	/* punctuation ) */ 
+#define KEY_BRL_COMB_119		0x377
+#define KEY_BRL_COMB_120		0x378	/* punctuation ? */ 
+#define KEY_BRL_COMB_121		0x379
+#define KEY_BRL_COMB_122		0x37a	/* y */
+#define KEY_BRL_COMB_123		0x37b	/* Y */
+#define KEY_BRL_COMB_124		0x37c	/* punctuation } */ 
+#define KEY_BRL_COMB_125		0x37d	/* punctuation ] */
+#define KEY_BRL_COMB_126		0x37e	/* math = */ 
+#define KEY_BRL_COMB_127		0x37f
+#define KEY_BRL_COMB_128		0x380
+#define KEY_BRL_COMB_129		0x381
+#define KEY_BRL_COMB_130		0x382
+#define KEY_BRL_COMB_131		0x383
+#define KEY_BRL_COMB_132		0x384
+#define KEY_BRL_COMB_133		0x385
+#define KEY_BRL_COMB_134		0x386
+#define KEY_BRL_COMB_135		0x387
+#define KEY_BRL_COMB_136		0x388
+#define KEY_BRL_COMB_137		0x389
+#define KEY_BRL_COMB_138		0x38a
+#define KEY_BRL_COMB_139		0x38b
+#define KEY_BRL_COMB_140		0x38c
+#define KEY_BRL_COMB_141		0x38d
+#define KEY_BRL_COMB_142		0x38e
+#define KEY_BRL_COMB_143		0x38f
+#define KEY_BRL_COMB_144		0x390
+#define KEY_BRL_COMB_145		0x391
+#define KEY_BRL_COMB_146		0x392
+#define KEY_BRL_COMB_147		0x393
+#define KEY_BRL_COMB_148		0x394
+#define KEY_BRL_COMB_149		0x395
+#define KEY_BRL_COMB_150		0x396
+#define KEY_BRL_COMB_151		0x397
+#define KEY_BRL_COMB_152		0x398
+#define KEY_BRL_COMB_153		0x399
+#define KEY_BRL_COMB_154		0x39a
+#define KEY_BRL_COMB_155		0x39b
+#define KEY_BRL_COMB_156		0x39c
+#define KEY_BRL_COMB_157		0x39d
+#define KEY_BRL_COMB_158		0x39e
+#define KEY_BRL_COMB_159		0x39f
+#define KEY_BRL_COMB_160		0x3a0
+#define KEY_BRL_COMB_161		0x3a1
+#define KEY_BRL_COMB_162		0x3a2
+#define KEY_BRL_COMB_163		0x3a3
+#define KEY_BRL_COMB_164		0x3a4
+#define KEY_BRL_COMB_165		0x3a5
+#define KEY_BRL_COMB_166		0x3a6
+#define KEY_BRL_COMB_167		0x3a7
+#define KEY_BRL_COMB_168		0x3a8
+#define KEY_BRL_COMB_169		0x3a9
+#define KEY_BRL_COMB_170		0x3aa
+#define KEY_BRL_COMB_171		0x3ab
+#define KEY_BRL_COMB_172		0x3ac
+#define KEY_BRL_COMB_173		0x3ad
+#define KEY_BRL_COMB_174		0x3ae
+#define KEY_BRL_COMB_175		0x3af
+#define KEY_BRL_COMB_176		0x3b0
+#define KEY_BRL_COMB_177		0x3b1
+#define KEY_BRL_COMB_178		0x3b2
+#define KEY_BRL_COMB_179		0x3b3
+#define KEY_BRL_COMB_180		0x3b4
+#define KEY_BRL_COMB_181		0x3b5
+#define KEY_BRL_COMB_182		0x3b6
+#define KEY_BRL_COMB_183		0x3b7
+#define KEY_BRL_COMB_184		0x3b8
+#define KEY_BRL_COMB_185		0x3b9
+#define KEY_BRL_COMB_186		0x3ba
+#define KEY_BRL_COMB_187		0x3bb
+#define KEY_BRL_COMB_188		0x3bc
+#define KEY_BRL_COMB_189		0x3bd
+#define KEY_BRL_COMB_190		0x3be
+#define KEY_BRL_COMB_191		0x3bf
+#define KEY_BRL_COMB_192		0x3c0
+#define KEY_BRL_COMB_193		0x3c1
+#define KEY_BRL_COMB_194		0x3c2
+#define KEY_BRL_COMB_195		0x3c3
+#define KEY_BRL_COMB_196		0x3c4
+#define KEY_BRL_COMB_197		0x3c5
+#define KEY_BRL_COMB_198		0x3c6
+#define KEY_BRL_COMB_199		0x3c7
+#define KEY_BRL_COMB_200		0x3c8
+#define KEY_BRL_COMB_201		0x3c9
+#define KEY_BRL_COMB_202		0x3ca
+#define KEY_BRL_COMB_203		0x3cb
+#define KEY_BRL_COMB_204		0x3cc
+#define KEY_BRL_COMB_205		0x3cd
+#define KEY_BRL_COMB_206		0x3ce
+#define KEY_BRL_COMB_207		0x3cf
+#define KEY_BRL_COMB_208		0x3d0
+#define KEY_BRL_COMB_209		0x3d1
+#define KEY_BRL_COMB_210		0x3d2
+#define KEY_BRL_COMB_211		0x3d3
+#define KEY_BRL_COMB_212		0x3d4
+#define KEY_BRL_COMB_213		0x3d5
+#define KEY_BRL_COMB_214		0x3d6
+#define KEY_BRL_COMB_215		0x3d7
+#define KEY_BRL_COMB_216		0x3d8
+#define KEY_BRL_COMB_217		0x3d9
+#define KEY_BRL_COMB_218		0x3da
+#define KEY_BRL_COMB_219		0x3db
+#define KEY_BRL_COMB_220		0x3dc
+#define KEY_BRL_COMB_221		0x3dd
+#define KEY_BRL_COMB_222		0x3de
+#define KEY_BRL_COMB_223		0x3df
+#define KEY_BRL_COMB_224		0x3e0
+#define KEY_BRL_COMB_225		0x3e1
+#define KEY_BRL_COMB_226		0x3e2
+#define KEY_BRL_COMB_227		0x3e3
+#define KEY_BRL_COMB_228		0x3e4
+#define KEY_BRL_COMB_229		0x3e5
+#define KEY_BRL_COMB_230		0x3e6
+#define KEY_BRL_COMB_231		0x3e7
+#define KEY_BRL_COMB_232		0x3e8
+#define KEY_BRL_COMB_233		0x3e9
+#define KEY_BRL_COMB_234		0x3ea
+#define KEY_BRL_COMB_235		0x3eb
+#define KEY_BRL_COMB_236		0x3ec
+#define KEY_BRL_COMB_237		0x3ed
+#define KEY_BRL_COMB_238		0x3ee
+#define KEY_BRL_COMB_239		0x3ef
+#define KEY_BRL_COMB_240		0x3f0
+#define KEY_BRL_COMB_241		0x3f1
+#define KEY_BRL_COMB_242		0x3f2
+#define KEY_BRL_COMB_243		0x3f3
+#define KEY_BRL_COMB_244		0x3f4
+#define KEY_BRL_COMB_245		0x3f5
+#define KEY_BRL_COMB_246		0x3f6
+#define KEY_BRL_COMB_247		0x3f7
+#define KEY_BRL_COMB_248		0x3f8
+#define KEY_BRL_COMB_249		0x3f9
+#define KEY_BRL_COMB_250		0x3fa
+#define KEY_BRL_COMB_251		0x3fb
+#define KEY_BRL_COMB_252		0x3fc
+#define KEY_BRL_COMB_253		0x3fd
+#define KEY_BRL_COMB_254		0x3fe
+#define KEY_BRL_COMB_255		0x3ff
+
+/*{KW} 256 Chorded key combinations */
+#define KEY_CHORD_COMB_1			0x401
+#define KEY_CHORD_COMB_2			0x402	/* Dot3-Chord (Cursor Left) */
+#define KEY_CHORD_COMB_3			0x403
+#define KEY_CHORD_COMB_4			0x404
+#define KEY_CHORD_COMB_5			0x405
+#define KEY_CHORD_COMB_6			0x406
+#define KEY_CHORD_COMB_7			0x407
+#define KEY_CHORD_COMB_8			0x408	/* a-Chord (Cursor Up) */
+#define KEY_CHORD_COMB_9			0x409
+#define KEY_CHORD_COMB_10			0x40a
+#define KEY_CHORD_COMB_11			0x40b
+#define KEY_CHORD_COMB_12			0x40c	/* b-Chord (BACK) */
+#define KEY_CHORD_COMB_13			0x40d
+#define KEY_CHORD_COMB_14			0x40e
+#define KEY_CHORD_COMB_15			0x40f
+#define KEY_CHORD_COMB_16			0x410	/* Dot4-Chord (Cursor Down) */
+#define KEY_CHORD_COMB_17			0x411
+#define KEY_CHORD_COMB_18			0x412
+#define KEY_CHORD_COMB_19			0x413
+#define KEY_CHORD_COMB_20			0x414
+#define KEY_CHORD_COMB_21			0x415
+#define KEY_CHORD_COMB_22			0x416
+#define KEY_CHORD_COMB_23			0x417
+#define KEY_CHORD_COMB_24			0x418
+#define KEY_CHORD_COMB_25			0x419
+#define KEY_CHORD_COMB_26			0x41a	/* m-Chord (MENU) */
+#define KEY_CHORD_COMB_27			0x41b
+#define KEY_CHORD_COMB_28			0x41c	/* F-Chord (SEARCH) */
+#define KEY_CHORD_COMB_29			0x41d
+#define KEY_CHORD_COMB_30			0x41e
+#define KEY_CHORD_COMB_31			0x41f
+#define KEY_CHORD_COMB_32			0x420
+#define KEY_CHORD_COMB_33			0x421
+#define KEY_CHORD_COMB_34			0x422
+#define KEY_CHORD_COMB_35			0x423
+#define KEY_CHORD_COMB_36			0x424
+#define KEY_CHORD_COMB_37			0x425
+#define KEY_CHORD_COMB_38			0x426
+#define KEY_CHORD_COMB_39			0x427
+#define KEY_CHORD_COMB_40			0x428
+#define KEY_CHORD_COMB_41			0x429
+#define KEY_CHORD_COMB_42			0x42a
+#define KEY_CHORD_COMB_43			0x42b
+#define KEY_CHORD_COMB_44			0x42c
+#define KEY_CHORD_COMB_45			0x42d
+#define KEY_CHORD_COMB_46			0x42e
+#define KEY_CHORD_COMB_47			0x42f
+#define KEY_CHORD_COMB_48			0x430
+#define KEY_CHORD_COMB_49			0x431
+#define KEY_CHORD_COMB_50			0x432
+#define KEY_CHORD_COMB_51			0x433
+#define KEY_CHORD_COMB_52			0x434
+#define KEY_CHORD_COMB_53			0x435
+#define KEY_CHORD_COMB_54			0x436
+#define KEY_CHORD_COMB_55			0x437
+#define KEY_CHORD_COMB_56			0x438	/* d-Chord (DELETE) */
+#define KEY_CHORD_COMB_57			0x439
+#define KEY_CHORD_COMB_58			0x43a
+#define KEY_CHORD_COMB_59			0x43b
+#define KEY_CHORD_COMB_60			0x43c
+#define KEY_CHORD_COMB_61			0x43d
+#define KEY_CHORD_COMB_62			0x43e
+#define KEY_CHORD_COMB_63			0x43f
+#define KEY_CHORD_COMB_64			0x440	/* Dot6-Chord (Cursor Right) */
+#define KEY_CHORD_COMB_65			0x441
+#define KEY_CHORD_COMB_66			0x442
+#define KEY_CHORD_COMB_67			0x443
+#define KEY_CHORD_COMB_68			0x444
+#define KEY_CHORD_COMB_69			0x445
+#define KEY_CHORD_COMB_70			0x446
+#define KEY_CHORD_COMB_71			0x447
+#define KEY_CHORD_COMB_72			0x448
+#define KEY_CHORD_COMB_73			0x449
+#define KEY_CHORD_COMB_74			0x44a
+#define KEY_CHORD_COMB_75			0x44b
+#define KEY_CHORD_COMB_76			0x44c
+#define KEY_CHORD_COMB_77			0x44d
+#define KEY_CHORD_COMB_78			0x44e
+#define KEY_CHORD_COMB_79			0x44f
+#define KEY_CHORD_COMB_80			0x450
+#define KEY_CHORD_COMB_81			0x451
+#define KEY_CHORD_COMB_82			0x452
+#define KEY_CHORD_COMB_83			0x453
+#define KEY_CHORD_COMB_84			0x454
+#define KEY_CHORD_COMB_85			0x455
+#define KEY_CHORD_COMB_86			0x456
+#define KEY_CHORD_COMB_87			0x457
+#define KEY_CHORD_COMB_88			0x458
+#define KEY_CHORD_COMB_89			0x459
+#define KEY_CHORD_COMB_90			0x45a
+#define KEY_CHORD_COMB_91			0x45b
+#define KEY_CHORD_COMB_92			0x45c
+#define KEY_CHORD_COMB_93			0x45d
+#define KEY_CHORD_COMB_94			0x45e
+#define KEY_CHORD_COMB_95			0x45f
+#define KEY_CHORD_COMB_96			0x460
+#define KEY_CHORD_COMB_97			0x461
+#define KEY_CHORD_COMB_98			0x462
+#define KEY_CHORD_COMB_99			0x463
+#define KEY_CHORD_COMB_100			0x464
+#define KEY_CHORD_COMB_101			0x465
+#define KEY_CHORD_COMB_102			0x466
+#define KEY_CHORD_COMB_103			0x467
+#define KEY_CHORD_COMB_104			0x468
+#define KEY_CHORD_COMB_105			0x469
+#define KEY_CHORD_COMB_106			0x46a
+#define KEY_CHORD_COMB_107			0x46b
+#define KEY_CHORD_COMB_108			0x46c
+#define KEY_CHORD_COMB_109			0x46d
+#define KEY_CHORD_COMB_110			0x46e
+#define KEY_CHORD_COMB_111			0x46f
+#define KEY_CHORD_COMB_112			0x470
+#define KEY_CHORD_COMB_113			0x471
+#define KEY_CHORD_COMB_114			0x472
+#define KEY_CHORD_COMB_115			0x473
+#define KEY_CHORD_COMB_116			0x474
+#define KEY_CHORD_COMB_117			0x475
+#define KEY_CHORD_COMB_118			0x476
+#define KEY_CHORD_COMB_119			0x477
+#define KEY_CHORD_COMB_120			0x478
+#define KEY_CHORD_COMB_121			0x479
+#define KEY_CHORD_COMB_122			0x47a
+#define KEY_CHORD_COMB_123			0x47b
+#define KEY_CHORD_COMB_124			0x47c
+#define KEY_CHORD_COMB_125			0x47d
+#define KEY_CHORD_COMB_126			0x47e	/* Dot123456-Chord (HOME) */
+#define KEY_CHORD_COMB_127			0x47f
+#define KEY_CHORD_COMB_128			0x480
+#define KEY_CHORD_COMB_129			0x481
+#define KEY_CHORD_COMB_130			0x482
+#define KEY_CHORD_COMB_131			0x483
+#define KEY_CHORD_COMB_132			0x484
+#define KEY_CHORD_COMB_133			0x485
+#define KEY_CHORD_COMB_134			0x486
+#define KEY_CHORD_COMB_135			0x487
+#define KEY_CHORD_COMB_136			0x488
+#define KEY_CHORD_COMB_137			0x489
+#define KEY_CHORD_COMB_138			0x48a
+#define KEY_CHORD_COMB_139			0x48b
+#define KEY_CHORD_COMB_140			0x48c
+#define KEY_CHORD_COMB_141			0x48d
+#define KEY_CHORD_COMB_142			0x48e
+#define KEY_CHORD_COMB_143			0x48f
+#define KEY_CHORD_COMB_144			0x490
+#define KEY_CHORD_COMB_145			0x491
+#define KEY_CHORD_COMB_146			0x492
+#define KEY_CHORD_COMB_147			0x493
+#define KEY_CHORD_COMB_148			0x494
+#define KEY_CHORD_COMB_149			0x495
+#define KEY_CHORD_COMB_150			0x496
+#define KEY_CHORD_COMB_151			0x497
+#define KEY_CHORD_COMB_152			0x498
+#define KEY_CHORD_COMB_153			0x499
+#define KEY_CHORD_COMB_154			0x49a
+#define KEY_CHORD_COMB_155			0x49b
+#define KEY_CHORD_COMB_156			0x49c
+#define KEY_CHORD_COMB_157			0x49d
+#define KEY_CHORD_COMB_158			0x49e
+#define KEY_CHORD_COMB_159			0x49f
+#define KEY_CHORD_COMB_160			0x4a0
+#define KEY_CHORD_COMB_161			0x4a1
+#define KEY_CHORD_COMB_162			0x4a2
+#define KEY_CHORD_COMB_163			0x4a3
+#define KEY_CHORD_COMB_164			0x4a4
+#define KEY_CHORD_COMB_165			0x4a5
+#define KEY_CHORD_COMB_166			0x4a6
+#define KEY_CHORD_COMB_167			0x4a7
+#define KEY_CHORD_COMB_168			0x4a8
+#define KEY_CHORD_COMB_169			0x4a9
+#define KEY_CHORD_COMB_170			0x4aa
+#define KEY_CHORD_COMB_171			0x4ab
+#define KEY_CHORD_COMB_172			0x4ac
+#define KEY_CHORD_COMB_173			0x4ad
+#define KEY_CHORD_COMB_174			0x4ae
+#define KEY_CHORD_COMB_175			0x4af
+#define KEY_CHORD_COMB_176			0x4b0
+#define KEY_CHORD_COMB_177			0x4b1
+#define KEY_CHORD_COMB_178			0x4b2
+#define KEY_CHORD_COMB_179			0x4b3
+#define KEY_CHORD_COMB_180			0x4b4
+#define KEY_CHORD_COMB_181			0x4b5
+#define KEY_CHORD_COMB_182			0x4b6
+#define KEY_CHORD_COMB_183			0x4b7
+#define KEY_CHORD_COMB_184			0x4b8
+#define KEY_CHORD_COMB_185			0x4b9
+#define KEY_CHORD_COMB_186			0x4ba
+#define KEY_CHORD_COMB_187			0x4bb
+#define KEY_CHORD_COMB_188			0x4bc
+#define KEY_CHORD_COMB_189			0x4bd
+#define KEY_CHORD_COMB_190			0x4be
+#define KEY_CHORD_COMB_191			0x4bf
+#define KEY_CHORD_COMB_192			0x4c0
+#define KEY_CHORD_COMB_193			0x4c1
+#define KEY_CHORD_COMB_194			0x4c2
+#define KEY_CHORD_COMB_195			0x4c3
+#define KEY_CHORD_COMB_196			0x4c4
+#define KEY_CHORD_COMB_197			0x4c5
+#define KEY_CHORD_COMB_198			0x4c6
+#define KEY_CHORD_COMB_199			0x4c7
+#define KEY_CHORD_COMB_200			0x4c8
+#define KEY_CHORD_COMB_201			0x4c9
+#define KEY_CHORD_COMB_202			0x4ca
+#define KEY_CHORD_COMB_203			0x4cb
+#define KEY_CHORD_COMB_204			0x4cc
+#define KEY_CHORD_COMB_205			0x4cd
+#define KEY_CHORD_COMB_206			0x4ce
+#define KEY_CHORD_COMB_207			0x4cf
+#define KEY_CHORD_COMB_208			0x4d0
+#define KEY_CHORD_COMB_209			0x4d1
+#define KEY_CHORD_COMB_210			0x4d2
+#define KEY_CHORD_COMB_211			0x4d3
+#define KEY_CHORD_COMB_212			0x4d4
+#define KEY_CHORD_COMB_213			0x4d5
+#define KEY_CHORD_COMB_214			0x4d6
+#define KEY_CHORD_COMB_215			0x4d7
+#define KEY_CHORD_COMB_216			0x4d8
+#define KEY_CHORD_COMB_217			0x4d9
+#define KEY_CHORD_COMB_218			0x4da
+#define KEY_CHORD_COMB_219			0x4db
+#define KEY_CHORD_COMB_220			0x4dc
+#define KEY_CHORD_COMB_221			0x4dd
+#define KEY_CHORD_COMB_222			0x4de
+#define KEY_CHORD_COMB_223			0x4df
+#define KEY_CHORD_COMB_224			0x4e0
+#define KEY_CHORD_COMB_225			0x4e1
+#define KEY_CHORD_COMB_226			0x4e2
+#define KEY_CHORD_COMB_227			0x4e3
+#define KEY_CHORD_COMB_228			0x4e4
+#define KEY_CHORD_COMB_229			0x4e5
+#define KEY_CHORD_COMB_230			0x4e6
+#define KEY_CHORD_COMB_231			0x4e7
+#define KEY_CHORD_COMB_232			0x4e8
+#define KEY_CHORD_COMB_233			0x4e9
+#define KEY_CHORD_COMB_234			0x4ea
+#define KEY_CHORD_COMB_235			0x4eb
+#define KEY_CHORD_COMB_236			0x4ec
+#define KEY_CHORD_COMB_237			0x4ed
+#define KEY_CHORD_COMB_238			0x4ee
+#define KEY_CHORD_COMB_239			0x4ef
+#define KEY_CHORD_COMB_240			0x4f0
+#define KEY_CHORD_COMB_241			0x4f1
+#define KEY_CHORD_COMB_242			0x4f2
+#define KEY_CHORD_COMB_243			0x4f3
+#define KEY_CHORD_COMB_244			0x4f4
+#define KEY_CHORD_COMB_245			0x4f5
+#define KEY_CHORD_COMB_246			0x4f6
+#define KEY_CHORD_COMB_247			0x4f7
+#define KEY_CHORD_COMB_248			0x4f8
+#define KEY_CHORD_COMB_249			0x4f9
+#define KEY_CHORD_COMB_250			0x4fa
+#define KEY_CHORD_COMB_251			0x4fb
+#define KEY_CHORD_COMB_252			0x4fc
+#define KEY_CHORD_COMB_253			0x4fd
+#define KEY_CHORD_COMB_254			0x4fe
+#define KEY_CHORD_COMB_255			0x4ff
+/*{KW} end */
+
 /* We avoid low common keys in module aliases so they don't get huge. */
 #define KEY_MIN_INTERESTING	KEY_MUTE
-#define KEY_MAX			0x2ff
+#define KEY_MAX			0x4ff 				/*{KW}: This was 0x2ff. Corresponding value 'INPUT_DEVICE_ID_KEY_MAX' must match in mod_devietable. */
 #define KEY_CNT			(KEY_MAX+1)
 
 /*

@@ -24,12 +24,7 @@
 
 #ifndef _OMAP34XX_CPU_H
 #define  _OMAP34XX_CPU_H
-#if defined(CONFIG_AM3517EVM) || defined(CONFIG_AM3517TEB) || \
-	defined(CONFIG_AM3517CRANE)
-#include <asm/arch/omap3.h>
-#elif defined (CONFIG_OMAP3430)
 #include <asm/arch/omap3430.h>
-#endif
 
 /* Register offsets of common modules */
 /* Control */
@@ -43,9 +38,6 @@
 #define TAP_IDCODE_REG		(OMAP34XX_TAP_BASE+0x204)
 #define PRODUCTION_ID		(OMAP34XX_TAP_BASE+0x208)
 
-/* OMAP 34XX/35XX/36xx/37xx Control ID */
-#define OMAP34XX_CONTROL_ID		(OMAP34XX_WAKEUP_L4_IO_BASE + 0xa204)
-
 /* device type */
 #define DEVICE_MASK		(BIT8|BIT9|BIT10)
 #define TST_DEVICE		0x0
@@ -54,13 +46,9 @@
 #define GP_DEVICE		0x3
 
 /* We are not concerned with BIT5 as it only determines
- *  the prirotiy between memory or perpheral booting
+ *  the prirotiy between memory or perpheral booting 
  */
-#if defined (CONFIG_AM3517EVM)
-#define SYSBOOT_MASK		(BIT0|BIT1|BIT2|BIT3|BIT4|BIT5)
-#else
 #define SYSBOOT_MASK		(BIT0|BIT1|BIT2|BIT3|BIT4)
-#endif
 
 /* GPMC CS3/cs4/cs6 not avaliable */
 #define GPMC_BASE		(OMAP34XX_GPMC_BASE)
@@ -71,21 +59,7 @@
 #define GPMC_CONFIG		(OMAP34XX_GPMC_BASE+0x50)
 #define GPMC_STATUS		(OMAP34XX_GPMC_BASE+0x54)
 
-#if defined(CONFIG_OMAP34XX) || defined(CONFIG_AM3517EVM) || \
-	defined(CONFIG_AM3517CRANE)
 #define GPMC_CONFIG_CS0		(OMAP34XX_GPMC_BASE+0x60)
-#elif defined (CONFIG_AM3517TEB)
-#define GPMC_CONFIG_CS0		(OMAP34XX_GPMC_BASE+0xC0)
-#endif
-
-#define GPMC_CONFIG_CS1		(OMAP34XX_GPMC_BASE+0x90)
-#define GPMC_CONFIG_CS2		(OMAP34XX_GPMC_BASE+0xC0)
-#define GPMC_CONFIG_CS3		(OMAP34XX_GPMC_BASE+0xF0)
-#define GPMC_CONFIG_CS4		(OMAP34XX_GPMC_BASE+0x120)
-#define GPMC_CONFIG_CS5		(OMAP34XX_GPMC_BASE+0x150)
-#define GPMC_CONFIG_CS6		(OMAP34XX_GPMC_BASE+0x180)
-#define GPMC_CONFIG_CS7		(OMAP34XX_GPMC_BASE+0x1B0)
-
 #define GPMC_CONFIG_WIDTH	(0x30)
 
 #define GPMC_CONFIG1		(0x00)
@@ -170,27 +144,6 @@
 #define SOFTRESET		BIT1
 #define SMART_IDLE		(0x2 << 3)
 #define REF_ON_IDLE		(0x1 << 6)
-
-/* EMIF4 register */
-#define	EMIF4_BASE		OMAP34XX_SDRC_BASE
-#define	EMIF4_MOD_ID		(EMIF4_BASE + 0x00)
-#define	EMIF4_SDRAM_STS		(EMIF4_BASE + 0x04)
-#define	EMIF4_SDRAM_CFG		(EMIF4_BASE + 0x08)
-#define	EMIF4_SDRAM_RFCR	(EMIF4_BASE + 0x10)
-#define	EMIF4_SDRAM_RFCR_SHDW	(EMIF4_BASE + 0x14)
-#define	EMIF4_SDRAM_TIM1	(EMIF4_BASE + 0x18)
-#define	EMIF4_SDRAM_TIM1_SHDW	(EMIF4_BASE + 0x1C)
-#define	EMIF4_SDRAM_TIM2	(EMIF4_BASE + 0x20)
-#define	EMIF4_SDRAM_TIM2_SHDW	(EMIF4_BASE + 0x24)
-#define	EMIF4_SDRAM_TIM3	(EMIF4_BASE + 0x28)
-#define	EMIF4_SDRAM_TIM3_SHDW	(EMIF4_BASE + 0x2c)
-#define	EMIF4_PWR_MGT_CTRL	(EMIF4_BASE + 0x38)
-#define	EMIF4_PWR_MGT_CTRL_SHDW	(EMIF4_BASE + 0x3C)
-#define	EMIF4_IODFT_TLGC	(EMIF4_BASE + 0x60)
-#define	EMIF4_DDR_PHYCTL1	(EMIF4_BASE + 0xE4)
-#define	EMIF4_DDR_PHYCTL1_SHDW	(EMIF4_BASE + 0xE8)
-#define	EMIF4_DDR_PHYCTL2	(EMIF4_BASE + 0xEC)
-
 
 /* timer regs offsets (32 bit regs) */
 #define TIDR			0x0      /* r */

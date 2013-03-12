@@ -37,10 +37,7 @@
 #  define CORE_FUSB_DIV  2        /* 41.5MHz: */
 #  define CORE_L4_DIV    2        /*  83MHz : L4 */
 #  define CORE_L3_DIV    2        /* 166MHz : L3 {DDR} */
-#  define GFX_DIV_34X    3        /*  96MHz : CM_CLKSEL_GFX */
-#  define GFX_DIV_36X    5        /*  200MHz : CM_CLKSEL_GFX */
-/* Keep default to 96Mhz */
-#  define GFX_DIV        3        /*  96MHz : CM_CLKSEL_GFX */
+#  define GFX_DIV        2        /*  83MHz : CM_CLKSEL_GFX */
 #  define WKUP_RSM       2        /* 41.5MHz: CM_CLKSEL_WKUP */
 
 /* PER DPLL */
@@ -69,7 +66,7 @@
 
 # define M_13_ES1	0x1B2
 # define N_13_ES1	0x10
-# define FSL_13_ES1 0x03
+# define FSL_13_ES1 0x03  
 # define M2_13_ES1	0x01 /* M3 of 2 */
 
 # define M_19p2     0x19F

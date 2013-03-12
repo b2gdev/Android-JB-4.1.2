@@ -54,7 +54,7 @@
 #define FAT12_SIGN	"FAT12   "
 #define FAT16_SIGN	"FAT16   "
 #define FAT32_SIGN	"FAT32   "
-#define SIGNLEN		7
+#define SIGNLEN		8
 
 /* File attributes */
 #define ATTR_RO      1

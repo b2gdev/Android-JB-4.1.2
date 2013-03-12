@@ -44,12 +44,15 @@
 #define CONFIG_OMAP3EVM          1    /* working with EVM */
 
 /* Enable the below macro if MMC boot support is required */
-#define CONFIG_MMC               1
+#define CONFIG_MMC	1
 #if defined(CONFIG_MMC)
-	#define CFG_CMD_MMC              1
-	#define CFG_CMD_FAT              1
-
-	#define CONFIG_DOS_PARTITION
+	#define CFG_CMD_MMC	1
+	#define CFG_CMD_FAT	1
+	#define CFG_I2C_SPEED		100000
+	#define CFG_I2C_SLAVE		1
+	#define CFG_I2C_BUS		0
+	#define CFG_I2C_BUS_SELECT	1
+	#define CONFIG_DRIVER_OMAP34XX_I2C 1
 #endif
 
 #include <asm/arch/cpu.h>        /* get chip and board defs */
@@ -71,9 +74,7 @@
 #define PRCM_PCLK_OPP2           1    /* ARM=381MHz - VDD1=1.20v */
 
 /* Memory type */
-#define CFG_OMAPEVM_DDR		1
-#define CFG_3430SDRAM_DDR	1
-#define CONFIG_DDR_256MB_STACKED
+#define CFG_3430SDRAM_DDR        1
 
 /* The actual register values are defined in u-boot- mem.h */
 /* SDRAM Bank Allocation method */
@@ -94,22 +95,13 @@
 #define CFG_NS16550_SERIAL
 #define CFG_NS16550_REG_SIZE     (-4)
 #define CFG_NS16550_CLK          (48000000)
-#ifdef CONFIG_FLASHBOARD
-#define CFG_NS16550_COM3         OMAP34XX_UART3
-#else
 #define CFG_NS16550_COM1         OMAP34XX_UART1
-#endif
 
 /*
  * select serial console configuration
  */
-#ifdef CONFIG_FLASHBOARD
-#define CONFIG_SERIAL3           3    /* UART3 on Flash Board */
-#define CONFIG_CONS_INDEX        3
-#else
 #define CONFIG_SERIAL1           1    /* UART1 on OMAP3EVM */
 #define CONFIG_CONS_INDEX        1
-#endif
 
 #define CONFIG_BAUDRATE          115200
 #define CFG_PBSIZE               256
@@ -134,14 +126,9 @@
  * Board NAND Info.
  */
 
-#define CFG_NAND
+
 #define CFG_NAND_K9F1G08R0A    /* Samsung 8-bit 128MB chip large page NAND chip*/
-#ifdef CONFIG_FLASHBOARD
-#define NAND_8BIT
-#else
 #define NAND_16BIT
-#endif
-#define ECC_HW_ENABLE
 
 /* NAND is partitioned:
  * 0x00000000 - 0x0007FFFF  Booting Image
@@ -158,16 +145,6 @@
 #define GPMC_NAND_COMMAND_0      (OMAP34XX_GPMC_BASE+0x7C)
 #define GPMC_NAND_ADDRESS_0      (OMAP34XX_GPMC_BASE+0x80)
 #define GPMC_NAND_DATA_0         (OMAP34XX_GPMC_BASE+0x84)
-
-#ifdef ECC_HW_ENABLE
-/* ECC values brought over from u-boot to support hw ecc read */
-#define ECCCLEAR        (0x1 << 8)
-#define ECCRESULTREG1   (0x1 << 0)
-#define ECCSIZE512BYTE  0xFF
-#define ECCSIZE1        (ECCSIZE512BYTE << 22)
-#define ECCSIZE0        (ECCSIZE512BYTE << 12)
-#define ECCSIZE0SEL     (0x000 << 0)
-#endif
 
 #ifdef NAND_16BIT
 #define WRITE_NAND_COMMAND(d, adr) \

@@ -312,7 +312,6 @@
 #define  CONTROL_PADCONF_SYS_32K             0x0A04       
 #define  CONTROL_PADCONF_SYS_CLKREQ          0x0A06       
 #define  CONTROL_PADCONF_SYS_nIRQ            0x01E0       
-#define  CONTROL_PADCONF_SYS_NRESWARM        0x0A08
 #define  CONTROL_PADCONF_SYS_BOOT0           0x0A0A       
 #define  CONTROL_PADCONF_SYS_BOOT1           0x0A0C       
 #define  CONTROL_PADCONF_SYS_BOOT2           0x0A0E       

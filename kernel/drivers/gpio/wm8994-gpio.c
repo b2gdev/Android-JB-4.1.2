@@ -32,6 +32,10 @@ struct wm8994_gpio {
 
 static inline struct wm8994_gpio *to_wm8994_gpio(struct gpio_chip *chip)
 {
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	return container_of(chip, struct wm8994_gpio, gpio_chip);
 }
 
@@ -39,6 +43,10 @@ static int wm8994_gpio_direction_in(struct gpio_chip *chip, unsigned offset)
 {
 	struct wm8994_gpio *wm8994_gpio = to_wm8994_gpio(chip);
 	struct wm8994 *wm8994 = wm8994_gpio->wm8994;
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	return wm8994_set_bits(wm8994, WM8994_GPIO_1 + offset,
 			       WM8994_GPN_DIR, WM8994_GPN_DIR);
@@ -49,6 +57,10 @@ static int wm8994_gpio_get(struct gpio_chip *chip, unsigned offset)
 	struct wm8994_gpio *wm8994_gpio = to_wm8994_gpio(chip);
 	struct wm8994 *wm8994 = wm8994_gpio->wm8994;
 	int ret;
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	ret = wm8994_reg_read(wm8994, WM8994_GPIO_1 + offset);
 	if (ret < 0)
@@ -65,6 +77,10 @@ static int wm8994_gpio_direction_out(struct gpio_chip *chip,
 {
 	struct wm8994_gpio *wm8994_gpio = to_wm8994_gpio(chip);
 	struct wm8994 *wm8994 = wm8994_gpio->wm8994;
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	return wm8994_set_bits(wm8994, WM8994_GPIO_1 + offset,
 			       WM8994_GPN_DIR, 0);
@@ -75,6 +91,10 @@ static void wm8994_gpio_set(struct gpio_chip *chip, unsigned offset, int value)
 	struct wm8994_gpio *wm8994_gpio = to_wm8994_gpio(chip);
 	struct wm8994 *wm8994 = wm8994_gpio->wm8994;
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	if (value)
 		value = WM8994_GPN_LVL;
 
@@ -86,6 +106,10 @@ static int wm8994_gpio_to_irq(struct gpio_chip *chip, unsigned offset)
 	struct wm8994_gpio *wm8994_gpio = to_wm8994_gpio(chip);
 	struct wm8994 *wm8994 = wm8994_gpio->wm8994;
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	if (!wm8994->irq_base)
 		return -EINVAL;
 
@@ -99,6 +123,10 @@ static void wm8994_gpio_dbg_show(struct seq_file *s, struct gpio_chip *chip)
 	struct wm8994_gpio *wm8994_gpio = to_wm8994_gpio(chip);
 	struct wm8994 *wm8994 = wm8994_gpio->wm8994;
 	int i;
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	for (i = 0; i < chip->ngpio; i++) {
 		int gpio = i + chip->base;
@@ -151,6 +179,10 @@ static int __devinit wm8994_gpio_probe(struct platform_device *pdev)
 	struct wm8994_pdata *pdata = wm8994->dev->platform_data;
 	struct wm8994_gpio *wm8994_gpio;
 	int ret;
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	wm8994_gpio = kzalloc(sizeof(*wm8994_gpio), GFP_KERNEL);
 	if (wm8994_gpio == NULL)
@@ -186,6 +218,10 @@ static int __devexit wm8994_gpio_remove(struct platform_device *pdev)
 	struct wm8994_gpio *wm8994_gpio = platform_get_drvdata(pdev);
 	int ret;
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	ret = gpiochip_remove(&wm8994_gpio->gpio_chip);
 	if (ret == 0)
 		kfree(wm8994_gpio);
@@ -202,12 +238,20 @@ static struct platform_driver wm8994_gpio_driver = {
 
 static int __init wm8994_gpio_init(void)
 {
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	return platform_driver_register(&wm8994_gpio_driver);
 }
 subsys_initcall(wm8994_gpio_init);
 
 static void __exit wm8994_gpio_exit(void)
 {
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	platform_driver_unregister(&wm8994_gpio_driver);
 }
 module_exit(wm8994_gpio_exit);

@@ -646,7 +646,6 @@ LIST_ARM11="			\
 ## ARM Cortex-A8 Systems
 #########################################################################
 LIST_ARM_CORTEX_A8="		\
-	am3517_crane		\
 	am3517_evm		\
 	devkit8000		\
 	mx51evk			\

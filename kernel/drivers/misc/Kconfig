@@ -498,6 +498,53 @@ config APANIC_PLABEL
 	 If your platform uses a different flash partition label for storing
  	 crashdumps, enter it here.
 
+# {PK} BEGIN:
+
+config TCBIN_CP430_CHARGER
+	tristate "Support for CP430 Battery Charger Driver"
+	default m
+        ---help---
+	 Provides support for CP430 Battery Charger for TCBIN.
+
+	 If unsure, say N.
+
+menu "TCBIN sensor drivers"
+
+config LM3553_CAMERA_FLASH_DRIVER
+        tristate "Support for LM3553 Camara Flash Driver"
+        default m
+         ---help---
+	  Provides support for LM3553 camera flash for TCBIN.
+
+	  If unsure, say N.
+
+config HMC5885L_COMPASS_DRIVER
+        tristate "Support for HMC5883L Compass Driver"
+        default m
+         ---help---
+	  Provides support for HMC5883 compass for TCBIN.
+
+	  If unsure, say N.
+
+config TWL3040_VIBRATOR_DRIVER
+        tristate "Support for TWL3040 Vibrator Motor Driver"
+        default m
+         ---help---
+	  Provides support for vibrator motor controlled by TWL3040.
+
+	  If unsure, say N.
+
+config W2SG0006_GPS_DRIVER
+        tristate "Support for W2SG0006 GPS Driver"
+        default n
+         ---help---
+	  Provides support for W2SG0006 GPS for TCBIN.
+
+	  If unsure, say N.
+
+endmenu
+# {PK} END:
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"

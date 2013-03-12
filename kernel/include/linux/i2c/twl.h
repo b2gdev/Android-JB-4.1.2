@@ -673,6 +673,9 @@ struct twl4030_power_data {
 	struct twl4030_resconfig *resource_config;
 	void (*twl5030_erratum27wa_script)(void);
 #define TWL4030_RESCONFIG_UNDEF	((u8)-1)
+   /* {SW} BEGIN: adding power off support */
+   bool use_poweroff;      /* Board is wired for TWL poweroff */
+   /* {SW} END: */
 };
 
 extern int twl4030_power_init(struct twl4030_power_data *triton2_scripts);

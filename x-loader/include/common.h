@@ -98,17 +98,8 @@ int	serial_getc   (void);
 int	serial_tstc   (void);
 
 /* lib/printf.c */
-void	serial_printf (const char *fmt, ...);
-#else
-#define serial_init()
-#define serial_setbrg()
-#define serial_putc(ch)
-#define serial_puts(str)
-#define serial_getc()
-#define serial_tstc()
-
-#define serial_printf(fmt,args...)
-#endif /* CFG_PRINTF */
+int	serial_printf (const char *fmt, ...);
+#endif
 
 /* lib/crc.c */
 void 	nand_calculate_ecc (const u_char *dat, u_char *ecc_code);
@@ -116,4 +107,12 @@ int 	nand_correct_data (u_char *dat, u_char *read_ecc, u_char *calc_ecc);
 
 /* lib/board.c */
 void	hang		(void) __attribute__ ((noreturn));
+
+extern int do_load_serial_bin (ulong offset, int baudrate);
+extern u32 get_mem_type(void);
+extern int mmc_init(int verbose);
+extern int misc_init_r(void);
+
+extern int sprintf (char *__s, const char *__format, ...);
+
 #endif	/* __COMMON_H_ */

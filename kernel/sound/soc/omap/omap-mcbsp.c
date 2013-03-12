@@ -36,6 +36,7 @@
 #include "omap-mcbsp.h"
 #include "omap-pcm.h"
 
+
 #define OMAP_MCBSP_RATES	(SNDRV_PCM_RATE_8000_96000)
 
 #define OMAP_MCBSP_SOC_SINGLE_S16_EXT(xname, xmin, xmax, \
@@ -155,6 +156,10 @@ static void omap_mcbsp_set_threshold(struct snd_pcm_substream *substream)
 	struct omap_pcm_dma_data *dma_data;
 	int dma_op_mode = omap_mcbsp_get_dma_op_mode(mcbsp_data->bus_id);
 	int words;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	dma_data = snd_soc_dai_get_dma_data(rtd->cpu_dai, substream);
 
@@ -191,6 +196,10 @@ static int omap_mcbsp_hwrule_min_buffersize(struct snd_pcm_hw_params *params,
 	struct snd_interval frames;
 	int size;
 
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	snd_interval_any(&frames);
 	size = omap_mcbsp_get_fifo_size(mcbsp_data->bus_id);
 
@@ -205,6 +214,10 @@ static int omap_mcbsp_dai_startup(struct snd_pcm_substream *substream,
 	struct omap_mcbsp_data *mcbsp_data = snd_soc_dai_get_drvdata(cpu_dai);
 	int bus_id = mcbsp_data->bus_id;
 	int err = 0;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	if (!cpu_dai->active)
 		err = omap_mcbsp_request(bus_id);
@@ -248,6 +261,10 @@ static void omap_mcbsp_dai_shutdown(struct snd_pcm_substream *substream,
 {
 	struct omap_mcbsp_data *mcbsp_data = snd_soc_dai_get_drvdata(cpu_dai);
 
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	if (!cpu_dai->active) {
 		omap_mcbsp_free(mcbsp_data->bus_id);
 		mcbsp_data->configured = 0;
@@ -260,6 +277,10 @@ static int omap_mcbsp_dai_trigger(struct snd_pcm_substream *substream, int cmd,
 	struct omap_mcbsp_data *mcbsp_data = snd_soc_dai_get_drvdata(cpu_dai);
 	int err = 0, play = (substream->stream == SNDRV_PCM_STREAM_PLAYBACK);
 
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
 	case SNDRV_PCM_TRIGGER_RESUME:
@@ -290,6 +311,10 @@ static snd_pcm_sframes_t omap_mcbsp_dai_delay(
 	struct omap_mcbsp_data *mcbsp_data = snd_soc_dai_get_drvdata(cpu_dai);
 	u16 fifo_use;
 	snd_pcm_sframes_t delay;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
 		fifo_use = omap_mcbsp_get_tx_delay(mcbsp_data->bus_id);
@@ -319,6 +344,10 @@ static int omap_mcbsp_dai_hw_params(struct snd_pcm_substream *substream,
 	unsigned long port;
 	unsigned int format, div, framesize, master;
 
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	dma_data = &omap_mcbsp_dai_dma_params[cpu_dai->id][substream->stream];
 	if (cpu_class_is_omap1()) {
 		dma = omap1_dma_reqs[bus_id][substream->stream];
@@ -488,6 +517,10 @@ static int omap_mcbsp_dai_set_dai_fmt(struct snd_soc_dai *cpu_dai,
 	struct omap_mcbsp_data *mcbsp_data = snd_soc_dai_get_drvdata(cpu_dai);
 	struct omap_mcbsp_reg_cfg *regs = &mcbsp_data->regs;
 	unsigned int temp_fmt = fmt;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	if (mcbsp_data->configured)
 		return 0;
@@ -588,6 +621,10 @@ static int omap_mcbsp_dai_set_clkdiv(struct snd_soc_dai *cpu_dai,
 	struct omap_mcbsp_data *mcbsp_data = snd_soc_dai_get_drvdata(cpu_dai);
 	struct omap_mcbsp_reg_cfg *regs = &mcbsp_data->regs;
 
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	if (div_id != OMAP_MCBSP_CLKGDV)
 		return -ENODEV;
 
@@ -604,6 +641,10 @@ static int omap_mcbsp_dai_set_dai_sysclk(struct snd_soc_dai *cpu_dai,
 	struct omap_mcbsp_data *mcbsp_data = snd_soc_dai_get_drvdata(cpu_dai);
 	struct omap_mcbsp_reg_cfg *regs = &mcbsp_data->regs;
 	int err = 0;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	/* The McBSP signal muxing functions are only available on McBSP1 */
 	if (clk_id == OMAP_MCBSP_CLKR_SRC_CLKR ||
@@ -683,6 +724,10 @@ static struct snd_soc_dai_ops mcbsp_dai_ops = {
 
 static int mcbsp_dai_probe(struct snd_soc_dai *dai)
 {
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	mcbsp_data[dai->id].bus_id = dai->id;
 	snd_soc_dai_set_drvdata(dai, &mcbsp_data[dai->id].bus_id);
 	return 0;
@@ -713,6 +758,10 @@ static int omap_mcbsp_st_info_volsw(struct snd_kcontrol *kcontrol,
 		(struct soc_mixer_control *)kcontrol->private_value;
 	int max = mc->max;
 	int min = mc->min;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
 	uinfo->count = 1;
@@ -768,6 +817,10 @@ static int omap_mcbsp_st_put_mode(struct snd_kcontrol *kcontrol,
 	struct soc_mixer_control *mc =
 		(struct soc_mixer_control *)kcontrol->private_value;
 	u8 value = ucontrol->value.integer.value[0];
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	if (value == omap_st_is_enabled(mc->reg))
 		return 0;
@@ -785,6 +838,10 @@ static int omap_mcbsp_st_get_mode(struct snd_kcontrol *kcontrol,
 {
 	struct soc_mixer_control *mc =
 		(struct soc_mixer_control *)kcontrol->private_value;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	ucontrol->value.integer.value[0] = omap_st_is_enabled(mc->reg);
 	return 0;
@@ -818,6 +875,10 @@ static const struct snd_kcontrol_new omap_mcbsp3_st_controls[] = {
 
 int omap_mcbsp_st_add_controls(struct snd_soc_codec *codec, int mcbsp_id)
 {
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	if (!cpu_is_omap34xx())
 		return -ENODEV;
 
@@ -838,11 +899,19 @@ EXPORT_SYMBOL_GPL(omap_mcbsp_st_add_controls);
 
 static __devinit int asoc_mcbsp_probe(struct platform_device *pdev)
 {
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	return snd_soc_register_dai(&pdev->dev, &omap_mcbsp_dai);
 }
 
 static int __devexit asoc_mcbsp_remove(struct platform_device *pdev)
 {
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	snd_soc_unregister_dai(&pdev->dev);
 	return 0;
 }
@@ -859,12 +928,20 @@ static struct platform_driver asoc_mcbsp_driver = {
 
 static int __init snd_omap_mcbsp_init(void)
 {
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	return platform_driver_register(&asoc_mcbsp_driver);
 }
 module_init(snd_omap_mcbsp_init);
 
 static void __exit snd_omap_mcbsp_exit(void)
 {
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	platform_driver_unregister(&asoc_mcbsp_driver);
 }
 module_exit(snd_omap_mcbsp_exit);

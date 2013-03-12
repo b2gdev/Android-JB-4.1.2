@@ -475,10 +475,13 @@ static int __devinit twl_rtc_probe(struct platform_device *pdev)
 	if (ret < 0)
 		goto out1;
 
-	ret = request_irq(irq, twl_rtc_interrupt,
+	/* {SW} BEGIN: merged a kernel patch for proper I2C operation for rtc block */
+   // ret = request_irq(irq, twl_rtc_interrupt,
+   ret = request_threaded_irq(irq, NULL, twl_rtc_interrupt,
 				IRQF_TRIGGER_RISING,
 				dev_name(&rtc->dev), rtc);
-	if (ret < 0) {
+	/* {SW} END: */
+   if (ret < 0) {
 		dev_err(&pdev->dev, "IRQ is not free.\n");
 		goto out1;
 	}

@@ -41,13 +41,74 @@ export	HOSTARCH
 VENDOR=
 
 #########################################################################
+#
+# X-loader build supports producing a object files to the separate external
+# directory. Two use cases are supported:
+#
+# 1) Add O= to the make command line
+# 'make O=/tmp/build all'
+#
+# 2) Set environement variable BUILD_DIR to point to the desired location
+# 'export BUILD_DIR=/tmp/build'
+# 'make'
+#
+# Command line 'O=' setting overrides BUILD_DIR environent variable.
+#
+# When none of the above methods is used the local build is performed and
+# the object files are placed in the source directory.
+#
 
-TOPDIR	:= $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
-export	TOPDIR
+ifdef O
+ifeq ("$(origin O)", "command line")
+BUILD_DIR := $(O)
+endif
+endif
 
-ifeq (include/config.mk,$(wildcard include/config.mk))
+ifneq ($(BUILD_DIR),)
+saved-output := $(BUILD_DIR)
+
+# Attempt to create a output directory.
+$(shell [ -d ${BUILD_DIR} ] || mkdir -p ${BUILD_DIR})
+
+# Verify if it was successful.
+BUILD_DIR := $(shell cd $(BUILD_DIR) && /bin/pwd)
+$(if $(BUILD_DIR),,$(error output directory "$(saved-output)" does not exist))
+endif # ifneq ($(BUILD_DIR),)
+
+OBJTREE		:= $(if $(BUILD_DIR),$(BUILD_DIR),$(CURDIR))
+SRCTREE		:= $(CURDIR)
+TOPDIR		:= $(SRCTREE)
+LNDIR		:= $(OBJTREE)
+export TOPDIR SRCTREE OBJTREE
+
+MKCONFIG	:= $(SRCTREE)/mkconfig
+export MKCONFIG
+
+ifneq ($(OBJTREE),$(SRCTREE))
+REMOTE_BUILD	:= 1
+export REMOTE_BUILD
+endif
+
+# $(obj) and (src) are defined in config.mk but here in main Makefile
+# we also need them before config.mk is included which is the case for
+# some targets like unconfig, clean, clobber, distclean, etc.
+ifneq ($(OBJTREE),$(SRCTREE))
+obj := $(OBJTREE)/
+src := $(SRCTREE)/
+else
+obj :=
+src :=
+endif
+export obj src
+
+# Make sure CDPATH settings don't interfere
+unexport CDPATH
+
+#########################################################################
+
+ifeq ($(obj)include/config.mk,$(wildcard $(obj)include/config.mk))
 # load ARCH, BOARD, and CPU configuration
-include include/config.mk
+include $(obj)include/config.mk
 export	ARCH CPU BOARD VENDOR
 # load other configuration
 include $(TOPDIR)/config.mk
@@ -62,7 +123,8 @@ endif
 # X-LOAD objects....order is important (i.e. start must be first)
 
 OBJS  = cpu/$(CPU)/start.o
-
+ 
+OBJS := $(addprefix $(obj),$(OBJS))
 
 LIBS += board/$(BOARDDIR)/lib$(BOARD).a
 LIBS += cpu/$(CPU)/lib$(CPU).a
@@ -70,44 +132,59 @@ LIBS += lib/lib$(ARCH).a
 LIBS += fs/fat/libfat.a
 LIBS += disk/libdisk.a
 LIBS += drivers/libdrivers.a
+LIBS += common/libcommon.a
+
+LIBS := $(addprefix $(obj),$(sort $(LIBS)))
 .PHONY : $(LIBS)
 
 # Add GCC lib
 PLATFORM_LIBS += -L $(shell dirname `$(CC) $(CFLAGS) -print-libgcc-file-name`) -lgcc
 
-SUBDIRS	=
+SUBDIRS	=  
+
+__OBJS := $(subst $(obj),,$(OBJS))
+__LIBS := $(subst $(obj),,$(LIBS))
+
 #########################################################################
 #########################################################################
 
-ALL = x-load.bin System.map
+ALL = $(obj)x-load.bin.ift $(obj)System.map
 
-all:		$(ALL)
+all ift:	$(ALL)
 
-
-x-load.bin:	x-load
+$(obj)x-load.bin.ift: $(obj)signGP $(obj)System.map $(obj)x-load.bin
+	$(obj)./signGP $(obj)x-load.bin $(TEXT_BASE) $(CONFIG_HEADER)
+	cp $(obj)x-load.bin.ift $(obj)MLO
+ 
+$(obj)x-load.bin:	$(obj)x-load
 		$(OBJCOPY) ${OBJCFLAGS} -O binary $< $@
-
-x-load:	$(OBJS) $(LIBS) $(LDSCRIPT)
+ 
+$(obj)x-load:	$(OBJS) $(LIBS) $(LDSCRIPT)
 		UNDEF_SYM=`$(OBJDUMP) -x $(LIBS) |sed  -n -e 's/.*\(__u_boot_cmd_.*\)/-u\1/p'|sort|uniq`;\
- 		$(LD) $(LDFLAGS) $$UNDEF_SYM $(OBJS) \
-			--start-group $(LIBS) --end-group $(PLATFORM_LIBS) \
+		cd $(LNDIR) && $(LD) $(LDFLAGS) $$UNDEF_SYM $(__OBJS) \
+			--start-group $(__LIBS) --end-group $(PLATFORM_LIBS) \
 			-Map x-load.map -o x-load
 
+$(OBJS):
+		$(MAKE) -C cpu/$(CPU) $(if $(REMOTE_BUILD),$@,$(notdir $@))
+
 $(LIBS):
-		$(MAKE) -C `dirname $@`
-
-
-System.map:	x-load
+		$(MAKE) -C $(dir $(subst $(obj),,$@))
+  
+$(obj)System.map:	$(obj)x-load
 		@$(NM) $< | \
 		grep -v '\(compiled\)\|\(\.o$$\)\|\( [aUw] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)' | \
-		sort > System.map
+		sort > $(obj)System.map
 
-oneboot:	x-load.bin
+oneboot:	$(obj)x-load.bin
 		scripts/mkoneboot.sh
+
+$(obj)signGP:	scripts/signGP.c
+		$(HOSTCC) $(HOSTCFLAGS) -o $(obj)signGP  $<
 
 #########################################################################
 else
-all install x-load x-load.srec oneboot depend dep:
+all $(obj)x-load $(obj)x-load.bin oneboot depend dep $(obj)System.map:
 	@echo "System not configured - see README" >&2
 	@ exit 1
 endif
@@ -115,79 +192,77 @@ endif
 #########################################################################
 
 unconfig:
-	rm -f include/config.h include/config.mk
+	rm -f $(obj)include/config.h $(obj)include/config.mk
 
 #========================================================================
 # ARM
 #========================================================================
 #########################################################################
-## OMAP1 (ARM92xT) Systems
-#########################################################################
-
-omap1710h3_config :    unconfig
-	@./mkconfig $(@:_config=) arm arm926ejs omap1710h3
-
-#########################################################################
 ## OMAP2 (ARM1136) Systems
 #########################################################################
-
-omap2420h4_config :    unconfig
-	@./mkconfig $(@:_config=) arm arm1136 omap2420h4
-
-omap2430sdp_config :    unconfig
-	@./mkconfig $(@:_config=) arm arm1136 omap2430sdp
 
 #########################################################################
 ## OMAP3 (ARM-CortexA8) Systems
 #########################################################################
 omap3430sdp_config :    unconfig
-	@./mkconfig $(@:_config=) arm omap3 omap3430sdp
+	@$(MKCONFIG) $(@:_config=) arm omap3 omap3430sdp
 
 omap3430labrador_config :    unconfig
-	@./mkconfig $(@:_config=) arm omap3 omap3430labrador
+	@$(MKCONFIG) $(@:_config=) arm omap3 omap3430labrador
 
 omap3evm_config :	unconfig
-	@./mkconfig $(@:_config=) arm omap3 omap3evm
-
-omap3_evm_mmc_config :	unconfig
-	@./mkconfig $(@:_config=) arm omap3 omap3evm
-
-flashboard_config :	unconfig
-	@./mkconfig $(@:_config=) arm omap3 omap3evm
-
-am3517evm_config :       unconfig
-	@./mkconfig $(@:_config=) arm omap3 am3517evm
+	@$(MKCONFIG) $(@:_config=) arm omap3 omap3evm
 
 overo_config :	unconfig
-	@./mkconfig $(@:_config=) arm omap3 overo
+	@$(MKCONFIG) $(@:_config=) arm omap3 overo
 
-omap3beagle_config :    unconfig
-	@./mkconfig $(@:_config=) arm omap3 omap3beagle
+omap3530beagle_config :    unconfig
+	@$(MKCONFIG) $(@:_config=) arm omap3 omap3530beagle
 
-am3517crane_config :       unconfig
-	@./mkconfig $(@:_config=) arm omap3 am3517crane
+igep00x0_config :    unconfig
+	@$(MKCONFIG) $(@:_config=) arm omap3 igep00x0
+
+tam3517_config :	unconfig
+	@$(MKCONFIG) $(@:_config=) arm omap3 tam3517
+
+tao3530_config :	unconfig
+	@$(MKCONFIG) $(@:_config=) arm omap3 tao3530
+
+tdm3730_config :	unconfig
+	@$(MKCONFIG) $(@:_config=) arm omap3 tdm3730
+	
+#########################################################################
+## OMAP4 (ARM-CortexA9) Systems
+#########################################################################
+omap4430panda_config :    unconfig
+	@$(MKCONFIG) $(@:_config=) arm omap4 omap4430panda 1
 
 #########################################################################
 
 clean:
-	find . -type f \
+	find $(OBJTREE) -type f \
 		\( -name 'core' -o -name '*.bak' -o -name '*~' \
 		-o -name '*.o'  -o -name '*.a'  \) -print \
 		| xargs rm -f
-
+ 
 clobber:	clean
-	find . -type f \
+	find $(OBJTREE) -type f \
 		\( -name .depend -o -name '*.srec' -o -name '*.bin' \) \
 		-print \
 		| xargs rm -f
-	rm -f $(OBJS) *.bak tags TAGS
-	rm -fr *.*~
-	rm -f x-load x-load.map $(ALL)
-	rm -f x-load.bin.ift
-	rm -f include/asm/proc include/asm/arch
+	rm -f $(OBJS) $(obj)*.bak $(obj)tags $(obj)TAGS
+	rm -fr $(obj)*.*~
+	rm -f $(obj)x-load $(obj)x-load.map $(ALL) $(obj)x-load.bin.ift $(obj)signGP $(obj)MLO
+	rm -f $(obj)include/asm/proc $(obj)include/asm/arch
 
+ifeq ($(OBJTREE),$(SRCTREE))
 mrproper \
 distclean:	clobber unconfig
+else
+mrproper \
+distclean:	clobber unconfig
+	rm -rf $(obj)*
+endif
 
 backup:
 	F=`basename $(TOPDIR)` ; cd .. ; \

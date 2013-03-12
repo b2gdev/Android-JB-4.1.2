@@ -32,6 +32,7 @@
 #include <plat/dma.h>
 #include "omap-pcm.h"
 
+
 static const struct snd_pcm_hardware omap_pcm_hardware = {
 	.info			= SNDRV_PCM_INFO_MMAP |
 				  SNDRV_PCM_INFO_MMAP_VALID |
@@ -60,6 +61,10 @@ static void omap_pcm_dma_irq(int ch, u16 stat, void *data)
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	struct omap_runtime_data *prtd = runtime->private_data;
 	unsigned long flags;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	if ((cpu_is_omap1510())) {
 		/*
@@ -104,6 +109,10 @@ static int omap_pcm_hw_params(struct snd_pcm_substream *substream,
 
 	int err = 0;
 
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	dma_data = snd_soc_dai_get_dma_data(rtd->cpu_dai, substream);
 
 	/* return if this is a bufferless transfer e.g.
@@ -135,6 +144,10 @@ static int omap_pcm_hw_free(struct snd_pcm_substream *substream)
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	struct omap_runtime_data *prtd = runtime->private_data;
 
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	if (prtd->dma_data == NULL)
 		return 0;
 
@@ -155,6 +168,10 @@ static int omap_pcm_prepare(struct snd_pcm_substream *substream)
 	struct omap_dma_channel_params dma_params;
 	int bytes;
 
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	/* return if this is a bufferless transfer e.g.
 	 * codec <--> BT codec or GSM modem -- lg FIXME */
 	if (!prtd->dma_data)
@@ -215,6 +232,10 @@ static int omap_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 	struct omap_pcm_dma_data *dma_data = prtd->dma_data;
 	unsigned long flags;
 	int ret = 0;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	spin_lock_irqsave(&prtd->lock, flags);
 	switch (cmd) {
@@ -249,6 +270,10 @@ static snd_pcm_uframes_t omap_pcm_pointer(struct snd_pcm_substream *substream)
 	struct omap_runtime_data *prtd = runtime->private_data;
 	dma_addr_t ptr;
 	snd_pcm_uframes_t offset;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	if (cpu_is_omap1510()) {
 		offset = prtd->period_index * runtime->period_size;
@@ -271,6 +296,10 @@ static int omap_pcm_open(struct snd_pcm_substream *substream)
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	struct omap_runtime_data *prtd;
 	int ret;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	snd_soc_set_runtime_hwparams(substream, &omap_pcm_hardware);
 
@@ -296,6 +325,10 @@ static int omap_pcm_close(struct snd_pcm_substream *substream)
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
 
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	kfree(runtime->private_data);
 	return 0;
 }
@@ -305,6 +338,10 @@ static int omap_pcm_mmap(struct snd_pcm_substream *substream,
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
 
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	return dma_mmap_writecombine(substream->pcm->card->dev, vma,
 				     runtime->dma_area,
 				     runtime->dma_addr,
@@ -331,6 +368,10 @@ static int omap_pcm_preallocate_dma_buffer(struct snd_pcm *pcm,
 	struct snd_pcm_substream *substream = pcm->streams[stream].substream;
 	struct snd_dma_buffer *buf = &substream->dma_buffer;
 	size_t size = omap_pcm_hardware.buffer_bytes_max;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	buf->dev.type = SNDRV_DMA_TYPE_DEV;
 	buf->dev.dev = pcm->card->dev;
@@ -349,6 +390,10 @@ static void omap_pcm_free_dma_buffers(struct snd_pcm *pcm)
 	struct snd_pcm_substream *substream;
 	struct snd_dma_buffer *buf;
 	int stream;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	for (stream = 0; stream < 2; stream++) {
 		substream = pcm->streams[stream].substream;
@@ -369,6 +414,10 @@ static int omap_pcm_new(struct snd_card *card, struct snd_soc_dai *dai,
 		 struct snd_pcm *pcm)
 {
 	int ret = 0;
+	
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	if (!card->dev->dma_mask)
 		card->dev->dma_mask = &omap_pcm_dmamask;
@@ -401,12 +450,20 @@ static struct snd_soc_platform_driver omap_soc_platform = {
 
 static __devinit int omap_pcm_probe(struct platform_device *pdev)
 {
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	return snd_soc_register_platform(&pdev->dev,
 			&omap_soc_platform);
 }
 
 static int __devexit omap_pcm_remove(struct platform_device *pdev)
 {
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	snd_soc_unregister_platform(&pdev->dev);
 	return 0;
 }
@@ -423,12 +480,20 @@ static struct platform_driver omap_pcm_driver = {
 
 static int __init snd_omap_pcm_init(void)
 {
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	return platform_driver_register(&omap_pcm_driver);
 }
 module_init(snd_omap_pcm_init);
 
 static void __exit snd_omap_pcm_exit(void)
 {
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	platform_driver_unregister(&omap_pcm_driver);
 }
 module_exit(snd_omap_pcm_exit);

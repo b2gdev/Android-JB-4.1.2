@@ -26,9 +26,9 @@
 #include <linux/mutex.h>
 #include <linux/input-polldev.h>
 #include <linux/slab.h>
-#include <linux/interrupt.h>
-#include <linux/gpio.h>
 
+#include <linux/regulator/consumer.h>	/* {PS} */
+#include <linux/delay.h>				/* {PS} */
 
 #define LIS331DLH_DEV_NAME	"lis331dlh"
 
@@ -46,16 +46,12 @@
 #define CTRL_REG2		0x21	/* power control reg */
 #define CTRL_REG3		0x22	/* power control reg */
 #define CTRL_REG4		0x23	/* interrupt control reg */
-#define INT2_CFG		0x34	/*int2 cfg */
-#define INT1_CFG		0x30	/*int2 cfg */
 
 #define FUZZ			0
 #define FLAT			0
 #define I2C_RETRY_DELAY		5
 #define I2C_RETRIES		5
 #define AUTO_INCREMENT		0x80
-
-#define LIS331DLH_INT2_GPIO 	42
 
 static struct {
 	unsigned int cutoff;
@@ -78,7 +74,7 @@ struct lis331dlh_data {
 
 	struct mutex lock;
 
-	struct input_dev *input_dev;
+	struct input_polled_dev *input_poll_dev;
 
 	int hw_initialized;
 	atomic_t enabled;
@@ -90,18 +86,18 @@ struct lis331dlh_data {
 	u8 resume_state[5];
 };
 
+/* {SW} BEGIN:regulator pointer definition */
+static struct regulator *lis331dlh_reg;
+/* {SW} END: */ 
 
-
-static int lis331dlh_enable_irq(struct lis331dlh_data *acc);
-void lis331dlh_config_irq_reg (struct lis331dlh_data *acc);
-
+static int lis331dlh_disable(struct lis331dlh_data *acc);
+static int lis331dlh_enable(struct lis331dlh_data *acc);
 
 /*
  * Because misc devices can not carry a pointer from driver register to
  * open, we keep this global.  This limits the driver to a single instance.
  */
 struct lis331dlh_data *lis331dlh_misc_data;
-u32			lis331dlh_irq;       /* IRQ number */
 
 static int lis331dlh_i2c_read(struct lis331dlh_data *acc,
 				  u8 *buf, int len)
@@ -199,7 +195,7 @@ static int get_lis331dlh_id (struct lis331dlh_data *acc)
 
 static int lis331dlh_hw_init(struct lis331dlh_data *acc)
 {
-	int err = -1;
+	int i,err = -1;
 	u8 buf[6];
 
 	buf[0] = (AUTO_INCREMENT | CTRL_REG1);
@@ -209,25 +205,95 @@ static int lis331dlh_hw_init(struct lis331dlh_data *acc)
 	buf[4] = acc->resume_state[3];
 	buf[5] = acc->resume_state[4];
 	err = lis331dlh_i2c_write(acc, buf, 5);
-	if (err < 0)
-		return err;
+	if (err < 0){
+		// {RD} retry
+		dev_err(&acc->client->dev, "hw init failed\n");
+		for(i=0;i<3;i++){
+			msleep(10);
+			err = lis331dlh_i2c_write(acc, buf, 5);
+			if (err < 0){
+				dev_err(&acc->client->dev, "hw init failed again\n");
+				continue;
+			}
+			break;
+		}
+		if (err < 0)
+			return err;
+	}
 
 	acc->hw_initialized = 1;
 
 	return 0;
 }
 
+/* {SW} BEGIN: functions needed to control power regulator */
+static int lis331dlh_reg_get (void)
+{
+   lis331dlh_reg = regulator_get (NULL, "vcc_vaux4_2v5");
+	
+   if (IS_ERR(lis331dlh_reg))
+   {
+      printk (KERN_ERR "%s: get vcc_vaux4_2v5 regulator failed\n", __FUNCTION__);
+      return PTR_ERR(lis331dlh_reg);
+   }
+   
+   return 0;
+}
+
+static void lis331dlh_reg_put (void)
+{
+   regulator_put (lis331dlh_reg);
+}
+
+static int lis331dlh_reg_power_on (void)
+{
+   int ret = 0;
+   
+   ret = regulator_enable (lis331dlh_reg);
+   if (ret < 0)
+   {
+      printk (KERN_ERR "%s: vcc_vaux4_2v5 regulator_enable failed\n", __FUNCTION__);
+      return ret;
+   }
+   /* {SW} IMPORTANT: delay added in order to give enough time to the regulator + accelerometer chip to be stabalize
+    * after turning on the regulator before any i2c communication is performed, can be fine tuned as neccessary
+    */
+   mdelay(3);
+   
+   return ret;
+}
+
+static void lis331dlh_reg_power_off (void)
+{
+   regulator_disable (lis331dlh_reg);
+}
+/* {SW} END: */
+
 static void lis331dlh_device_power_off(struct lis331dlh_data *acc)
 {
-	int err;
+	int err,i;
 	u8 buf[2] = { CTRL_REG1,
 		      LIS331DLH_PM_OFF | LIS331DLH_ENABLE_ALL_AXES };
 
 	err = lis331dlh_i2c_write(acc, buf, 1);
-	if (err < 0)
+	if (err < 0){
 		dev_err(&acc->client->dev, "soft power off failed\n");
+		// {RD} retry
+		for(i=0;i<3;i++){
+			msleep(10);
+			err = lis331dlh_i2c_write(acc, buf, 1);
+			if (err < 0){
+				dev_err(&acc->client->dev, "soft power off failed again\n");
+				continue;
+			}
+			break;
+		}
+	}
 
-	if (acc->pdata->power_off)
+	/* {SW} BEGIN: */
+   lis331dlh_reg_power_off();
+   /* {SW} END: */
+   if (acc->pdata->power_off)
 		acc->pdata->power_off();
 
 	acc->hw_initialized = 0;
@@ -238,7 +304,14 @@ static int lis331dlh_device_power_on(struct lis331dlh_data *acc)
 {
 	int err;
 
-	if (acc->pdata->power_on) {
+	/* {SW} BEGIN: */
+   err = lis331dlh_reg_power_on();
+   if (err < 0)
+   {
+      return err;
+   }
+   /* {SW} END: */
+   if (acc->pdata->power_on) {
 		err = acc->pdata->power_on();
 		if (err < 0)
 			return err;
@@ -252,7 +325,6 @@ static int lis331dlh_device_power_on(struct lis331dlh_data *acc)
 		}
 	}
 
-	lis331dlh_config_irq_reg (acc);
 	return 0;
 }
 
@@ -345,6 +417,7 @@ static int lis331dlh_get_data(struct lis331dlh_data *acc,
 
 	acc_data[0] = (AUTO_INCREMENT | AXISDATA_REG);
 	err = lis331dlh_i2c_read(acc, acc_data, 6);
+	
 	if (err < 0)
 		return err;
 
@@ -365,8 +438,7 @@ static int lis331dlh_get_data(struct lis331dlh_data *acc,
 static void lis331dlh_report_values(struct lis331dlh_data *acc,
 					int *xyz)
 {
-	struct input_dev *input = acc->input_dev;
-
+	struct input_dev *input = acc->input_poll_dev->input;
 	input_report_abs(input, ABS_X, xyz[0]);
 	input_report_abs(input, ABS_Y, xyz[1]);
 	input_report_abs(input, ABS_Z, xyz[2]);
@@ -378,7 +450,7 @@ static int lis331dlh_enable(struct lis331dlh_data *acc)
 	int err;
 
 	if (!atomic_cmpxchg(&acc->enabled, 0, 1)) {
-		
+
 		err = lis331dlh_device_power_on(acc);
 		if (err < 0) {
 			atomic_set(&acc->enabled, 0);
@@ -392,9 +464,8 @@ static int lis331dlh_enable(struct lis331dlh_data *acc)
 static int lis331dlh_disable(struct lis331dlh_data *acc)
 {
 	if (atomic_cmpxchg(&acc->enabled, 1, 0))
-	{
 		lis331dlh_device_power_off(acc);
-	}
+
 	return 0;
 }
 
@@ -482,15 +553,20 @@ static ssize_t attr_set_enable(struct device *dev,
 			       const char *buf, size_t size)
 {
 	struct lis331dlh_data *acc = dev_get_drvdata(dev);
-	unsigned long val;
+	unsigned long val,ret;
 
 	if (strict_strtoul(buf, 10, &val))
 		return -EINVAL;
 
-	if (val)
-		lis331dlh_enable(acc);
-	else
+	if (val){
+		printk(KERN_INFO "Accelerometer: set enable\n");
+		ret = lis331dlh_enable(acc);
+		if(ret < 0)		
+			printk(KERN_ERR "Accelerometer: set enable FAILED\n");
+	}else{
 		lis331dlh_disable(acc);
+		printk(KERN_INFO "Accelerometer: set disable\n");
+	}
 
 	return size;
 }
@@ -574,38 +650,37 @@ static int remove_sysfs_interfaces(struct device *dev)
 }
 
 
-static irqreturn_t lis331dlh_interrupt_thread2 (int irq, void *data)
+static void lis331dlh_input_poll_func(struct input_polled_dev *dev)
 {
-	struct lis331dlh_data *acc = (struct lis331dlh_data *) data;
+	struct lis331dlh_data *acc = dev->private;
 
 	int xyz[3] = { 0 };
 	int err;
 
 
 	mutex_lock(&acc->lock);
-	err = lis331dlh_get_data(acc, xyz);
-	if (err < 0)
-		dev_err(&acc->client->dev, "get_acceleration_data failed\n");
-	else
-		lis331dlh_report_values(acc, xyz);
-
+	if(atomic_read(&acc->enabled)){
+		err = lis331dlh_get_data(acc, xyz);
+		if (err == 0)
+			lis331dlh_report_values(acc, xyz);
+		else
+			dev_err(&acc->client->dev, "get_acceleration_data failed\n");			
+	}
 	mutex_unlock(&acc->lock);
-	return IRQ_HANDLED;
 }
 
 int lis331dlh_input_open(struct input_dev *input)
 {
-//	struct lis331dlh_data *acc = input_get_drvdata(input);
-//	return lis331dlh_enable(acc);
-	return 0; 
+	//struct lis331dlh_data *acc = input_get_drvdata(input);
+	//return lis331dlh_enable(acc);
+	return 0;
 }
 
 void lis331dlh_input_close(struct input_dev *dev)
 {
-/*	struct lis331dlh_data *acc = input_get_drvdata(dev);
-	lis331dlh_disable(acc);
-*/
-	return ; 
+//	struct lis331dlh_data *acc = input_get_drvdata(dev);
+//	lis331dlh_disable(acc);
+	return; 
 }
 
 static int lis331dlh_validate_pdata(struct lis331dlh_data *acc)
@@ -646,15 +721,19 @@ static int lis331dlh_input_init(struct lis331dlh_data *acc)
 	int err;
 	struct input_dev *input;
 
-	acc->input_dev = input_allocate_device();
-	if (!acc->input_dev) {
+	acc->input_poll_dev = input_allocate_polled_device();
+	if (!acc->input_poll_dev) {
 		err = -ENOMEM;
 		dev_err(&acc->client->dev, "input device allocate failed\n");
 		goto err0;
 	}
 
+	/* set input-polldev handlers */
+	acc->input_poll_dev->private = acc;
+	acc->input_poll_dev->poll = lis331dlh_input_poll_func;
+	acc->input_poll_dev->poll_interval = acc->pdata->poll_interval;
 
-	input = acc->input_dev;
+	input = acc->input_poll_dev->input;
 
 	input->open = lis331dlh_input_open;
 	input->close = lis331dlh_input_close;
@@ -662,7 +741,7 @@ static int lis331dlh_input_init(struct lis331dlh_data *acc)
 	input->id.bustype = BUS_I2C;
 	input->dev.parent = &acc->client->dev;
 
-	input_set_drvdata(acc->input_dev, acc);
+	input_set_drvdata(acc->input_poll_dev->input, acc);
 
 	set_bit(EV_ABS, input->evbit);
 
@@ -672,26 +751,26 @@ static int lis331dlh_input_init(struct lis331dlh_data *acc)
 
 	input->name = "accelerometer";
 
-	err = input_register_device(acc->input_dev);
+	err = input_register_polled_device(acc->input_poll_dev);
 	if (err) {
 		dev_err(&acc->client->dev,
-			"unable to register input device %s\n",
-			acc->input_dev->name);
+			"unable to register input polled device %s\n",
+			acc->input_poll_dev->input->name);
 		goto err1;
 	}
 
 	return 0;
 
 err1:
-	input_free_device(acc->input_dev);
+	input_free_polled_device(acc->input_poll_dev);
 err0:
 	return err;
 }
 
 static void lis331dlh_input_cleanup(struct lis331dlh_data *acc)
 {
-	input_unregister_device(acc->input_dev);
-	input_free_device(acc->input_dev);
+	input_unregister_polled_device(acc->input_poll_dev);
+	input_free_polled_device(acc->input_poll_dev);
 }
 
 static int lis331dlh_probe(struct i2c_client *client,
@@ -738,7 +817,15 @@ static int lis331dlh_probe(struct i2c_client *client,
 
 	i2c_set_clientdata(client, acc);
 
-	if (acc->pdata->init) {
+	/* {SW} BEGIN: */
+   err = lis331dlh_reg_get();
+   if (err < 0)
+   {
+      goto err1_1;
+   }
+   /* {SW} END: */
+   
+   if (acc->pdata->init) {
 		err = acc->pdata->init();
 		if (err < 0)
 			goto err1_1;
@@ -785,15 +872,14 @@ static int lis331dlh_probe(struct i2c_client *client,
 		goto err4;
 	}
 
-//	lis331dlh_device_power_off(acc);
+	lis331dlh_device_power_off(acc);
 
 	/* As default, do not report information */
 	atomic_set(&acc->enabled, 0);
 
 	mutex_unlock(&acc->lock);
-
+		
 	get_lis331dlh_id (acc);
-	lis331dlh_enable_irq(acc);
 	dump_reg (acc);
 	dev_info(&client->dev, "lis331dlh probed\n");
 
@@ -804,6 +890,9 @@ err4:
 err3:
 	lis331dlh_device_power_off(acc);
 err2:
+   /* {SW} BEGIN: */
+   lis331dlh_reg_put();
+   /* {SW} END: */
 	if (acc->pdata->exit)
 		acc->pdata->exit();
 err1_1:
@@ -816,38 +905,59 @@ err0:
 }
 
 static int __devexit lis331dlh_remove(struct i2c_client *client)
-{
+{	
 	/* TODO: revisit ordering here once _probe order is finalized */
 	struct lis331dlh_data *acc = i2c_get_clientdata(client);
 	lis331dlh_input_cleanup(acc);
 	lis331dlh_device_power_off(acc);
 	remove_sysfs_interfaces(&client->dev);
+   /* {SW} BEGIN: */
+   lis331dlh_reg_put();
+   /* {SW} END: */
 	if (acc->pdata->exit)
 		acc->pdata->exit();
 	kfree(acc->pdata);
 	kfree(acc);
-	gpio_free(LIS331DLH_INT2_GPIO);
-	free_irq(lis331dlh_irq, acc);
 
 	return 0;
 }
 
+/* {SW} BEGIN: modifying the suspend/resume functions to disable/enable interrupts */
 static int lis331dlh_resume(struct i2c_client *client)
 {
+   int ret = 0;
 	struct lis331dlh_data *acc = i2c_get_clientdata(client);
 
-	if (acc->on_before_suspend)
-		return lis331dlh_enable(acc);
+	printk (KERN_INFO "%s: LIS331DLH resume\n", __FUNCTION__);
+   if (acc->on_before_suspend)
+   {
+		ret = lis331dlh_enable(acc);
+      if (ret < 0)
+      {
+         return ret;
+      }
+   }
+
 	return 0;
 }
 
 static int lis331dlh_suspend(struct i2c_client *client, pm_message_t mesg)
 {
-	struct lis331dlh_data *acc = i2c_get_clientdata(client);
+	int ret = 0;
+   struct lis331dlh_data *acc = i2c_get_clientdata(client);
 
-	acc->on_before_suspend = atomic_read(&acc->enabled);
-	return lis331dlh_disable(acc);
+	printk (KERN_INFO "%s: LIS331DLH suspend\n", __FUNCTION__);	
+		
+   acc->on_before_suspend = atomic_read(&acc->enabled);
+   
+   if(acc->on_before_suspend){
+		ret = lis331dlh_disable(acc);
+	   if (ret < 0)
+		  return ret;
+   }
+	return 0;
 }
+/* {SW} END: */
 
 static const struct i2c_device_id lis331dlh_id[] = {
 	{LIS331DLH_DEV_NAME, 0},
@@ -863,69 +973,27 @@ static struct i2c_driver lis331dlh_driver = {
 	},
 	.probe = lis331dlh_probe,
 	.remove = __devexit_p(lis331dlh_remove),
+   /* {SW} BEGIN: */
+   .resume = lis331dlh_resume,
+   .suspend = lis331dlh_suspend,
+   /* {SW} END: */
 //	.resume = lis331dlh_resume,
 //	.suspend = lis331dlh_suspend,
 	.id_table = lis331dlh_id,
 };
 
-void lis331dlh_config_irq_reg (struct lis331dlh_data *acc)
-{
-	u8 buf[2];
-
-	buf[0]= CTRL_REG3;
-	buf[1] = 0xB6;
-	lis331dlh_i2c_write (acc, buf, 1);
-
-	buf [0] = INT1_CFG;
-	buf[1] = 0x3f;
-	lis331dlh_i2c_write (acc, buf, 1);
-
-
-
-}
-
-static int lis331dlh_enable_irq(struct lis331dlh_data *acc)
-{
-        int irq_flags;
-        int err;
-        int ret;
-	u8 buf[2];
-	
-        ret = gpio_request(LIS331DLH_INT2_GPIO , "is331dlh irq");
-        if (ret < 0)
-                goto fail;
-
-        ret = gpio_direction_input(LIS331DLH_INT2_GPIO);
-        if (ret < 0)
-                goto fail_irq;
-
-        lis331dlh_irq = gpio_to_irq(LIS331DLH_INT2_GPIO);
-        if ( lis331dlh_irq < 0)
-                goto fail_irq;
-
-        //irq_flags = IRQF_TRIGGER_RISING;
-        irq_flags = IRQF_TRIGGER_FALLING;
-        err = request_threaded_irq(lis331dlh_irq,
-                        NULL,
-                        lis331dlh_interrupt_thread2,
-                        irq_flags,
-                        "lis331dlh", acc);
-
-	lis331dlh_config_irq_reg (acc);
-
-        return err;
-fail_irq:
-        gpio_free(LIS331DLH_INT2_GPIO);
-fail:
-        printk(KERN_ERR "lis331dlh initialisation failed\n");
-        return -1;
-}
-
-
-
-
 static int __init lis331dlh_init(void)
 {
+	/* {PS} BEGIN: enable power supply for LIS331DLH */
+	/*
+   int ret = 0;
+	
+	ret = lis331dlh_init_supply();
+	if (ret)
+		return ret;
+   */
+	/* {PS} END: */
+	
 	pr_debug("LIS331DLH driver for the accelerometer part\n");
 	printk (KERN_ALERT "LIS331DLH driver for the accelerometer part\n");
 	return i2c_add_driver(&lis331dlh_driver);
@@ -943,4 +1011,3 @@ module_exit(lis331dlh_exit);
 MODULE_DESCRIPTION("lis331dlh accelerometer driver");
 MODULE_AUTHOR("Texas Instruments");
 MODULE_LICENSE("GPL");
-
