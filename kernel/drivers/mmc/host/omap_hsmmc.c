@@ -149,6 +149,8 @@
 #define OMAP_HSMMC_WRITE(base, reg, val) \
 	__raw_writel((val), (base) + OMAP_HSMMC_##reg)
 
+// #define DEBUG_PRINT_ENABLE		/* {PS} */
+
 struct omap_hsmmc_host {
 	struct	device		*dev;
 	struct	mmc_host	*mmc;
@@ -322,6 +324,32 @@ static int omap_hsmmc_23_set_power(struct device *dev, int slot, int power_on,
 	struct omap_hsmmc_host *host =
 		platform_get_drvdata(to_platform_device(dev));
 	int ret = 0;
+	
+	#ifdef DEBUG_PRINT_ENABLE
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
+
+
+	/* {PS} BEGIN: */
+	if (host->id == OMAP_MMC3_DEVID) {
+	  // {RD} BEGIN
+	  if (power_on) {
+		  printk("WLAN Enabled\n");
+		  gpio_request(150, "WL_EN");         /* {PS} : WL_EN				*/
+		  gpio_direction_output(150, 0);		/* {PS} : WL_EN				- LOW	- Disable Wi-Fi */
+		  gpio_set_value(150, 1);		/* {PS} : WL_EN	*/
+		  mdelay(170);
+	  }else{
+		  printk("WLAN Disabled\n");
+		  gpio_request(150, "WL_EN");         /* {PS} : WL_EN				*/
+		  gpio_direction_output(150, 0);		/* {PS} : WL_EN				- LOW	- Disable Wi-Fi */
+		  gpio_set_value(150, 0);		/* {PS} : WL_EN	*/
+	  }
+	  // {RD} END
+	  return 0;
+		
+	}
+	/* {PS} END: */
 
 	/*
 	 * If we don't see a Vcc regulator, assume it's a fixed
@@ -388,6 +416,18 @@ static int omap_hsmmc_23_set_sleep(struct device *dev, int slot, int sleep,
 	struct omap_hsmmc_host *host =
 		platform_get_drvdata(to_platform_device(dev));
 	int err, mode;
+	
+	#ifdef DEBUG_PRINT_ENABLE
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
+	
+	//printk("{RD} omap_hsmmc: omap_hsmmc_23_set_sleep slot:%d\n",host->id);
+	/* {PS} BEGIN: */
+	if (host->id == OMAP_MMC3_DEVID) {
+		printk("omap_hsmmc: omap_hsmmc_23_set_sleep OMAP_MMC3_DEVID\n");
+		return 0;
+	}
+	/* {PS} END: */	
 
 	/*
 	 * If we don't see a Vcc regulator, assume it's a fixed
@@ -433,12 +473,12 @@ static int omap_hsmmc_reg_get(struct omap_hsmmc_host *host)
 		mmc_slot(host).set_power = omap_hsmmc_1_set_power;
 		mmc_slot(host).set_sleep = omap_hsmmc_1_set_sleep;
 		break;
-	case OMAP_MMC2_DEVID:
-	case OMAP_MMC3_DEVID:
-		/* Off-chip level shifting, or none */
-		mmc_slot(host).set_power = omap_hsmmc_23_set_power;
-		mmc_slot(host).set_sleep = omap_hsmmc_23_set_sleep;
-		break;
+ 	case OMAP_MMC2_DEVID:
+ 	case OMAP_MMC3_DEVID:
+ 		/* Off-chip level shifting, or none */
+ 		mmc_slot(host).set_power = omap_hsmmc_23_set_power;
+ 		mmc_slot(host).set_sleep = omap_hsmmc_23_set_sleep;
+ 		break;
 	default:
 		pr_err("MMC%d configuration not supported!\n", host->id);
 		return -EINVAL;
@@ -1595,14 +1635,16 @@ static void omap_hsmmc_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 	if (ios->power_mode != host->power_mode) {
 		switch (ios->power_mode) {
 		case MMC_POWER_OFF:
-			mmc_slot(host).set_power(host->dev, host->slot_id,
+		  mmc_slot(host).set_power(host->dev, host->slot_id,
 						 0, 0);
 			host->vdd = 0;
+			
 			break;
 		case MMC_POWER_UP:
-			mmc_slot(host).set_power(host->dev, host->slot_id,
+		  mmc_slot(host).set_power(host->dev, host->slot_id,
 						 1, ios->vdd);
 			host->vdd = ios->vdd;
+			
 			break;
 		case MMC_POWER_ON:
 			do_send_init_stream = 1;
@@ -2225,7 +2267,9 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 	if (mmc_slot(host).nonremovable)
 		mmc->caps |= MMC_CAP_NONREMOVABLE;
 
-	mmc->pm_caps |= MMC_PM_KEEP_POWER;
+	/* {SW} BEGIN: merged a kernel patch */
+   mmc->pm_caps |= MMC_PM_KEEP_POWER;
+   /* {SW} END: */
 
 	omap_hsmmc_conf_bus_power(host);
 
@@ -2254,7 +2298,7 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 			goto err_irq_cd_init;
 		}
 	}
-
+		
 	if (omap_hsmmc_have_reg() && !mmc_slot(host).set_power) {
 		ret = omap_hsmmc_reg_get(host);
 		if (ret)

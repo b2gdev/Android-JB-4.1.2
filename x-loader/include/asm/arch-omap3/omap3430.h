@@ -71,16 +71,16 @@
 #define OMAP34XX_UART2			(OMAP34XX_L4_IO_BASE+0x6c000)
 #define OMAP34XX_UART3			(OMAP34XX_L4_PER+0x20000)
 
-/* General Purpose Timers */
+/* General Purpose Timers */ 
 #define OMAP34XX_GPT1			0x48318000
 #define OMAP34XX_GPT2			0x49032000
-#define OMAP34XX_GPT3			0x49034000
+#define OMAP34XX_GPT3			0x49034000 
 #define OMAP34XX_GPT4			0x49036000
-#define OMAP34XX_GPT5			0x49038000
-#define OMAP34XX_GPT6			0x4903A000
-#define OMAP34XX_GPT7			0x4903C000
-#define OMAP34XX_GPT8			0x4903E000
-#define OMAP34XX_GPT9			0x49040000
+#define OMAP34XX_GPT5			0x49038000 
+#define OMAP34XX_GPT6			0x4903A000 
+#define OMAP34XX_GPT7			0x4903C000 
+#define OMAP34XX_GPT8			0x4903E000 
+#define OMAP34XX_GPT9			0x49040000 
 #define OMAP34XX_GPT10			0x48086000
 #define OMAP34XX_GPT11			0x48088000
 #define OMAP34XX_GPT12			0x48304000
@@ -138,43 +138,60 @@
 #define ENHANCED_UI_EE_NAME		"750-2075"
 #endif
 
-#if defined(CONFIG_AM3517EVM) || defined(CONFIG_AM3517TEB) || \
-	defined(CONFIG_AM3517CRANE)
-/* EMIF 4 replaces SDRC in AM3517 for DDR */
-#define EMIF4_MOD_ID			0x00
-#define EMIF4_STATUS			0x04
-#define EMIF4_SDR_CONFIG		0x08
-#define EMIF4_LPDDR2_CONFIF		0x0C
-#define EMIF4_SDR_REF_CTRL		0x10
-#define EMIF4_SDR_REF_CTRL_SHDW		0x14
-#define EMIF4_SDR_TIM1			0x18
-#define EMIF4_SDR_TIM1_SHDW		0x1C
-#define EMIF4_SDR_TIM2                  0x20
-#define EMIF4_SDR_TIM2_SHDW             0x24
-#define EMIF4_SDR_TIM3                  0x28
-#define EMIF4_SDR_TIM3_SHDW             0x2C
-#define EMIF4_LPDDR2_NVM_TIM		0x30
-#define EMIF4_LPDDR2_NVM_TIM_SHDW	0x34
-#define EMIF4_PWR_MGMT_CTRL		0x38
-#define EMIF4_PWR_MGMT_CTRL_SHDW	0x3C
-#define EMIF4_LPDDR2_REG_DATA		0x40
-#define EMIF4_LPDDR2_REG_CFG		0x50
-#define EMIF4_OCP_CONFIG		0x54
-#define EMIF4_OCP_CFG_VAL1		0x58
-#define EMIF4_OCP_CFG_VAL2		0x5C
-#define EMIF4_PERF_CNT1			0x80
-#define EMIF4_PERF_CNT2			0x84
-#define EMIF4_PERF_CNT_CFG		0x88
-#define EMIF4_PERF_CNT_SEL		0x8C
-#define EMIF4_PERF_CNT_TIM		0x90
-#define EMIF4_IRQ_EOI			0xA0
-#define EMIF4_IRQSTS_RAW		0xA4
-#define EMIF4_IRQSTS			0xAC
-#define EMIF4_IRQEN_SET			0xB4
-#define EMIF4_IRQEN_CLR			0xBC
-#define EMIF4_DDR_PHY_CTRL1		0xE4
-#define EMIF4_DDR_PHY_CTRL1_SHDW	0xE8
-#define EMIF4_DDR_PHY_CTRL2		0xEC
-#endif
+/*
+ * 343x real hardware:
+ *  ES1     = rev 0
+ *
+ *  ES2 onwards, the value maps to contents of IDCODE register [31:28].
+ *
+ * Note : CPU_3XX_ES20 is used in cache.S.  Please review before changing.
+ */
+#define CPU_3XX_ES10		0
+#define CPU_3XX_ES20		1
+#define CPU_3XX_ES21		2
+#define CPU_3XX_ES30		3
+#define CPU_3XX_ES31		4
+#define CPU_3XX_ES312		7
+#define CPU_3XX_MAX_REV		8
+
+#define CPU_3XX_ID_SHIFT	28
+
+#define WIDTH_8BIT		0x0000
+#define WIDTH_16BIT		0x1000	/* bit pos for 16 bit in gpmc */
+
+/*
+ * Control idcode register contains hawkeye and revision info
+ */
+#define CONTROL_IDCODE		0x4830A204
+#define CONTROL_OMAP_STATUS     0x4800244C
+
+/*
+ * Hawkeye values
+ */
+#define HAWKEYE_OMAP34XX	0xb7ae
+#define HAWKEYE_AM35XX		0xb868
+#define HAWKEYE_OMAP36XX	0xb891
+
+#define HAWKEYE_SHIFT		12
+
+/*
+ * Define CPU families
+ */
+#define CPU_OMAP34XX		0x3400	/* OMAP34xx/OMAP35 devices */
+#define CPU_AM35XX		0x3500	/* AM35xx devices          */
+#define CPU_OMAP36XX		0x3600	/* OMAP36xx devices        */
+
+/*
+ * Control status register values corresponding to cpu variants
+ */
+#define OMAP3503		0x5c00
+#define OMAP3515		0x1c00
+#define OMAP3525		0x4c00
+#define OMAP3530		0x0c00
+
+#define AM3505			0x5c00
+#define AM3517			0x1c00
+
+#define OMAP3730		0x0c00
 
 #endif  /* _OMAP3430_SYS_H_ */

@@ -46,6 +46,7 @@ typedef enum {
 #define MMC_NAND            4
 #define MMC_ONENAND         5
 #define GPMC_NONE           6
+#define GPMC_ONENAND_TRY    7
 
 #endif
 
@@ -70,20 +71,15 @@ typedef enum {
 #ifdef CONFIG_3430ZEBU
 #define SDP_SDRC_MDCFG_0_DDR	(0x02582019|B_ALL) /* Infin ddr module */
 #else
-#ifdef CONFIG_FLASHBOARD
-/* RASWidth | CASWidth | AddrLegacy | RamSize | BankAloc | B32Not16 | DeepPD |
-   DDRType | RamType */
-#define SDP_SDRC_MDCFG_0_DDR   ((3 << 24) | (5 << 20) | (1 << 19) |           \
-				(128 << 8) | (0 << 6) | (1 << 4) | (1 << 3) | \
-				(0 << 2) | (1 << 0) | B_ALL)
-#define SDP_SDRC_MDCFG_1_DDR   ((3 << 24) | (5 << 20) | (1 << 19) |           \
-				(0 << 8) | (2 << 6) | (1 << 4) | (1 << 3) |   \
-				(0 << 2) | (1 << 0) | B_ALL)
-#else
 #define SDP_SDRC_MDCFG_0_DDR	(0x02584019|B_ALL)
-#define SDP_SDRC_MDCFG_0_DDR_XM	(0x03588019|B_ALL)
-#endif /* #ifdef CONFIG_FLASHBOARD */
+#define SDP_SDRC_MDCFG_0_DDR_MICRON_XM	(0x03588019|B_ALL)
+#define SDP_SDRC_MDCFG_0_DDR_NUMONYX_XM	(0x04590019|B_ALL)
+#define SDP_SDRC_MDCFG_0_DDR_HYNIX	(0x03588019|B_ALL)
 #endif
+
+/* Numonyx devices */
+#define MK65KX001AM_SDRC_MCDCFG	(0x02584019|B_ALL)
+#define MK65KX002AM_SDRC_MCDCFG	(0x03588019|B_ALL)
 
 #define SDP_SDRC_MR_0_DDR		0x00000032
 
@@ -248,47 +244,6 @@ typedef enum {
 #define MICRON_V_ACTIMB_165 ((MICRON_TCKE_165 << 12) | (MICRON_XSR_165 << 0)) | \
 				(MICRON_TXP_165 << 8) | (MICRON_TWTR_165 << 16)
 
-
-/* Hynix part of AM/DM37xEVM (200MHz optimized)
- *   ACTIMA
- *	TDAL		= 6
- *	TDPL (Twr)	= 3
- *	TRRD		= 2
- *	TRCD		= 4
- *	TRP		= 3
- *	TRAS		= 8
- *	TRC		= 11
- *	TRFC		= 18
- *   ACTIMB
- *	TWTR		= 2
- *	TCKE		= 1
- *	TXP		= 1
- *	TXSR		= 28
- */
-#define HYNIX_TDAL_200	6
-#define HYNIX_TDPL_200	3
-#define HYNIX_TRRD_200	2
-#define HYNIX_TRCD_200	4
-#define HYNIX_TRP_200		3
-#define HYNIX_TRAS_200	8
-#define HYNIX_TRC_200		11
-#define HYNIX_TRFC_200	18
-#define HYNIX_V_ACTIMA_200	((HYNIX_TRFC_200 << 27) | (HYNIX_TRC_200 << 22) | \
-			(HYNIX_TRAS_200 << 18) | (HYNIX_TRP_200 << 15) |  \
-			(HYNIX_TRCD_200 << 12) | (HYNIX_TRRD_200 << 9) |  \
-			(HYNIX_TDPL_200 << 6) | (HYNIX_TDAL_200))
-
-#define HYNIX_TWTR_200	2
-#define HYNIX_TCKE_200	1
-#define HYNIX_TXP_200		1
-#define HYNIX_XSR_200		28
-#define HYNIX_V_ACTIMB_200	(((HYNIX_TCKE_200 << 12) | (HYNIX_XSR_200 << 0)) |	\
-			(HYNIX_TXP_200 << 8) | (HYNIX_TWTR_200 << 16))
-
-#define HYNIX_SDRC_ACTIM_CTRLA_0	HYNIX_V_ACTIMA_200
-#define HYNIX_SDRC_ACTIM_CTRLB_0	HYNIX_V_ACTIMB_200
-
-
 /* Micron part (200MHz optimized) 5 ns
   */
 #define MICRON_TDAL_200   6
@@ -304,11 +259,86 @@ typedef enum {
 		(MICRON_TDPL_200 << 6) | (MICRON_TDAL_200))
 
 #define MICRON_TWTR_200   2
-#define MICRON_TCKE_200   1
+#define MICRON_TCKE_200   4
 #define MICRON_TXP_200    2
 #define MICRON_XSR_200   23
 #define MICRON_V_ACTIMB_200 ((MICRON_TCKE_200 << 12) | (MICRON_XSR_200 << 0)) | \
 				(MICRON_TXP_200 << 8) | (MICRON_TWTR_200 << 16)
+
+/* NUMONYX part of IGEP0020 (165MHz optimized) 6.06ns
+ *   ACTIMA
+ *      TDAL = Twr/Tck + Trp/tck = 15/6 + 18/6 = 2.5 + 3 = 5.5 -> 6
+ *      TDPL (Twr) = 15/6 = 2.5 -> 3
+ *      TRRD = 12/6 = 2
+ *      TRCD = 22.5/6 = 3.75 -> 4
+ *      TRP  = 18/6 = 3
+ *      TRAS = 42/6 = 7
+ *      TRC  = 60/6 = 10
+ *      TRFC = 140/6 = 23.3 -> 24
+ *   ACTIMB
+ *	TWTR = 2
+ *	TCKE = 2
+ *	TXSR = 200/6 =  33.3 -> 34
+ *	TXP  = 1.0 + 1.1 = 2.1 -> 3 ¿?
+ */
+#define NUMONYX_TDAL_165   6
+#define NUMONYX_TDPL_165   3
+#define NUMONYX_TRRD_165   2
+#define NUMONYX_TRCD_165   4
+#define NUMONYX_TRP_165    3
+#define NUMONYX_TRAS_165   7
+#define NUMONYX_TRC_165   10
+#define NUMONYX_TRFC_165  24
+#define NUMONYX_V_ACTIMA_165 ((NUMONYX_TRFC_165 << 27) | (NUMONYX_TRC_165 << 22) | (NUMONYX_TRAS_165 << 18) \
+		| (NUMONYX_TRP_165 << 15) | (NUMONYX_TRCD_165 << 12) |(NUMONYX_TRRD_165 << 9) | \
+		(NUMONYX_TDPL_165 << 6) | (NUMONYX_TDAL_165))
+
+#define NUMONYX_TWTR_165   2
+#define NUMONYX_TCKE_165   2
+#define NUMONYX_TXP_165    3
+#define NUMONYX_XSR_165    34
+#define NUMONYX_V_ACTIMB_165 ((NUMONYX_TCKE_165 << 12) | (NUMONYX_XSR_165 << 0)) | \
+				(NUMONYX_TXP_165 << 8) | (NUMONYX_TWTR_165 << 16)
+
+/*
+ * Hynix part of Overo (165MHz optimized) 6.06ns
+ *   ACTIMA
+ *     ACTIMA
+ *        TDAL = Twr/Tck + Trp/tck = 15/6 + 18/6 = 2.5 + 3 = 5.5 -> 6
+ *        TDPL (Twr) = 15/6       = 2.5 -> 3
+ *        TRRD = 12/6     = 2
+ *        TRCD = 18/6     = 3
+ *        TRP = 18/6      = 3
+ *        TRAS = 42/6     = 7
+ *        TRC = 60/6      = 10
+ *        TRFC = 97.5/6    = 17
+ *     ACTIMB
+ *        TWTR = 1
+ *        TCKE = 1
+ *        TXP = 1+1
+ *        XSR = 140/6 = 24
+ */
+#define HYNIX_TDAL_165   6
+#define HYNIX_TDPL_165   3
+#define HYNIX_TRRD_165   2
+#define HYNIX_TRCD_165   3
+#define HYNIX_TRP_165    3
+#define HYNIX_TRAS_165   7
+#define HYNIX_TRC_165   10
+#define HYNIX_TRFC_165  21
+#define HYNIX_V_ACTIMA_165 ((HYNIX_TRFC_165 << 27) | \
+		(HYNIX_TRC_165 << 22) | (HYNIX_TRAS_165 << 18) | \
+		(HYNIX_TRP_165 << 15) | (HYNIX_TRCD_165 << 12) | \
+		(HYNIX_TRRD_165 << 9) | (HYNIX_TDPL_165 << 6) | \
+		(HYNIX_TDAL_165))
+
+#define HYNIX_TWTR_165   1
+#define HYNIX_TCKE_165   1
+#define HYNIX_TXP_165    2
+#define HYNIX_XSR_165    24
+#define HYNIX_V_ACTIMB_165 ((HYNIX_TCKE_165 << 12) | \
+		(HYNIX_XSR_165 << 0) | (HYNIX_TXP_165 << 8) | \
+		(HYNIX_TWTR_165 << 16))
 
 /* New and compatability speed defines */
 #if defined(PRCM_CLK_CFG2_200MHZ) || defined(PRCM_CONFIG_II) || defined(PRCM_CONFIG_5B)
@@ -328,6 +358,8 @@ typedef enum {
 #elif  defined(L3_165MHZ)
 # define MICRON_SDRC_ACTIM_CTRLA_0     MICRON_V_ACTIMA_165
 # define MICRON_SDRC_ACTIM_CTRLB_0     MICRON_V_ACTIMB_165
+# define NUMONYX_SDRC_ACTIM_CTRLA_0    NUMONYX_V_ACTIMA_165
+# define NUMONYX_SDRC_ACTIM_CTRLB_0    NUMONYX_V_ACTIMB_165
 #endif
 
 
@@ -400,32 +432,12 @@ typedef enum {
 # define SMNAND_GPMC_CONFIG5 0x010C1414
 # define SMNAND_GPMC_CONFIG6 0x00000A80
 
-#if defined (CONFIG_OMAP34XX)
-
 # define M_NAND_GPMC_CONFIG1 0x00001800
 # define M_NAND_GPMC_CONFIG2 SMNAND_GPMC_CONFIG2
 # define M_NAND_GPMC_CONFIG3 SMNAND_GPMC_CONFIG3
 # define M_NAND_GPMC_CONFIG4 SMNAND_GPMC_CONFIG4
 # define M_NAND_GPMC_CONFIG5 SMNAND_GPMC_CONFIG5
 # define M_NAND_GPMC_CONFIG6 SMNAND_GPMC_CONFIG6
-
-#elif defined(CONFIG_AM3517EVM) || defined(CONFIG_AM3517TEB) || \
-	defined(CONFIG_AM3517CRANE)
-
-#ifdef NAND_16BIT
-# define M_NAND_GPMC_CONFIG1 0x00001800
-#else
-# define M_NAND_GPMC_CONFIG1 0x00000800
-#endif
-# define M_NAND_GPMC_CONFIG2 0x00080800
-# define M_NAND_GPMC_CONFIG3 0x00080800
-# define M_NAND_GPMC_CONFIG4 0x06000600
-# define M_NAND_GPMC_CONFIG5 0x00070808
-# define M_NAND_GPMC_CONFIG6 0x000003cf
-# define M_NAND_GPMC_CONFIG7 0x00000848
-
-#endif
-
 # define STNOR_GPMC_CONFIG1  0x3
 # define STNOR_GPMC_CONFIG2  0x000f0f01
 # define STNOR_GPMC_CONFIG3  0x00050502
@@ -449,8 +461,6 @@ typedef enum {
 # define SMNAND_GPMC_CONFIG6 0x00000A80
 # define SMNAND_GPMC_CONFIG7 0x00000C44
 
-#if defined (CONFIG_OMAP34XX)
-
 # define M_NAND_GPMC_CONFIG1 0x00001800
 # define M_NAND_GPMC_CONFIG2 SMNAND_GPMC_CONFIG2
 # define M_NAND_GPMC_CONFIG3 SMNAND_GPMC_CONFIG3
@@ -458,24 +468,6 @@ typedef enum {
 # define M_NAND_GPMC_CONFIG5 SMNAND_GPMC_CONFIG5
 # define M_NAND_GPMC_CONFIG6 SMNAND_GPMC_CONFIG6
 # define M_NAND_GPMC_CONFIG7 SMNAND_GPMC_CONFIG7
-
-#elif defined(CONFIG_AM3517EVM) || defined(CONFIG_AM3517TEB) || \
-	defined(CONFIG_AM3517CRANE)
-
-#ifdef NAND_16BIT
-# define M_NAND_GPMC_CONFIG1 0x00001800
-#else
-# define M_NAND_GPMC_CONFIG1 0x00000800
-#endif
-# define M_NAND_GPMC_CONFIG2 0x00080800
-# define M_NAND_GPMC_CONFIG3 0x00080800
-# define M_NAND_GPMC_CONFIG4 0x06000600
-# define M_NAND_GPMC_CONFIG5 0x00070808
-# define M_NAND_GPMC_CONFIG6 0x000003cf
-# define M_NAND_GPMC_CONFIG7 0x00000848
-
-#endif
-
 
 # define STNOR_GPMC_CONFIG1  0x1203
 # define STNOR_GPMC_CONFIG2  0x00151501
@@ -523,8 +515,6 @@ typedef enum {
 # define SMNAND_GPMC_CONFIG6 0x1F0F0A80
 # define SMNAND_GPMC_CONFIG7 0x00000C44
 
-#if defined (CONFIG_OMAP34XX)
-
 # define M_NAND_GPMC_CONFIG1 0x00001800
 # define M_NAND_GPMC_CONFIG2 SMNAND_GPMC_CONFIG2
 # define M_NAND_GPMC_CONFIG3 SMNAND_GPMC_CONFIG3
@@ -532,24 +522,6 @@ typedef enum {
 # define M_NAND_GPMC_CONFIG5 SMNAND_GPMC_CONFIG5
 # define M_NAND_GPMC_CONFIG6 SMNAND_GPMC_CONFIG6
 # define M_NAND_GPMC_CONFIG7 SMNAND_GPMC_CONFIG7
-
-#elif defined(CONFIG_AM3517EVM) || defined(CONFIG_AM3517TEB) || \
-	defined(CONFIG_AM3517CRANE)
-
-#ifdef NAND_16BIT
-# define M_NAND_GPMC_CONFIG1 0x00001800
-#else
-# define M_NAND_GPMC_CONFIG1 0x00000800
-#endif
-# define M_NAND_GPMC_CONFIG2 0x00080800
-# define M_NAND_GPMC_CONFIG3 0x00080800
-# define M_NAND_GPMC_CONFIG4 0x06000600
-# define M_NAND_GPMC_CONFIG5 0x00070808
-# define M_NAND_GPMC_CONFIG6 0x000003cf
-# define M_NAND_GPMC_CONFIG7 0x00000848
-
-#endif
-
 
 # define STNOR_GPMC_CONFIG1  0x3
 # define STNOR_GPMC_CONFIG2  0x00151501

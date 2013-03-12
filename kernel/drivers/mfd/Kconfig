@@ -427,6 +427,20 @@ config MFD_WM8994
 	  core support for the WM8994, in order to use the actual
 	  functionaltiy of the device other drivers must be enabled.
 
+# {PS} BEGIN:
+config MFD_WM8994_DEBUG
+	bool "WM8994 debug output"
+	depends on MFD_WM8994
+	help
+	  Makes the WM8994 drivers print out a lot of debug info.
+	  This is useful if you want to find out the values of the
+	  WM8994 registers or how the driver functions are called.
+# {PS} END:
+
+# {PK} BEGIN:
+source "drivers/mfd/cp430-core/Kconfig"
+# {PK} END:
+
 config MFD_PCF50633
 	tristate "Support for NXP PCF50633"
 	depends on I2C

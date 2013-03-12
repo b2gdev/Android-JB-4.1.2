@@ -2773,7 +2773,6 @@ extern unsigned int __machine_arch_type;
 #define MACH_TYPE_SKAT91_S3E           2790
 #define MACH_TYPE_OMAP4_PANDA          2791
 #define MACH_TYPE_DF7220               2792
-#define MACH_TYPE_CRANEBOARD           2932
 #define MACH_TYPE_NEMINI               2793
 #define MACH_TYPE_T8200                2794
 #define MACH_TYPE_APF51                2795

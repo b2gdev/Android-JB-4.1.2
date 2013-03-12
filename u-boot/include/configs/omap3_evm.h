@@ -151,11 +151,7 @@
  */
 #define	CONFIG_CMD_FASTBOOT
 #define	CONFIG_FASTBOOT_TRANSFER_BUFFER		(PHYS_SDRAM_1 + SZ_16M)
-
-/* The buffer size is fixed to 192MB for a 256MB RAM, and it can be increased
-to a higher value if a higher sized RAM support is available in Hardware */
-#define	CONFIG_FASTBOOT_TRANSFER_BUFFER_SIZE    (SZ_256M - SZ_64M)
-
+#define	CONFIG_FASTBOOT_TRANSFER_BUFFER_SIZE	(SZ_128M - SZ_16M)
 /* if already present, use already existing NAND macros for block & oob size */
 #define	FASTBOOT_NAND_BLOCK_SIZE		2048
 #define	FASTBOOT_NAND_OOB_SIZE			64

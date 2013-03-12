@@ -42,41 +42,13 @@ struct dpll_param {
         unsigned int m2;
 };
 
-struct dpll_per_36x_param {
-	unsigned int sys_clk;
-	unsigned int m;
-	unsigned int n;
-	unsigned int m2;
-	unsigned int m3;
-	unsigned int m4;
-	unsigned int m5;
-	unsigned int m6;
-	unsigned int m2div;
-};
-
 typedef struct dpll_param dpll_param;
 
-extern unsigned int is_ddr_166M;
-
-#define MAX_SIL_INDEX	3
-
 /* Following functions are exported from lowlevel_init.S */
-extern dpll_param *get_mpu_dpll_param(void);
-#ifdef CONFIG_IVA
-extern dpll_param *get_iva_dpll_param(void);
-#endif
-extern dpll_param *get_core_dpll_param(void);
-extern dpll_param *get_per_dpll_param(void);
-
-extern dpll_param *get_36x_mpu_dpll_param(void);
-#ifdef CONFIG_IVA
-extern dpll_param *get_36x_iva_dpll_param(void);
-#endif
-extern dpll_param *get_36x_core_dpll_param(void);
-extern dpll_param *get_36x_per_dpll_param(void);
-
-extern int mmc_init(int verbose);
-extern block_dev_desc_t *mmc_get_dev(int dev);
+extern dpll_param * get_mpu_dpll_param();
+extern dpll_param * get_iva_dpll_param();
+extern dpll_param * get_core_dpll_param();
+extern dpll_param * get_per_dpll_param();
 
 #define __raw_readl(a)    (*(volatile unsigned int *)(a))
 #define __raw_writel(v,a) (*(volatile unsigned int *)(a) = (v))
@@ -107,25 +79,6 @@ int board_init (void)
 }
 
 /*************************************************************
- *  get_device_type(): tell if GP/HS/EMU/TST
- *************************************************************/
-u32 get_device_type(void)
-{
-        int mode;
-        mode = __raw_readl(CONTROL_STATUS) & (DEVICE_MASK);
-        return(mode >>= 8);
-}
-
-/************************************************
- * get_sysboot_value(void) - return SYS_BOOT[4:0]
- ************************************************/
-u32 get_sysboot_value(void)
-{
-        int mode;
-        mode = __raw_readl(CONTROL_STATUS) & (SYSBOOT_MASK);
-        return mode;
-}
-/*************************************************************
  * Routine: get_mem_type(void) - returns the kind of memory connected
  * to GPMC that we are trying to boot form. Uses SYS BOOT settings.
  *************************************************************/
@@ -141,9 +94,7 @@ u32 get_mem_type(void)
 
             case 1:
             case 12:
-#ifndef CONFIG_FLASHBOARD /* FLASH Board, just boot from MMC for now */
             case 15:
-#endif
             case 21:
             case 27:    return GPMC_NAND;
 
@@ -156,9 +107,6 @@ u32 get_mem_type(void)
             case 20:
             case 26:    return GPMC_MDOC;
 
-#ifdef CONFIG_FLASHBOARD /* FLASH Board, just boot from MMC for now */
-            case 15:
-#endif
             case 17:
             case 18:
             case 24:	return MMC_NAND;
@@ -172,53 +120,6 @@ u32 get_mem_type(void)
         }
 }
 
-/******************************************
- * get_cpu_rev(void) - extract version info
- ******************************************/
-u32 get_cpu_rev(void)
-{
-	u32 cpuid=0;
-	/* On ES1.0 the IDCODE register is not exposed on L4
-	 * so using CPU ID to differentiate
-	 * between ES2.0 and ES1.0.
-	 */
-	__asm__ __volatile__("mrc p15, 0, %0, c0, c0, 0":"=r" (cpuid));
-	if((cpuid  & 0xf) == 0x0)
-		return CPU_3430_ES1;
-	else
-		return CPU_3430_ES2;
-
-}
-
-u32 is_cpu_family(void)
-{
-	u32 cpuid = 0, cpu_family = 0;
-	u16 hawkeye;
-
-	__asm__ __volatile__("mrc p15, 0, %0, c0, c0, 0":"=r"(cpuid));
-	if ((cpuid & 0xf) == 0x0) {
-		cpu_family = CPU_OMAP34XX;
-	} else {
-		cpuid = __raw_readl(OMAP34XX_CONTROL_ID);
-		hawkeye  = (cpuid >> HAWKEYE_SHIFT) & 0xffff;
-
-		switch (hawkeye) {
-			case HAWKEYE_OMAP34XX:
-				cpu_family = CPU_OMAP34XX;
-				break;
-			case HAWKEYE_AM35XX:
-				cpu_family = CPU_AM35XX;
-				break;
-			case HAWKEYE_OMAP36XX:
-				cpu_family = CPU_OMAP36XX;
-				break;
-			default:
-				cpu_family = CPU_OMAP34XX;
-				break;
-		}
-	}
-	return cpu_family;
-}
 /******************************************
  * cpu_is_3410(void) - returns true for 3410
  ******************************************/
@@ -240,77 +141,12 @@ u32 cpu_is_3410(void)
 	}
 }
 
-/*****************************************************************
- * sr32 - clear & set a value in a bit range for a 32 bit address
- *****************************************************************/
-void sr32(u32 addr, u32 start_bit, u32 num_bits, u32 value)
-{
-	u32 tmp, msk = 0;
-	msk = 1 << num_bits;
-	--msk;
-	tmp = __raw_readl(addr) & ~(msk << start_bit);
-	tmp |=  value << start_bit;
-	__raw_writel(tmp, addr);
-}
-
-/*********************************************************************
- * wait_on_value() - common routine to allow waiting for changes in
- *   volatile regs.
- *********************************************************************/
-u32 wait_on_value(u32 read_bit_mask, u32 match_value, u32 read_addr, u32 bound)
-{
-	u32 i = 0, val;
-	do {
-		++i;
-		val = __raw_readl(read_addr) & read_bit_mask;
-		if (val == match_value)
-			return (1);
-		if (i == bound)
-			return (0);
-	} while (1);
-}
-
-#ifdef CFG_OMAPEVM_DDR
-#ifdef CONFIG_DDR_256MB_STACKED
-/**************************************************************************
- * make_cs1_contiguous() - for es2 and above remap cs1 behind cs0 to allow
- *  command line mem=xyz use all memory with out discontinuous support
- *  compiled in.  Could do it at the ATAG, but there really is two banks...
- * Called as part of 2nd phase DDR init.
- **************************************************************************/
-void make_cs1_contiguous(void)
-{
-	u32 size, a_add_low, a_add_high;
-
-	size = get_sdr_cs_size(SDRC_CS0_OSET);
-	size /= SZ_32M;         /* find size to offset CS1 */
-	a_add_high = (size & 3) << 8;   /* set up low field */
-	a_add_low = (size & 0x3C) >> 2; /* set up high field */
-	__raw_writel((a_add_high | a_add_low), SDRC_CS_CFG);
-}
-
-/***********************************************************************
- * get_cs0_size() - get size of chip select 0/1
- ************************************************************************/
-u32 get_sdr_cs_size(u32 offset)
-{
-	u32 size;
-
-	/* get ram size field */
-	size = __raw_readl(SDRC_MCFG_0 + offset) >> 8;
-	size &= 0x3FF;          /* remove unwanted bits */
-	size *= SZ_2M;          /* find size in MB */
-	return size;
-}
-#endif
-
+#ifdef CFG_3430SDRAM_DDR
 /*********************************************************************
  * config_3430sdram_ddr() - Init DDR on 3430SDP dev board.
  *********************************************************************/
 void config_3430sdram_ddr(void)
 {
-
-#ifndef CONFIG_DDR_256MB_STACKED
 	/* reset sdrc controller */
 	__raw_writel(SOFTRESET, SDRC_SYSCONFIG);
 	wait_on_value(BIT0, BIT0, SDRC_STATUS, 12000000);
@@ -323,32 +159,21 @@ void config_3430sdram_ddr(void)
 	__raw_writel(SDP_SDRC_MDCFG_0_DDR, SDRC_MCFG_0);
 
 	/* set timing */
-	if (is_cpu_family() == CPU_OMAP36XX) {
-		if (is_ddr_166M) {
-			__raw_writel(MICRON_SDRC_ACTIM_CTRLA_0, SDRC_ACTIM_CTRLA_0);
-			__raw_writel(MICRON_SDRC_ACTIM_CTRLB_0, SDRC_ACTIM_CTRLB_0);
-		} else {
-			__raw_writel(HYNIX_SDRC_ACTIM_CTRLA_0, SDRC_ACTIM_CTRLA_0);
-			__raw_writel(HYNIX_SDRC_ACTIM_CTRLB_0, SDRC_ACTIM_CTRLB_0);
-		}
+	if ((get_mem_type() == GPMC_ONENAND) || (get_mem_type() == MMC_ONENAND)){
+        	__raw_writel(INFINEON_SDRC_ACTIM_CTRLA_0, SDRC_ACTIM_CTRLA_0);
+        	__raw_writel(INFINEON_SDRC_ACTIM_CTRLB_0, SDRC_ACTIM_CTRLB_0);
+	}
+	if ((get_mem_type() == GPMC_NAND) ||(get_mem_type() == MMC_NAND)){
+        	__raw_writel(MICRON_SDRC_ACTIM_CTRLA_0, SDRC_ACTIM_CTRLA_0);
+        	__raw_writel(MICRON_SDRC_ACTIM_CTRLB_0, SDRC_ACTIM_CTRLB_0);
+	}
 
-	} else {
-		if ((get_mem_type() == GPMC_ONENAND) || (get_mem_type() == MMC_ONENAND)){
-			__raw_writel(INFINEON_SDRC_ACTIM_CTRLA_0, SDRC_ACTIM_CTRLA_0);
-			__raw_writel(INFINEON_SDRC_ACTIM_CTRLB_0, SDRC_ACTIM_CTRLB_0);
-		}
-		if ((get_mem_type() == GPMC_NAND) ||(get_mem_type() == MMC_NAND)){
-			__raw_writel(MICRON_SDRC_ACTIM_CTRLA_0, SDRC_ACTIM_CTRLA_0);
-			__raw_writel(MICRON_SDRC_ACTIM_CTRLB_0, SDRC_ACTIM_CTRLB_0);
-		}
-	 }
-
-	__raw_writel(SDP_SDRC_RFR_CTRL, SDRC_RFR_CTRL_0);
+	__raw_writel(SDP_3430_SDRC_RFR_CTRL_165MHz, SDRC_RFR_CTRL_0);
 	__raw_writel(SDP_SDRC_POWER_POP, SDRC_POWER);
 
 	/* init sequence for mDDR/mSDR using manual commands (DDR is different) */
 	__raw_writel(CMD_NOP, SDRC_MANUAL_0);
-	delay(2000);
+	delay(5000);
 	__raw_writel(CMD_PRECHARGE, SDRC_MANUAL_0);
 	__raw_writel(CMD_AUTOREFRESH, SDRC_MANUAL_0);
 	__raw_writel(CMD_AUTOREFRESH, SDRC_MANUAL_0);
@@ -358,92 +183,10 @@ void config_3430sdram_ddr(void)
 
 	/* set up dll */
 	__raw_writel(SDP_SDRC_DLLAB_CTRL, SDRC_DLLA_CTRL);
-	delay(2000);	/* give time to lock */
-#else
-	/* reset sdrc controller */
-	__raw_writel(SOFTRESET, SDRC_SYSCONFIG);
-	wait_on_value(BIT0, BIT0, SDRC_STATUS, 12000000);
-	__raw_writel(0, SDRC_SYSCONFIG);
+	delay(0x2000);	/* give time to lock */
 
-	/* setup sdrc to ball mux */
-	__raw_writel(SDP_SDRC_SHARING, SDRC_SHARING);
-
-	/* SDRC_MCFG0 register */
-#ifdef CONFIG_FLASHBOARD
-	/* set 256MB for SAMSUNG K4X1G163PE-FCG6 */
-	__raw_writel(SDP_SDRC_MDCFG_0_DDR, SDRC_MCFG_0);
-#else
-	(*(unsigned int *)0x6D000080) = 0x02584099; /* from Micron */
-#endif
-
-	 if (is_cpu_family() == CPU_OMAP36XX) {
-		 if (is_ddr_166M) {
-			 /* SDRC_ACTIM_CTRLA0 register */
-			 (*(unsigned int*)0x6D00009c) = 0xaa9db4c6;// for 166M
-			 /* SDRC_ACTIM_CTRLB0 register */
-			 (*(unsigned int*)0x6D0000a0) = 0x00011517;
-		 } else {
-			 /* SDRC_ACTIM_CTRLA0 register */
-			 (*(unsigned int*)0x6D00009c) = 0x92e1c4c6;// for 200M
-			 /* SDRC_ACTIM_CTRLB0 register */
-			 (*(unsigned int*)0x6D0000a0) = 0x0002111c;
-			 /* SDRC_MCFG0 register - for Hynix*/
-			 (*(unsigned int *)0x6D000080) = 0x03588099;
-		 }
-	 } else {
-		 /* SDRC_ACTIM_CTRLA0 register */
-		 (*(unsigned int*)0x6D00009c) = 0xaa9db4c6;// for 166M
-		 /* SDRC_ACTIM_CTRLB0 register */
-		 (*(unsigned int*)0x6D0000a0) = 0x00011517;
-	 }
-
-
-         (*(unsigned int*)0x6D0000a4) =0x0004DC01;
-
-         /* Disble Power Down of CKE cuz of 1 CKE on combo part */
-         (*(unsigned int*)0x6D000070) = 0x00000081;
-
-         /* SDRC_Manual command register */
-         (*(unsigned int*)0x6D0000a8) = 0x00000000; // NOP command
-         delay(2000);
-         (*(unsigned int*)0x6D0000a8) = 0x00000001; // Precharge command
-         (*(unsigned int*)0x6D0000a8) = 0x00000002; // Auto-refresh command
-         (*(unsigned int*)0x6D0000a8) = 0x00000002; // Auto-refresh command
-
-         /* SDRC MR0 register */
-         (*(int*)0x6D000084) = 0x00000032; // Burst length =4
-         // CAS latency = 3
-         // Write Burst = Read Burst
-         // Serial Mode
-
-         /* SDRC DLLA control register */
-         (*(unsigned int*)0x6D000060) = 0x0000A;
-         delay(2000); // some delay
-
-#endif
-
-#ifdef CONFIG_DDR_256MB_STACKED
-	make_cs1_contiguous();
-
-#ifdef CONFIG_FLASHBOARD
-	__raw_writel(SDP_SDRC_MDCFG_1_DDR, SDRC_MCFG_0 + SDRC_CS1_OSET);
-#else
-	__raw_writel(SDP_SDRC_MDCFG_0_DDR, SDRC_MCFG_0 + SDRC_CS1_OSET);
-#endif
-	__raw_writel(MICRON_SDRC_ACTIM_CTRLA_0, SDRC_ACTIM_CTRLA_1);
-	__raw_writel(MICRON_SDRC_ACTIM_CTRLB_0, SDRC_ACTIM_CTRLB_1);
-
-	__raw_writel(SDP_SDRC_RFR_CTRL, SDRC_RFR_CTRL_0 + SDRC_CS1_OSET);
-	/* init sequence for mDDR/mSDR using manual commands */
-	__raw_writel(CMD_NOP, SDRC_MANUAL_0 + SDRC_CS1_OSET);
-	delay(2000);	/* supposed to be 100us per design spec for mddr/msdr */
-	__raw_writel(CMD_PRECHARGE, SDRC_MANUAL_0 + SDRC_CS1_OSET);
-	__raw_writel(CMD_AUTOREFRESH, SDRC_MANUAL_0 + SDRC_CS1_OSET);
-	__raw_writel(CMD_AUTOREFRESH, SDRC_MANUAL_0 + SDRC_CS1_OSET);
-	__raw_writel(SDP_SDRC_MR_0_DDR, SDRC_MR_0 + SDRC_CS1_OSET);
-#endif
 }
-#endif /* CFG_OMAPEVM_DDR */
+#endif // CFG_3430SDRAM_DDR
 
 /*************************************************************
  * get_sys_clk_speed - determine reference oscillator speed
@@ -451,21 +194,12 @@ void config_3430sdram_ddr(void)
  *************************************************************/
 u32 get_osc_clk_speed(void)
 {
-	u32 start, cstart, cend, cdiff, cdiv, val;
+	u32 start, cstart, cend, cdiff, val;
 
 	val = __raw_readl(PRM_CLKSRC_CTRL);
-
-	if (val & BIT7)
-		cdiv = 2;
-	else if (val & BIT6)
-		cdiv = 1;
-	else
-		/*
-		 * Should never reach here!
-		 * TBD: Add a WARN()/BUG()
-		 *      For now, assume divider as 1.
-		 */
-		cdiv = 1;
+	/* If SYS_CLK is being divided by 2, remove for now */
+	val = (val & (~BIT7)) | BIT6;
+	__raw_writel(val, PRM_CLKSRC_CTRL);
 
 	/* enable timer2 */
 	val = __raw_readl(CM_CLKSEL_WKUP) | BIT0;
@@ -489,11 +223,6 @@ u32 get_osc_clk_speed(void)
 	cend = __raw_readl(OMAP34XX_GPT1 + TCRR);	/* get end sys_clk count */
 	cdiff = cend - cstart;				/* get elapsed ticks */
 
-	if (cdiv == 2)
-	{
-		cdiff *= 2;
-	}
-
 	/* based on number of ticks assign speed */
 	if (cdiff > 19000)
 		return (S38_4M);
@@ -510,320 +239,13 @@ u32 get_osc_clk_speed(void)
 }
 
 /******************************************************************************
- * get_sys_clkin_sel() - returns the sys_clkin_sel field value based on
- *   -- input oscillator clock frequency.
- *
- *****************************************************************************/
-void get_sys_clkin_sel(u32 osc_clk, u32 *sys_clkin_sel)
-{
-	if(osc_clk == S38_4M)
-		*sys_clkin_sel=  4;
-	else if(osc_clk == S26M)
-		*sys_clkin_sel = 3;
-	else if(osc_clk == S19_2M)
-		*sys_clkin_sel = 2;
-	else if(osc_clk == S13M)
-		*sys_clkin_sel = 1;
-	else if(osc_clk == S12M)
-		*sys_clkin_sel = 0;
-}
-
-/*
- * OMAP34x/35x specific functions
- */
-static void dpll3_init_34xx(u32 sil_index, u32 clk_index)
-{
-	dpll_param *ptr;
-
-	/* Getting the base address of Core DPLL param table*/
-	ptr = (dpll_param *)get_core_dpll_param();
-
-	/* Moving it to the right sysclk and ES rev base */
-	ptr = ptr + 2*clk_index + sil_index;
-
-	/* CORE DPLL */
-	/* Select relock bypass: CM_CLKEN_PLL[0:2] */
-	sr32(CM_CLKEN_PLL, 0, 3, PLL_FAST_RELOCK_BYPASS);
-	wait_on_value(BIT0, 0, CM_IDLEST_CKGEN, LDELAY);
-
-	/* CM_CLKSEL1_EMU[DIV_DPLL3] */
-	sr32(CM_CLKSEL1_EMU, 16, 5, CORE_M3X2);
-
-	/* M2 (CORE_DPLL_CLKOUT_DIV): CM_CLKSEL1_PLL[27:31] */
-	sr32(CM_CLKSEL1_PLL, 27, 5, ptr->m2);
-
-	/* M (CORE_DPLL_MULT): CM_CLKSEL1_PLL[16:26] */
-	sr32(CM_CLKSEL1_PLL, 16, 11, ptr->m);
-
-	/* N (CORE_DPLL_DIV): CM_CLKSEL1_PLL[8:14] */
-	sr32(CM_CLKSEL1_PLL, 8, 7, ptr->n);
-
-	/* Source is the CM_96M_FCLK: CM_CLKSEL1_PLL[6] */
-	sr32(CM_CLKSEL1_PLL, 6, 1, 0);
-
-	sr32(CM_CLKSEL_CORE, 8, 4, CORE_SSI_DIV);	/* ssi */
-	sr32(CM_CLKSEL_CORE, 4, 2, CORE_FUSB_DIV);	/* fsusb */
-	sr32(CM_CLKSEL_CORE, 2, 2, CORE_L4_DIV);	/* l4 */
-	sr32(CM_CLKSEL_CORE, 0, 2, CORE_L3_DIV);	/* l3 */
-
-	sr32(CM_CLKSEL_GFX,  0, 3, GFX_DIV_34X);	/* gfx */
-	sr32(CM_CLKSEL_WKUP, 1, 2, WKUP_RSM);		/* reset mgr */
-
-	/* FREQSEL (CORE_DPLL_FREQSEL): CM_CLKEN_PLL[4:7] */
-	sr32(CM_CLKEN_PLL,   4, 4, ptr->fsel);
-	sr32(CM_CLKEN_PLL,   0, 3, PLL_LOCK);		/* lock mode */
-
-	wait_on_value(BIT0, 1, CM_IDLEST_CKGEN, LDELAY);
-}
-
-static void dpll4_init_34xx(u32 sil_index, u32 clk_index)
-{
-	dpll_param *ptr;
-
-	ptr = (dpll_param *)get_per_dpll_param();
-
-	/* Moving it to the right sysclk base */
-	ptr = ptr + clk_index;
-
-	/* EN_PERIPH_DPLL: CM_CLKEN_PLL[16:18] */
-	sr32(CM_CLKEN_PLL, 16, 3, PLL_STOP);
-	wait_on_value(BIT1, 0, CM_IDLEST_CKGEN, LDELAY);
-
-	sr32(CM_CLKSEL1_EMU, 24, 5, PER_M6X2);		/* set M6 */
-	sr32(CM_CLKSEL_CAM, 0, 5, PER_M5X2);		/* set M5 */
-	sr32(CM_CLKSEL_DSS, 0, 5, PER_M4X2);		/* set M4 */
-	sr32(CM_CLKSEL_DSS, 8, 5, PER_M3X2);		/* set M3 */
-
-	/* M2 (DIV_96M): CM_CLKSEL3_PLL[0:4] */
-	sr32(CM_CLKSEL3_PLL, 0, 5, ptr->m2);
-
-	/* M (PERIPH_DPLL_MULT): CM_CLKSEL2_PLL[8:18] */
-	sr32(CM_CLKSEL2_PLL, 8, 11, ptr->m);
-
-	/* N (PERIPH_DPLL_DIV): CM_CLKSEL2_PLL[0:6] */
-	sr32(CM_CLKSEL2_PLL, 0, 7, ptr->n);
-
-	/* FREQSEL (PERIPH_DPLL_FREQSEL): CM_CLKEN_PLL[20:23] */
-	sr32(CM_CLKEN_PLL, 20, 4, ptr->fsel);
-
-	/* LOCK MODE (EN_PERIPH_DPLL) : CM_CLKEN_PLL[16:18] */
-	sr32(CM_CLKEN_PLL, 16, 3, PLL_LOCK);
-	wait_on_value(BIT1, 2, CM_IDLEST_CKGEN, LDELAY);
-}
-
-static void mpu_init_34xx(u32 sil_index, u32 clk_index)
-{
-	dpll_param *ptr;
-
-	/* Getting the base address to MPU DPLL param table*/
-	ptr = (dpll_param *)get_mpu_dpll_param();
-
-	/* Moving it to the right sysclk and ES rev base */
-	ptr = ptr + 2*clk_index + sil_index;
-
-	/* MPU DPLL (unlocked already) */
-	/* M2 (MPU_DPLL_CLKOUT_DIV) : CM_CLKSEL2_PLL_MPU[0:4] */
-	sr32(CM_CLKSEL2_PLL_MPU, 0, 5, ptr->m2);
-
-	/* M (MPU_DPLL_MULT) : CM_CLKSEL2_PLL_MPU[8:18] */
-	sr32(CM_CLKSEL1_PLL_MPU, 8, 11, ptr->m);
-
-	/* N (MPU_DPLL_DIV) : CM_CLKSEL2_PLL_MPU[0:6] */
-	sr32(CM_CLKSEL1_PLL_MPU, 0, 7, ptr->n);
-
-	/* FREQSEL (MPU_DPLL_FREQSEL) : CM_CLKEN_PLL_MPU[4:7] */
-	sr32(CM_CLKEN_PLL_MPU, 4, 4, ptr->fsel);
-}
-
-#ifdef CONFIG_IVA
-static void iva_init_34xx(u32 sil_index, u32 clk_index)
-{
-	dpll_param *ptr;
-
-	/* Getting the base address to IVA DPLL param table*/
-	ptr = (dpll_param *)get_iva_dpll_param();
-
-	/* Moving it to the right sysclk and ES rev base */
-	ptr = ptr + 2*clk_index + sil_index;
-
-	/* IVA DPLL */
-	/* EN_IVA2_DPLL : CM_CLKEN_PLL_IVA2[0:2] */
-	sr32(CM_CLKEN_PLL_IVA2, 0, 3, PLL_STOP);
-	wait_on_value(BIT0, 0, CM_IDLEST_PLL_IVA2, LDELAY);
-
-	/* M2 (IVA2_DPLL_CLKOUT_DIV) : CM_CLKSEL2_PLL_IVA2[0:4] */
-	sr32(CM_CLKSEL2_PLL_IVA2, 0, 5, ptr->m2);
-
-	/* M (IVA2_DPLL_MULT) : CM_CLKSEL1_PLL_IVA2[8:18] */
-	sr32(CM_CLKSEL1_PLL_IVA2, 8, 11, ptr->m);
-
-	/* N (IVA2_DPLL_DIV) : CM_CLKSEL1_PLL_IVA2[0:6] */
-	sr32(CM_CLKSEL1_PLL_IVA2, 0, 7, ptr->n);
-
-	/* FREQSEL (IVA2_DPLL_FREQSEL) : CM_CLKEN_PLL_IVA2[4:7] */
-	sr32(CM_CLKEN_PLL_IVA2, 4, 4, ptr->fsel);
-
-	/* LOCK MODE (EN_IVA2_DPLL) : CM_CLKEN_PLL_IVA2[0:2] */
-	sr32(CM_CLKEN_PLL_IVA2, 0, 3, PLL_LOCK);
-
-	wait_on_value(BIT0, 1, CM_IDLEST_PLL_IVA2, LDELAY);
-}
-#endif /* CONFIG_IVA */
-
-/*
- * OMAP3630 specific functions
- */
-static void dpll3_init_36xx(u32 sil_index, u32 clk_index)
-{
-	dpll_param *ptr;
-
-	/* Getting the base address of Core DPLL param table*/
-	ptr = (dpll_param *)get_36x_core_dpll_param();
-
-	/* Moving it to the right sysclk and ES rev base */
-	ptr += clk_index;
-
-	/* CORE DPLL */
-	/* Select relock bypass: CM_CLKEN_PLL[0:2] */
-	sr32(CM_CLKEN_PLL, 0, 3, PLL_FAST_RELOCK_BYPASS);
-	wait_on_value(BIT0, 0, CM_IDLEST_CKGEN, LDELAY);
-
-	/* CM_CLKSEL1_EMU[DIV_DPLL3] */
-	sr32(CM_CLKSEL1_EMU, 16, 5, CORE_M3X2);
-
-	/* M2 (CORE_DPLL_CLKOUT_DIV): CM_CLKSEL1_PLL[27:31] */
-	sr32(CM_CLKSEL1_PLL, 27, 5, ptr->m2);
-
-	/* M (CORE_DPLL_MULT): CM_CLKSEL1_PLL[16:26] */
-	sr32(CM_CLKSEL1_PLL, 16, 11, ptr->m);
-
-	/* N (CORE_DPLL_DIV): CM_CLKSEL1_PLL[8:14] */
-	sr32(CM_CLKSEL1_PLL, 8, 7, ptr->n);
-
-	/* Source is the CM_96M_FCLK: CM_CLKSEL1_PLL[6] */
-	sr32(CM_CLKSEL1_PLL, 6, 1, 0);
-
-	sr32(CM_CLKSEL_CORE, 8, 4, CORE_SSI_DIV);	/* ssi */
-	sr32(CM_CLKSEL_CORE, 4, 2, CORE_FUSB_DIV);	/* fsusb */
-	sr32(CM_CLKSEL_CORE, 2, 2, CORE_L4_DIV);	/* l4 */
-	sr32(CM_CLKSEL_CORE, 0, 2, CORE_L3_DIV);	/* l3 */
-
-	sr32(CM_CLKSEL_GFX,  0, 3, GFX_DIV_36X);		/* gfx */
-	sr32(CM_CLKSEL_WKUP, 1, 2, WKUP_RSM);		/* reset mgr */
-
-	/* FREQSEL (CORE_DPLL_FREQSEL): CM_CLKEN_PLL[4:7] */
-	sr32(CM_CLKEN_PLL,   4, 4, ptr->fsel);
-	sr32(CM_CLKEN_PLL,   0, 3, PLL_LOCK);		/* lock mode */
-
-	wait_on_value(BIT0, 1, CM_IDLEST_CKGEN, LDELAY);
-}
-
-static void dpll4_init_36xx(u32 sil_index, u32 clk_index)
-{
-	struct dpll_per_36x_param *ptr;
-
-	ptr = (struct dpll_per_36x_param *)get_36x_per_dpll_param();
-
-	/* Moving it to the right sysclk base */
-	ptr += clk_index;
-
-	/* EN_PERIPH_DPLL: CM_CLKEN_PLL[16:18] */
-	sr32(CM_CLKEN_PLL, 16, 3, PLL_STOP);
-	wait_on_value(BIT1, 0, CM_IDLEST_CKGEN, LDELAY);
-
-	/* M6 (DIV_DPLL4): CM_CLKSEL1_EMU[24:29] */
-	sr32(CM_CLKSEL1_EMU, 24, 6, ptr->m6);
-
-	/* M5 (CLKSEL_CAM): CM_CLKSEL1_EMU[0:5] */
-	sr32(CM_CLKSEL_CAM, 0, 6, ptr->m5);
-
-	/* M4 (CLKSEL_DSS1): CM_CLKSEL_DSS[0:5] */
-	sr32(CM_CLKSEL_DSS, 0, 6, ptr->m4);
-
-	/* M3 (CLKSEL_DSS1): CM_CLKSEL_DSS[8:13] */
-	sr32(CM_CLKSEL_DSS, 8, 6, ptr->m3);
-
-	/* M2 (DIV_96M): CM_CLKSEL3_PLL[0:4] */
-	sr32(CM_CLKSEL3_PLL, 0, 5, ptr->m2);
-
-	/* M (PERIPH_DPLL_MULT): CM_CLKSEL2_PLL[8:19] */
-	sr32(CM_CLKSEL2_PLL, 8, 12, ptr->m);
-
-	/* N (PERIPH_DPLL_DIV): CM_CLKSEL2_PLL[0:6] */
-	sr32(CM_CLKSEL2_PLL, 0, 7, ptr->n);
-
-	/* M2DIV (CLKSEL_96M): CM_CLKSEL_CORE[12:13] */
-	sr32(CM_CLKSEL_CORE, 12, 2, ptr->m2div);
-
-	/* LOCK MODE (EN_PERIPH_DPLL): CM_CLKEN_PLL[16:18] */
-	sr32(CM_CLKEN_PLL, 16, 3, PLL_LOCK);
-	wait_on_value(BIT1, 2, CM_IDLEST_CKGEN, LDELAY);
-}
-
-static void mpu_init_36xx(u32 sil_index, u32 clk_index)
-{
-	dpll_param *ptr;
-
-	/* Getting the base address to MPU DPLL param table*/
-	ptr = (dpll_param *)get_36x_mpu_dpll_param();
-
-	/* Moving it to the right sysclk and ES rev base */
-	ptr = ptr + (2*clk_index) + sil_index;
-
-	/* MPU DPLL (unlocked already) */
-	/* M2 (MPU_DPLL_CLKOUT_DIV) : CM_CLKSEL2_PLL_MPU[0:4] */
-	sr32(CM_CLKSEL2_PLL_MPU, 0, 5, ptr->m2);
-
-	/* M (MPU_DPLL_MULT) : CM_CLKSEL2_PLL_MPU[8:18] */
-	sr32(CM_CLKSEL1_PLL_MPU, 8, 11, ptr->m);
-
-	/* N (MPU_DPLL_DIV) : CM_CLKSEL2_PLL_MPU[0:6] */
-	sr32(CM_CLKSEL1_PLL_MPU, 0, 7, ptr->n);
-
-	/* LOCK MODE (EN_MPU_DPLL) : CM_CLKEN_PLL_IVA2[0:2] */
-	sr32(CM_CLKEN_PLL_MPU, 0, 3, PLL_LOCK);
-	wait_on_value(BIT0, 1, CM_IDLEST_PLL_MPU, LDELAY);
-}
-
-#ifdef CONFIG_IVA
-static void iva_init_36xx(u32 sil_index, u32 clk_index)
-{
-	dpll_param *ptr;
-
-	/* Getting the base address to IVA DPLL param table*/
-	ptr = (dpll_param *)get_36x_iva_dpll_param();
-
-	/* Moving it to the right sysclk and ES rev base */
-	ptr = ptr + (2*clk_index) + sil_index;
-
-	/* IVA DPLL */
-	/* EN_IVA2_DPLL : CM_CLKEN_PLL_IVA2[0:2] */
-	sr32(CM_CLKEN_PLL_IVA2, 0, 3, PLL_STOP);
-	wait_on_value(BIT0, 0, CM_IDLEST_PLL_IVA2, LDELAY);
-
-	/* M2 (IVA2_DPLL_CLKOUT_DIV) : CM_CLKSEL2_PLL_IVA2[0:4] */
-	sr32(CM_CLKSEL2_PLL_IVA2, 0, 5, ptr->m2);
-
-	/* M (IVA2_DPLL_MULT) : CM_CLKSEL1_PLL_IVA2[8:18] */
-	sr32(CM_CLKSEL1_PLL_IVA2, 8, 11, ptr->m);
-
-	/* N (IVA2_DPLL_DIV) : CM_CLKSEL1_PLL_IVA2[0:6] */
-	sr32(CM_CLKSEL1_PLL_IVA2, 0, 7, ptr->n);
-
-	/* LOCK MODE (EN_IVA2_DPLL) : CM_CLKEN_PLL_IVA2[0:2] */
-	sr32(CM_CLKEN_PLL_IVA2, 0, 3, PLL_LOCK);
-
-	wait_on_value(BIT0, 1, CM_IDLEST_PLL_IVA2, LDELAY);
-}
-#endif /* CONFIG_IVA */
-
-/******************************************************************************
  * prcm_init() - inits clocks for PRCM as defined in clocks.h
  *   -- called from SRAM, or Flash (using temp SRAM stack).
  *****************************************************************************/
 void prcm_init(void)
 {
 	u32 osc_clk=0, sys_clkin_sel;
+	dpll_param *dpll_param_p;
 	u32 clk_index, sil_index;
 
 	/* Gauge the input clock speed and find out the sys_clkin_sel
@@ -835,13 +257,7 @@ void prcm_init(void)
 	sr32(PRM_CLKSEL, 0, 3, sys_clkin_sel); /* set input crystal speed */
 
 	/* If the input clock is greater than 19.2M always divide/2 */
-	/*
-	 * On OMAP3630, DDR data corruption has been observed on OFF mode
-	 * exit if the sys clock was lower than 26M. As a work around,
-	 * OMAP3630 is operated at 26M sys clock and this internal division
-	 * is not performed.
-	 */
-	if((is_cpu_family() != CPU_OMAP36XX) && (sys_clkin_sel > 2)) {
+	if(sys_clkin_sel > 2) {
 		sr32(PRM_CLKSRC_CTRL, 6, 2, 2);/* input clock divider */
 		clk_index = sys_clkin_sel/2;
 	} else {
@@ -849,96 +265,90 @@ void prcm_init(void)
 		clk_index = sys_clkin_sel;
 	}
 
-	if (is_cpu_family() == CPU_OMAP36XX) {
-		dpll3_init_36xx(0, clk_index);
-		dpll4_init_36xx(0, clk_index);
-		mpu_init_36xx(0, clk_index);
-#ifdef CONFIG_IVA
-		iva_init_36xx(0, clk_index);
-#endif
-	} else {
-		sil_index = get_cpu_rev() - 1;
+	/* The DPLL tables are defined according to sysclk value and
+	 * silicon revision. The clk_index value will be used to get
+	 * the values for that input sysclk from the DPLL param table
+	 * and sil_index will get the values for that SysClk for the
+	 * appropriate silicon rev.
+	 */
+	sil_index = !(get_cpu_rev() == CPU_3XX_ES10);
 
-		/* The DPLL tables are defined according to sysclk value and
-		 * silicon revision. The clk_index value will be used to get
-		 * the values for that input sysclk from the DPLL param table
-		 * and sil_index will get the values for that SysClk for the
-		 * appropriate silicon rev.
-		 */
+	/* Unlock MPU DPLL (slows things down, and needed later) */
+	sr32(CM_CLKEN_PLL_MPU, 0, 3, PLL_LOW_POWER_BYPASS);
+	wait_on_value(BIT0, 0, CM_IDLEST_PLL_MPU, LDELAY);
 
-		/* Unlock MPU DPLL (slows things down, and needed later) */
-		sr32(CM_CLKEN_PLL_MPU, 0, 3, PLL_LOW_POWER_BYPASS);
-		wait_on_value(BIT0, 0, CM_IDLEST_PLL_MPU, LDELAY);
+	/* Getting the base address of Core DPLL param table*/
+	dpll_param_p = (dpll_param *)get_core_dpll_param();
+	/* Moving it to the right sysclk and ES rev base */
+	dpll_param_p = dpll_param_p + 2*clk_index + sil_index;
+	/* CORE DPLL */
+	/* sr32(CM_CLKSEL2_EMU) set override to work when asleep */
+	sr32(CM_CLKEN_PLL, 0, 3, PLL_FAST_RELOCK_BYPASS);
+	wait_on_value(BIT0, 0, CM_IDLEST_CKGEN, LDELAY);
+	sr32(CM_CLKSEL1_EMU, 16, 5, CORE_M3X2);	/* m3x2 */
+	sr32(CM_CLKSEL1_PLL, 27, 2, dpll_param_p->m2);	/* Set M2 */
+	sr32(CM_CLKSEL1_PLL, 16, 11, dpll_param_p->m);	/* Set M */
+	sr32(CM_CLKSEL1_PLL, 8, 7, dpll_param_p->n);	/* Set N */
+	sr32(CM_CLKSEL1_PLL, 6, 1, 0);			/* 96M Src */
+	sr32(CM_CLKSEL_CORE, 8, 4, CORE_SSI_DIV);	/* ssi */
+	sr32(CM_CLKSEL_CORE, 4, 2, CORE_FUSB_DIV);	/* fsusb */
+	sr32(CM_CLKSEL_CORE, 2, 2, CORE_L4_DIV);	/* l4 */
+	sr32(CM_CLKSEL_CORE, 0, 2, CORE_L3_DIV);	/* l3 */
+	sr32(CM_CLKSEL_GFX, 0, 3, GFX_DIV);		/* gfx */
+	sr32(CM_CLKSEL_WKUP, 1, 2, WKUP_RSM);		/* reset mgr */
+	sr32(CM_CLKEN_PLL, 4, 4, dpll_param_p->fsel);	/* FREQSEL */
+	sr32(CM_CLKEN_PLL, 0, 3, PLL_LOCK);		/* lock mode */
+	wait_on_value(BIT0, 1, CM_IDLEST_CKGEN, LDELAY);
 
-		dpll3_init_34xx(sil_index, clk_index);
-		dpll4_init_34xx(sil_index, clk_index);
-#ifdef CONFIG_IVA
-		iva_init_34xx(sil_index, clk_index);
-#endif
-		mpu_init_34xx(sil_index, clk_index);
+	/* Getting the base address to PER  DPLL param table*/
+	dpll_param_p = (dpll_param *)get_per_dpll_param();
+	/* Moving it to the right sysclk base */
+	dpll_param_p = dpll_param_p + clk_index;
+	/* PER DPLL */
+	sr32(CM_CLKEN_PLL, 16, 3, PLL_STOP);
+	wait_on_value(BIT1, 0, CM_IDLEST_CKGEN, LDELAY);
+	sr32(CM_CLKSEL1_EMU, 24, 5, PER_M6X2);	/* set M6 */
+	sr32(CM_CLKSEL_CAM, 0, 5, PER_M5X2);	/* set M5 */
+	sr32(CM_CLKSEL_DSS, 0, 5, PER_M4X2);	/* set M4 */
+	sr32(CM_CLKSEL_DSS, 8, 5, PER_M3X2);	/* set M3 */
+	sr32(CM_CLKSEL3_PLL, 0, 5, dpll_param_p->m2);	/* set M2 */
+	sr32(CM_CLKSEL2_PLL, 8, 11, dpll_param_p->m);	/* set m */
+	sr32(CM_CLKSEL2_PLL, 0, 7, dpll_param_p->n);	/* set n */
+	sr32(CM_CLKEN_PLL, 20, 4, dpll_param_p->fsel);/* FREQSEL */
+	sr32(CM_CLKEN_PLL, 16, 3, PLL_LOCK);	/* lock mode */
+	wait_on_value(BIT1, 2, CM_IDLEST_CKGEN, LDELAY);
 
-		/* Lock MPU DPLL to set frequency */
-		sr32(CM_CLKEN_PLL_MPU, 0, 3, PLL_LOCK);
-		wait_on_value(BIT0, 1, CM_IDLEST_PLL_MPU, LDELAY);
-	}
+	/* Getting the base address to MPU DPLL param table*/
+	dpll_param_p = (dpll_param *)get_mpu_dpll_param();
+	/* Moving it to the right sysclk and ES rev base */
+	dpll_param_p = dpll_param_p + 2*clk_index + sil_index;
+	/* MPU DPLL (unlocked already) */
+	sr32(CM_CLKSEL2_PLL_MPU, 0, 5, dpll_param_p->m2);	/* Set M2 */
+	sr32(CM_CLKSEL1_PLL_MPU, 8, 11, dpll_param_p->m);	/* Set M */
+	sr32(CM_CLKSEL1_PLL_MPU, 0, 7, dpll_param_p->n);	/* Set N */
+	sr32(CM_CLKEN_PLL_MPU, 4, 4, dpll_param_p->fsel);	/* FREQSEL */
+	sr32(CM_CLKEN_PLL_MPU, 0, 3, PLL_LOCK); /* lock mode */
+	wait_on_value(BIT0, 1, CM_IDLEST_PLL_MPU, LDELAY);
+
+	/* Getting the base address to IVA DPLL param table*/
+	dpll_param_p = (dpll_param *)get_iva_dpll_param();
+	/* Moving it to the right sysclk and ES rev base */
+	dpll_param_p = dpll_param_p + 2*clk_index + sil_index;
+	/* IVA DPLL (set to 12*20=240MHz) */
+	sr32(CM_CLKEN_PLL_IVA2, 0, 3, PLL_STOP);
+	wait_on_value(BIT0, 0, CM_IDLEST_PLL_IVA2, LDELAY);
+	sr32(CM_CLKSEL2_PLL_IVA2, 0, 5, dpll_param_p->m2);	/* set M2 */
+	sr32(CM_CLKSEL1_PLL_IVA2, 8, 11, dpll_param_p->m);	/* set M */
+  	sr32(CM_CLKSEL1_PLL_IVA2, 0, 7, dpll_param_p->n);	/* set N */
+	sr32(CM_CLKEN_PLL_IVA2, 4, 4, dpll_param_p->fsel);	/* FREQSEL */
+	sr32(CM_CLKEN_PLL_IVA2, 0, 3, PLL_LOCK);	/* lock mode */
+	wait_on_value(BIT0, 1, CM_IDLEST_PLL_IVA2, LDELAY);
 
 	/* Set up GPTimers to sys_clk source only */
  	sr32(CM_CLKSEL_PER, 0, 8, 0xff);
 	sr32(CM_CLKSEL_WKUP, 0, 1, 1);
 
-	delay(500);
-}
-
-/*****************************************
- * Routine: secure_unlock
- * Description: Setup security registers for access
- * (GP Device only)
- *****************************************/
-void secure_unlock(void)
-{
-	/* Permission values for registers -Full fledged permissions to all */
-	#define UNLOCK_1 0xFFFFFFFF
-	#define UNLOCK_2 0x00000000
-	#define UNLOCK_3 0x0000FFFF
-	/* Protection Module Register Target APE (PM_RT)*/
-	__raw_writel(UNLOCK_1, RT_REQ_INFO_PERMISSION_1);
-	__raw_writel(UNLOCK_1, RT_READ_PERMISSION_0);
-	__raw_writel(UNLOCK_1, RT_WRITE_PERMISSION_0);
-	__raw_writel(UNLOCK_2, RT_ADDR_MATCH_1);
-
-	__raw_writel(UNLOCK_3, GPMC_REQ_INFO_PERMISSION_0);
-	__raw_writel(UNLOCK_3, GPMC_READ_PERMISSION_0);
-	__raw_writel(UNLOCK_3, GPMC_WRITE_PERMISSION_0);
-
-	__raw_writel(UNLOCK_3, OCM_REQ_INFO_PERMISSION_0);
-	__raw_writel(UNLOCK_3, OCM_READ_PERMISSION_0);
-	__raw_writel(UNLOCK_3, OCM_WRITE_PERMISSION_0);
-	__raw_writel(UNLOCK_2, OCM_ADDR_MATCH_2);
-
-	/* IVA Changes */
-	__raw_writel(UNLOCK_3, IVA2_REQ_INFO_PERMISSION_0);
-	__raw_writel(UNLOCK_3, IVA2_READ_PERMISSION_0);
-	__raw_writel(UNLOCK_3, IVA2_WRITE_PERMISSION_0);
-
-	__raw_writel(UNLOCK_1, SMS_RG_ATT0); /* SDRC region 0 public */
-}
-
-/**********************************************************
- * Routine: try_unlock_sram()
- * Description: If chip is GP type, unlock the SRAM for
- *  general use.
- ***********************************************************/
-void try_unlock_memory(void)
-{
-	int mode;
-
-	/* if GP device unlock device SRAM for general use */
-	/* secure code breaks for Secure/Emulation device - HS/E/T*/
-	mode = get_device_type();
-	if (mode == GP_DEVICE) {
-		secure_unlock();
-	}
-	return;
+	delay(5000);
 }
 
 /**********************************************************
@@ -961,11 +371,6 @@ void s_init(void)
 	delay(100);
 	prcm_init();
 	per_clocks_enable();
-	/*
-	 * WORKAROUND: To suuport both Micron and Hynix NAND/DDR parts
-	 */
-	if ((get_mem_type() == GPMC_NAND) || (get_mem_type() == MMC_NAND))
-		nand_init();
 	config_3430sdram_ddr();
 }
 
@@ -1035,13 +440,7 @@ void per_clocks_enable(void)
 	sr32(CM_FCLKEN1_CORE, 13, 1, 0x1);
 	sr32(CM_ICLKEN1_CORE, 13, 1, 0x1);
 #endif
-
-#ifdef CONFIG_MMC
-	/* Enable MMC1 clocks */
-	sr32(CM_FCLKEN1_CORE, 24, 1, 0x1);
-	sr32(CM_ICLKEN1_CORE, 24, 1, 0x1);
-#endif
-	delay(500);
+	delay(1000);
 }
 
 /* Set MUX for UART, GPMC, SDRC, GPIO */
@@ -1150,8 +549,8 @@ void per_clocks_enable(void)
 	MUX_VAL(CP(CAM_WEN),        (IEN  | PTD | DIS | M4)) /*GPIO_167*/\
 	MUX_VAL(CP(UART1_TX),       (IDIS | PTD | DIS | M0)) /*UART1_TX*/\
 	MUX_VAL(CP(UART1_RTS),      (IDIS | PTD | DIS | M0)) /*UART1_RTS*/\
-	MUX_VAL(CP(UART1_CTS),      (IEN  | PTU | DIS | M0)) /*UART1_CTS*/\
-	MUX_VAL(CP(UART1_RX),       (IEN  | PTD | DIS | M0)) /*UART1_RX*/\
+	MUX_VAL(CP(UART1_CTS),      (IEN | PTU | DIS | M0)) /*UART1_CTS*/\
+	MUX_VAL(CP(UART1_RX),       (IEN | PTD | DIS | M0)) /*UART1_RX*/\
 	MUX_VAL(CP(McBSP1_DX),      (IEN  | PTD | DIS | M4)) /*GPIO_158*/\
 	MUX_VAL(CP(SYS_32K),        (IEN  | PTD | DIS | M0)) /*SYS_32K*/\
 	MUX_VAL(CP(SYS_BOOT0),      (IEN  | PTD | DIS | M4)) /*GPIO_2 */\
@@ -1191,15 +590,11 @@ void set_muxconf_regs(void)
 	MUX_DEFAULT();
 }
 
-int nor_read_boot(unsigned char *buf)
-{
-	return 0;
-}
-
 /**********************************************************
  * Routine: nand+_init
  * Description: Set up nand for nand and jffs2 commands
  *********************************************************/
+
 int nand_init(void)
 {
 	/* global settings */
@@ -1214,12 +609,7 @@ int nand_init(void)
          */
 	__raw_writel(0 , GPMC_CONFIG7 + GPMC_CONFIG_CS0);
 	delay(1000);
-#ifdef ECC_HW_ENABLE
-	if (get_mem_type() == GPMC_NAND){
-        	__raw_writel( (ECCCLEAR | ECCRESULTREG1), GPMC_ECC_CONTROL + GPMC_CONFIG_CS0);
-        	__raw_writel( (ECCSIZE1 | ECCSIZE0 | ECCSIZE0SEL), GPMC_ECC_SIZE_CONFIG + GPMC_CONFIG_CS0);
-	}
-#endif
+
 	if ((get_mem_type() == GPMC_NAND) || (get_mem_type() == MMC_NAND)){
         	__raw_writel( M_NAND_GPMC_CONFIG1, GPMC_CONFIG1 + GPMC_CONFIG_CS0);
         	__raw_writel( M_NAND_GPMC_CONFIG2, GPMC_CONFIG2 + GPMC_CONFIG_CS0);
@@ -1267,155 +657,20 @@ int nand_init(void)
 	return 0;
 }
 
-#ifdef ECC_HW_ENABLE
-void omap_enable_hw_ecc(void)
-{
-	uint32_t val,dev_width = 0;
-        uint8_t cs = 0;
-#ifdef NAND_16BIT
-	dev_width = 1;
-#endif
-	/* Clear the ecc result registers, select ecc reg as 1 */
-	__raw_writel(ECCCLEAR | ECCRESULTREG1, GPMC_ECC_CONTROL + GPMC_CONFIG_CS0);
-
-	/*
-	* Size 0 = 0xFF, Size1 is 0xFF - both are 512 bytes
-	* tell all regs to generate size0 sized regs
-	* we just have a single ECC engine for all CS
-	*/
-	__raw_writel(ECCSIZE1 | ECCSIZE0 | ECCSIZE0SEL,
-			GPMC_ECC_SIZE_CONFIG + GPMC_CONFIG_CS0);
-	val = (dev_width << 7) | (cs << 1) | (0x1);
-	__raw_writel(val, GPMC_ECC_CONFIG + GPMC_CONFIG_CS0);
-	return;
-}
-/*
- * hweightN: returns the hamming weight (i.e. the number
- * of bits set) of a N-bit word
- */
-
-static inline unsigned int hweight32(unsigned int w)
-{
-        unsigned int res = (w & 0x55555555) + ((w >> 1) & 0x55555555);
-        res = (res & 0x33333333) + ((res >> 2) & 0x33333333);
-        res = (res & 0x0F0F0F0F) + ((res >> 4) & 0x0F0F0F0F);
-        res = (res & 0x00FF00FF) + ((res >> 8) & 0x00FF00FF);
-        return (res & 0x0000FFFF) + ((res >> 16) & 0x0000FFFF);
-}
-/*
- * gen_true_ecc - This function will generate true ECC value, which
- * can be used when correcting data read from NAND flash memory core
- *
- * @ecc_buf:    buffer to store ecc code
- *
- * @return:     re-formatted ECC value
- */
-static uint32_t gen_true_ecc(uint8_t *ecc_buf)
-{
-        return ecc_buf[0] | (ecc_buf[1] << 16) | ((ecc_buf[2] & 0xF0) << 20) |
-                ((ecc_buf[2] & 0x0F) << 8);
-}
-
-
-int omap_correct_data_hw_ecc(u_char *dat, u_char *read_ecc, u_char *calc_ecc)
-{
-        uint32_t orig_ecc, new_ecc, res, hm;
-        uint16_t parity_bits, byte;
-        uint8_t bit;
-
-        /* Regenerate the orginal ECC */
-        orig_ecc = gen_true_ecc(read_ecc);
-        new_ecc = gen_true_ecc(calc_ecc);
-        /* Get the XOR of real ecc */
-        res = orig_ecc ^ new_ecc;
-        if (res) {
-                /* Get the hamming width */
-                hm = hweight32(res);
-                /* Single bit errors can be corrected! */
-                if (hm == 12) {
-                        /* Correctable data! */
-                        parity_bits = res >> 16;
-                        bit = (parity_bits & 0x7);
-                        byte = (parity_bits >> 3) & 0x1FF;
-                        /* Flip the bit to correct */
-                        dat[byte] ^= (0x1 << bit);
-                } else if (hm == 1) {
-                        printf("Error: Ecc is wrong\n");
-                        /* ECC itself is corrupted */
-                        return 2;
-                } else {
-                        /*
-                         * hm distance != parity pairs OR one, could mean 2 bit
-                         * error OR potentially be on a blank page..
-                         * orig_ecc: contains spare area data from nand flash.
-                         * new_ecc: generated ecc while reading data area.
-                         * Note: if the ecc = 0, all data bits from which it was
-                         * generated are 0xFF.
-                         * The 3 byte(24 bits) ecc is generated per 512byte
-                         * chunk of a page. If orig_ecc(from spare area)
-                         * is 0xFF && new_ecc(computed now from data area)=0x0,
-                         * this means that data area is 0xFF and spare area is
-                         * 0xFF. A sure sign of a erased page!
-                         */
-                        if ((orig_ecc == 0x0FFF0FFF) && (new_ecc == 0x00000000))
-                                return 0;
-                        printf("Error: Bad compare! failed\n");
-                        /* detected 2 bit error */
-                        return -1;
-                }
-        }
-        return 0;
-}
-void omap_calculate_hw_ecc(const u_char *dat, u_char *ecc_code)
-{
-        u_int32_t val;
-
-        /* Start Reading from HW ECC1_Result = 0x200 */
-        val = __raw_readl(GPMC_ECC1_RESULT + GPMC_CONFIG_CS0);
-
-        ecc_code[0] = val & 0xFF;
-        ecc_code[1] = (val >> 16) & 0xFF;
-        ecc_code[2] = ((val >> 8) & 0x0F) | ((val >> 20) & 0xF0);
-
-        /*
-         * Stop reading anymore ECC vals and clear old results
-         * enable will be called if more reads are required
-         */
-	__raw_writel(0x000 , GPMC_ECC_CONFIG + GPMC_CONFIG_CS0);
-
-        return;
-}
-#endif
-typedef int (mmc_boot_addr) (void);
-int mmc_boot(unsigned char *buf)
-{
-
-       long size = 0;
-#ifdef CFG_CMD_FAT
-       block_dev_desc_t *dev_desc = NULL;
-       unsigned char ret = 0;
-
-       printf("Starting X-loader on MMC\n");
-
-       ret = mmc_init(1);
-       if(ret == 0){
-               printf("\n MMC init failed\n");
-               return 0;
-       }
-
-       dev_desc = mmc_get_dev(0);
-       fat_register_device(dev_desc, 1);
-       size = file_fat_read("u-boot.bin", buf, 0);
-       if (size == -1) {
-               return 0;
-       }
-       printf("\n%ld Bytes Read from MMC\n", size);
-
-       printf("Starting OS Bootloader from MMC...\n");
-#endif
-       return size;
-}
-
 /* optionally do something like blinking LED */
 void board_hang (void)
 { while (0) {};}
+
+/******************************************************************************
+ * Dummy function to handle errors for EABI incompatibility
+ *****************************************************************************/
+void raise(void)
+{
+}
+
+/******************************************************************************
+ * Dummy function to handle errors for EABI incompatibility
+ *****************************************************************************/
+void abort(void)
+{
+}

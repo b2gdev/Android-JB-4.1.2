@@ -214,30 +214,50 @@ static irqreturn_t wm8994_irq_thread(int irq, void *data)
 	unsigned int i;
 	u16 status[WM8994_NUM_IRQ_REGS];
 	int ret;
-
+	
+	//printk("{RD} [%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);
+	
 	ret = wm8994_bulk_read(wm8994, WM8994_INTERRUPT_STATUS_1,
 			       WM8994_NUM_IRQ_REGS, status);
+		
 	if (ret < 0) {
 		dev_err(wm8994->dev, "Failed to read interrupt status: %d\n",
 			ret);
 		return IRQ_NONE;
 	}
+	
+	//printk("{RD} [%08u] - %s - %s - WM8994_INTERRUPT_STATUS_1 = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, status[0]);
+	//printk("{RD} [%08u] - %s - %s - WM8994_INTERRUPT_STATUS_2 = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, status[1]);
+	//printk("%s - %s - WM8994_INTERRUPT_STATUS_2 = 0x%04x\n",  __FILE__, __FUNCTION__, status[1]);
+
+	//{RD}
+	//wm8994->irq_masks_cur[1] = 0xffe7;
 
 	/* Apply masking */
-	for (i = 0; i < WM8994_NUM_IRQ_REGS; i++)
+	for (i = 0; i < WM8994_NUM_IRQ_REGS; i++){
+		//printk("{RD} [%08u] - %s - %s - wm8994->irq_masks_cur[%d] = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__,i, wm8994->irq_masks_cur[i]);
 		status[i] &= ~wm8994->irq_masks_cur[i];
+		//printk("{RD} [%08u] - %s - %s - status[%d] = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__,i, status[i]);
+		}
 
 	/* Report */
 	for (i = 0; i < ARRAY_SIZE(wm8994_irqs); i++) {
 		if (status[wm8994_irqs[i].reg - 1] & wm8994_irqs[i].mask)
 			handle_nested_irq(wm8994->irq_base + i);
 	}
-
+	//for (i = 3; i < 5; i++) {
+	//	if (status[wm8994_irqs[i].reg - 1] & wm8994_irqs[i].mask)
+	//		handle_nested_irq(wm8994->irq_base + i);
+	//}	handle_nested_irq(wm8994->irq_base + 1);
+			
 	/* Ack any unmasked IRQs */
 	for (i = 0; i < ARRAY_SIZE(status); i++) {
-		if (status[i])
-			wm8994_reg_write(wm8994, WM8994_INTERRUPT_STATUS_1 + i,
+		if (status[i]){
+			ret = wm8994_reg_write(wm8994, WM8994_INTERRUPT_STATUS_1 + i,
 					 status[i]);
+			 //if(ret)
+				//printk("{RD} [%08u] - %s - %s - wm8994_reg_write FILED with :%d\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, ret);
+		 }			
 	}
 
 	return IRQ_HANDLED;
@@ -287,7 +307,7 @@ int wm8994_irq_init(struct wm8994 *wm8994)
 		set_irq_noprobe(cur_irq);
 #endif
 	}
-
+		
 	ret = request_threaded_irq(wm8994->irq, NULL, wm8994_irq_thread,
 				   IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
 				   "wm8994", wm8994);
@@ -297,6 +317,11 @@ int wm8994_irq_init(struct wm8994 *wm8994)
 		return ret;
 	}
 
+	//{RD}//
+	//	wm8994->irq_masks_cur[1] = 0xffe1;
+	//	wm8994->irq_masks_cache[1] = 0xffe1;
+	//	wm8994_reg_write(wm8994, WM8994_INTERRUPT_STATUS_1_MASK + 1, 0xffe1);
+		
 	/* Enable top level interrupt if it was masked */
 	wm8994_reg_write(wm8994, WM8994_INTERRUPT_CONTROL, 0);
 

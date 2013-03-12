@@ -46,8 +46,6 @@
 #if defined(CONFIG_MMC)
 	#define CFG_CMD_MMC              1
 	#define CFG_CMD_FAT              1
-
-	#define CONFIG_DOS_PARTITION
 #endif
 
 #include <asm/arch/cpu.h>        /* get chip and board defs */

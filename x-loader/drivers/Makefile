@@ -25,49 +25,44 @@ include $(TOPDIR)/config.mk
 
 # CFLAGS += -DET_DEBUG -DDEBUG
 
-LIB	= libdrivers.a
-OBJS	= serial.o ns16550.o onenand.o
+LIB	= $(obj)libdrivers.a
+COBJS	= serial.o ns16550.o omap24xx_i2c.o
 
 ifeq ($(BOARD), omap3430sdp)
-OBJS 	+= k9f1g08r0a.o
+COBJS 	+= k9f1g08r0a.o
 endif
 
 ifeq ($(BOARD), omap3430labrador)
-OBJS 	+= k9f1g08r0a.o
+COBJS 	+= k9f1g08r0a.o
 endif
 
-ifeq ($(BOARD), omap3beagle)
-OBJS 	+= k9f1g08r0a.o
+ifeq ($(BOARD), omap3530beagle)
+COBJS 	+= k9f1g08r0a.o
 endif
 
 ifeq ($(BOARD), omap3evm)
-OBJS 	+= k9f1g08r0a.o
-endif
-
-ifeq ($(BOARD), am3517evm)
-OBJS    += k9f1g08r0a.o
+COBJS 	+= k9f1g08r0a.o onenand.o
 endif
 
 ifeq ($(BOARD), overo)
-OBJS 	+= k9f1g08r0a.o
+COBJS 	+= k9f1g08r0a.o
 endif
 
-ifeq ($(BOARD), am3517crane)
-OBJS    += k9f1g08r0a.o
+ifeq ($(BOARD), igep00x0)
+COBJS    += onenand.o
 endif
 
-ifeq ($(BOARD), omap2420h4)
-OBJS 	+= k9k1216.o
+ifeq ($(BOARD), tam3517)
+COBJS    += k9f1g08r0a.o
 endif
 
-ifeq ($(BOARD), omap2430sdp)
-OBJS    += k9k1216.o
+ifeq ($(BOARD), tao3530)
+COBJS    += k9f1g08r0a.o onenand.o
 endif
 
-ifeq ($(BOARD), omap1710h3)
-OBJS    += k9f5616.o
-endif
-
+ifeq ($(BOARD), tdm3730)
+COBJS    += k9f1g08r0a.o 
+endif 
 
 ## Disabled for now:
 ##	  cs8900.o ct69000.o dataflash.o dc2114x.o ds1722.o \
@@ -75,16 +70,19 @@ endif
 ##	  smc91111.o smiLynxEM.o spi_eeprom.o sym53c8xx.o \
 ##
 
+SRCS	:= $(COBJS:.o=.c)
+OBJS	:= $(addprefix $(obj),$(COBJS))
+
 all:	$(LIB)
 
-$(LIB):	$(OBJS)
+$(LIB):	$(obj).depend $(OBJS)
 	$(AR) crv $@ $(OBJS)
 
 #########################################################################
 
-.depend:	Makefile $(OBJS:.o=.c)
-		$(CC) -M $(CFLAGS) $(OBJS:.o=.c) > $@
+# defines $(obj).depend target
+include $(SRCTREE)/rules.mk
 
-sinclude .depend
+sinclude $(obj).depend
 
 #########################################################################

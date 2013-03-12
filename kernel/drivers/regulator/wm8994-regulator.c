@@ -38,10 +38,19 @@ struct wm8994_ldo {
 static int wm8994_ldo_enable(struct regulator_dev *rdev)
 {
 	struct wm8994_ldo *ldo = rdev_get_drvdata(rdev);
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s ldo->enable:%d\n", (unsigned int)jiffies, __FILE__, __FUNCTION__,ldo->enable);	/* {PS} */
+	#endif	
 
 	/* If we have no soft control assume that the LDO is always enabled. */
-	if (!ldo->enable)
+	// {RD}
+	//if (!ldo->enable)
+	//	return 0;
+	if (!ldo->enable){
+		ldo->is_enabled = true;	
 		return 0;
+	}
 
 	gpio_set_value(ldo->enable, 1);
 	ldo->is_enabled = true;
@@ -52,10 +61,19 @@ static int wm8994_ldo_enable(struct regulator_dev *rdev)
 static int wm8994_ldo_disable(struct regulator_dev *rdev)
 {
 	struct wm8994_ldo *ldo = rdev_get_drvdata(rdev);
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s ldo->enable:%d\n", (unsigned int)jiffies, __FILE__, __FUNCTION__,ldo->enable);	/* {PS} */
+	#endif	
 
 	/* If we have no soft control assume that the LDO is always enabled. */
-	if (!ldo->enable)
-		return -EINVAL;
+	//{RD}
+	//if (!ldo->enable)
+	//	return -EINVAL;
+	if (!ldo->enable){
+		ldo->is_enabled = false;
+		return 0;
+	}
 
 	gpio_set_value(ldo->enable, 0);
 	ldo->is_enabled = false;
@@ -66,12 +84,20 @@ static int wm8994_ldo_disable(struct regulator_dev *rdev)
 static int wm8994_ldo_is_enabled(struct regulator_dev *rdev)
 {
 	struct wm8994_ldo *ldo = rdev_get_drvdata(rdev);
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	return ldo->is_enabled;
 }
 
 static int wm8994_ldo_enable_time(struct regulator_dev *rdev)
 {
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
+	
 	/* 3ms is fairly conservative but this shouldn't be too performance
 	 * critical; can be tweaked per-system if required. */
 	return 3000;
@@ -80,6 +106,10 @@ static int wm8994_ldo_enable_time(struct regulator_dev *rdev)
 static int wm8994_ldo1_list_voltage(struct regulator_dev *rdev,
 				    unsigned int selector)
 {
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	if (selector > WM8994_LDO1_MAX_SELECTOR)
 		return -EINVAL;
 
@@ -90,6 +120,10 @@ static int wm8994_ldo1_get_voltage(struct regulator_dev *rdev)
 {
 	struct wm8994_ldo *ldo = rdev_get_drvdata(rdev);
 	int val;
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	val = wm8994_reg_read(ldo->wm8994, WM8994_LDO_1);
 	if (val < 0)
@@ -105,6 +139,10 @@ static int wm8994_ldo1_set_voltage(struct regulator_dev *rdev,
 {
 	struct wm8994_ldo *ldo = rdev_get_drvdata(rdev);
 	int selector, v;
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	selector = (min_uV - 2400000) / 100000;
 	v = wm8994_ldo1_list_voltage(rdev, selector);
@@ -131,6 +169,10 @@ static struct regulator_ops wm8994_ldo1_ops = {
 static int wm8994_ldo2_list_voltage(struct regulator_dev *rdev,
 				    unsigned int selector)
 {
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	if (selector > WM8994_LDO2_MAX_SELECTOR)
 		return -EINVAL;
 
@@ -142,6 +184,10 @@ static int wm8994_ldo2_get_voltage(struct regulator_dev *rdev)
 	struct wm8994_ldo *ldo = rdev_get_drvdata(rdev);
 	int val;
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	val = wm8994_reg_read(ldo->wm8994, WM8994_LDO_2);
 	if (val < 0)
 		return val;
@@ -156,6 +202,10 @@ static int wm8994_ldo2_set_voltage(struct regulator_dev *rdev,
 {
 	struct wm8994_ldo *ldo = rdev_get_drvdata(rdev);
 	int selector, v;
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	selector = (min_uV - 900000) / 100000;
 	v = wm8994_ldo2_list_voltage(rdev, selector);
@@ -205,6 +255,10 @@ static __devinit int wm8994_ldo_probe(struct platform_device *pdev)
 	int id = pdev->id % ARRAY_SIZE(pdata->ldo);
 	struct wm8994_ldo *ldo;
 	int ret;
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	dev_dbg(&pdev->dev, "Probing LDO%d\n", id + 1);
 
@@ -263,6 +317,10 @@ static __devexit int wm8994_ldo_remove(struct platform_device *pdev)
 {
 	struct wm8994_ldo *ldo = platform_get_drvdata(pdev);
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	platform_set_drvdata(pdev, NULL);
 
 	regulator_unregister(ldo->regulator);
@@ -285,6 +343,10 @@ static struct platform_driver wm8994_ldo_driver = {
 static int __init wm8994_ldo_init(void)
 {
 	int ret;
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 
 	ret = platform_driver_register(&wm8994_ldo_driver);
 	if (ret != 0)
@@ -296,6 +358,10 @@ subsys_initcall(wm8994_ldo_init);
 
 static void __exit wm8994_ldo_exit(void)
 {
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	platform_driver_unregister(&wm8994_ldo_driver);
 }
 module_exit(wm8994_ldo_exit);

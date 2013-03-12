@@ -501,4 +501,22 @@ config KEYBOARD_W90P910
 	  To compile this driver as a module, choose M here: the
 	  module will be called w90p910_keypad.
 
+# {PS} BEGIN:
+#
+# CP430 Keypad
+#
+menu "CP430 Keypad"
+	depends on MFD_CP430_CORE
+
+config KEYPAD_CP430
+        tristate "Support for CP430 Keypad"
+        default m
+         ---help---
+	  Provides support for CP430 Keypad. For this
+	  driver to work, CP430 Multi-function device is required.
+
+	  If unsure, say N.
+endmenu
+# {PS} END:
+
 endif

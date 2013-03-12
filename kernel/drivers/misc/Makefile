@@ -40,6 +40,13 @@ obj-$(CONFIG_IWMC3200TOP)      += iwmc3200top/
 obj-$(CONFIG_HMC6352)		+= hmc6352.o
 obj-y				+= eeprom/
 obj-y				+= cb710/
+# {PK} BEGIN:
+obj-y				+= cp430_charger/
+obj-y				+= lm3553/
+obj-y				+= hmc5883l/
+obj-y				+= twl3040_vib/
+obj-y				+= w2sg0006/
+# {PK} END:
 obj-$(CONFIG_VMWARE_BALLOON)	+= vmw_balloon.o
 obj-$(CONFIG_ARM_CHARLCD)	+= arm-charlcd.o
 obj-$(CONFIG_PCH_PHUB)		+= pch_phub.o

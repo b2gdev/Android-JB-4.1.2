@@ -31,9 +31,10 @@
 
 #include <config.h>
 #include <asm/arch/cpu.h>
+#incldue <asm/arch-omap3/omap3430.h>
 
 .globl _start
-_start:
+_start:	
 	b	reset
  	ldr	pc, _hang
 	ldr	pc, _hang
@@ -45,7 +46,7 @@ _start:
 
 _hang:
  	.word do_hang
-
+	
 	.word 0x12345678
 	.word 0x12345678
 	.word 0x12345678
@@ -93,7 +94,7 @@ _bss_end:
  * the actual reset code
  */
 
-reset:
+reset: 
 	/*
 	 * set the cpu to SVC32 mode
 	 */
@@ -102,7 +103,7 @@ reset:
 	orr	r0,r0,#0xd3
 	msr	cpsr,r0
 
-	/* Copy vectors to mask ROM indirect addr */
+	/* Copy vectors to mask ROM indirect addr */ 
 	adr     r0, _start              /* r0 <- current position of code   */
 	add     r0, r0, #4				/* skip reset vector			*/
 	mov     r2, #64                 /* r2 <- size to copy  */
@@ -119,7 +120,7 @@ next:
 	bne     next                    /* loop until equal */
 
 	bl	cpy_clk_code            /* put dpll adjust code behind vectors */
-
+ 
 	/* the mask ROM code should have PLL and others stable */
 	bl  cpu_init_crit
 
@@ -127,7 +128,7 @@ relocate:				/* relocate U-Boot to RAM	    */
 	adr	r0, _start		/* r0 <- current position of code   */
 	ldr	r1, _TEXT_BASE		/* test if we run from flash or RAM */
 	cmp r0, r1                  	/* no need to relocate if XIP       */
-	beq stack_setup			/* skip txt cpy if XIP(SRAM, SDRAM) */
+	beq stack_setup			/* skip txt cpy if XIP(SRAM, SDRAM) */ 
 
 	ldr	r2, _armboot_start
 	ldr	r3, _bss_start
@@ -180,17 +181,13 @@ cpu_init_crit:
         mcr	p15, 0, r0, c8, c7, 0  /* invalidate TLBs */
         mcr	p15, 0, r0, c7, c5, 1  /* invalidate icache */
 
-	/* Invalide L2 cache (gp device call point)
+	/* Invalide L2 cache (gp device call point) 
 	 * - warning, this may have issues on EMU/HS devices
 	 * this call can corrupt r0-r5
 	 */
-	mov r12, #0x1		@ set up to invalide L2
-/*
- * TODO: Need to revert back on GP device.
- */
-/*
+	mov r12, #0x1		@ set up to invalide L2	
 smi: 	.word 0xE1600070	@ Call SMI monitor
-*/
+
 	/*
 	 * disable MMU stuff and caches
 	 */

@@ -455,7 +455,6 @@ omap2_mcspi_txrx_dma(struct spi_device *spi, struct spi_transfer *xfer)
 			else /* word_len <= 32 */
 				((u32 *)xfer->rx_buf)[elements] = w;
 		} else {
-			dev_err(&spi->dev, "DMA RX last word empty");
 			count -= (word_len <= 8)  ? 1 :
 				 (word_len <= 16) ? 2 :
 			       /* word_len <= 32 */ 4;

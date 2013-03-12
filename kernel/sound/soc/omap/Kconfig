@@ -125,6 +125,14 @@ config SND_OMAP_SOC_OMAP3_BEAGLE
 	  Say Y if you want to add support for SoC audio on the Beagleboard or
 	  the clone Devkit8000.
 
+# {PS} BEGIN:
+config SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+	bool "Debug SoC Audio support for OMAP3 Beagle and Devkit8000"
+	depends on SND_OMAP_SOC_OMAP3_BEAGLE
+	help
+	  Makes the OMAP3 Beagle sound drivers print out a lot of debug info.
+# {PS} END:
+
 config SND_OMAP_SOC_ZOOM2
 	tristate "SoC Audio support for Zoom2"
 	depends on TWL4030_CORE && SND_OMAP_SOC && MACH_OMAP_ZOOM2

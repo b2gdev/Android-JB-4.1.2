@@ -1,0 +1,35 @@
+#########################################################################
+#									#
+# Regular Maintainers for X-loader board support:			#
+#									#
+# For any board without permanent maintainer, please contact		#
+# and Cc: the <x-loader@googlegroups.com> mailing list.			#
+#									#
+# Note: lists sorted by Maintainer Name					#
+#########################################################################
+
+#########################################################################
+# OMAP3 Systems:							#
+#									#
+# Maintainer Name, Email Address					#
+#	Board		CPU						#
+#########################################################################
+
+Enric Balletbo i Serra, <eballetbo@iseebcn.com>
+	igep00x0	ARM ARMV7 (OMAP3xx SoC)
+
+Tapani Utriainen, <tapani@technexion.com>
+	tam3517		ARM ARMV7 (Sitara AM3517 SoM)
+	tao3530		ARM ARMV7 (OMAP3530 SoM)
+	tdm3730		ARM ARMV7 (DaVinci DM3730 SoM)
+
+#########################################################################
+# OMAP4 Systems:							#
+#									#
+# Maintainer Name, Email Address					#
+#	Board		CPU						#
+#########################################################################
+
+#########################################################################
+# End of MAINTAINERS list						#
+#########################################################################

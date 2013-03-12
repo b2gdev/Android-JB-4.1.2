@@ -31,19 +31,32 @@
  */
 
 #include <common.h>
+#include <i2c.h>
+#include <part.h>
+#include <fat.h>
 #include <asm/arch/mem.h>
-#include <asm/arch/sys_proto.h>
 
-extern int misc_init_r (void);
-extern u32 get_mem_type(void);
+const char version_string[] =
+	"Texas Instruments X-Loader 1.5.1 (" __DATE__ " - " __TIME__ ")";
 
-#ifdef CFG_PRINTF
 int print_info(void)
 {
-	printf("\n\nTexas Instruments X-Loader 1.51 ("
-			__DATE__ " - " __TIME__ ")\n");
+#ifdef CFG_PRINTF
+        printf("\n\n%s\n", version_string);
+#endif
 	return 0;
 }
+
+/* !!! why is I2C dependent on MMC? */
+
+#ifdef CONFIG_MMC
+#ifdef CONFIG_DRIVER_OMAP34XX_I2C
+static int init_func_i2c (void)
+{
+	i2c_init (CFG_I2C_SPEED, CFG_I2C_SLAVE);
+	return 0;
+}
+#endif
 #endif
 
 typedef int (init_fnc_t) (void);
@@ -51,80 +64,87 @@ typedef int (init_fnc_t) (void);
 init_fnc_t *init_sequence[] = {
 	cpu_init,		/* basic cpu dependent setup */
 	board_init,		/* basic board dependent setup */
-#ifdef CFG_PRINTF
+#ifdef CFG_NS16550_SERIAL
  	serial_init,		/* serial communications setup */
-	print_info,
 #endif
+	print_info,
   	nand_init,		/* board specific nand init */
+#ifdef CONFIG_MMC
+#ifdef CONFIG_DRIVER_OMAP34XX_I2C
+	init_func_i2c,
+#endif
+#endif
   	NULL,
 };
 
 void start_armboot (void)
 {
   	init_fnc_t **init_fnc_ptr;
- 	int i;
+ 	int size;
 	uchar *buf;
+	int *first_instruction;
+#if defined(CFG_ONENAND) || defined(CFG_NAND_K9F1G08R0A)
+	int i;
+#endif
 
-   	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr) {
-		if ((*init_fnc_ptr)() != 0) {
+   	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr)
+		if ((*init_fnc_ptr)())
 			hang ();
-		}
-	}
 
 	misc_init_r();
-	buf =  (uchar*) CFG_LOADADDR;
 
-	/* Always first try mmc without checking boot pins */
-#ifndef CONFIG_OMAP3_BEAGLE
-	if ((get_mem_type() == MMC_ONENAND) || (get_mem_type() == MMC_NAND))
-#endif	/* CONFIG_OMAP3_BEAGLE */
-		buf += mmc_boot(buf);
+	buf =  (uchar*) CFG_LOADADDR;
+	*(int *)buf = 0xffffffff;
+
+#ifdef CONFIG_MMC
+	/* first try mmc */
+	if (mmc_init(1)) {
+		size = file_fat_read("u-boot.bin", buf, 0);
+		if (size > 0) {
+#ifdef CFG_PRINTF
+			printf("Loading u-boot.bin from mmc\n");
+#endif
+			buf += size;
+		}
+	}
+#endif
 
 	if (buf == (uchar *)CFG_LOADADDR) {
-#ifdef CFG_NAND
-		if (get_mem_type() == GPMC_NAND){
-#ifdef CFG_PRINTF
-			printf("Booting from nand . . .\n");
-#endif
-			for (i = NAND_UBOOT_START; i < NAND_UBOOT_END; i+= NAND_BLOCK_SIZE){
-				if (!nand_read_block(buf, i))
-					buf += NAND_BLOCK_SIZE; /* advance buf ptr */
-			}
-		}
-#endif /* CFG_NAND */
-
-#ifdef CFG_ONENAND
+		/* if no u-boot on mmc, try onenand or nand, depending upon sysboot */
 		if (get_mem_type() == GPMC_ONENAND){
+#ifdef CFG_ONENAND
 #ifdef CFG_PRINTF
-			printf("Booting from onenand . . .\n");
+       			printf("Loading u-boot.bin from onenand\n");
 #endif
-			for (i = ONENAND_START_BLOCK; i < ONENAND_END_BLOCK; i++){
-				if (!onenand_read_block(buf, i))
-					buf += ONENAND_BLOCK_SIZE;
-			}
+        		for (i = ONENAND_START_BLOCK; i < ONENAND_END_BLOCK; i++){
+        			if (!onenand_read_block(buf, i))
+        				buf += ONENAND_BLOCK_SIZE;
+        		}
+#endif
+		} else if (get_mem_type() == GPMC_NAND){
+#ifdef CFG_NAND_K9F1G08R0A
+#ifdef CFG_PRINTF
+       			printf("Loading u-boot.bin from nand\n");
+#endif
+        		for (i = NAND_UBOOT_START; i < NAND_UBOOT_END; i+= NAND_BLOCK_SIZE){
+        			if (!nand_read_block(buf, i))
+        				buf += NAND_BLOCK_SIZE; /* advance buf ptr */
+        		}
+#endif
 		}
-#endif /* CFG_ONENAND */
 	}
 
-#if defined (CONFIG_AM3517EVM)
-	/*
-	 * FIXME: Currently coping uboot image,
-	 * ideally we should leverage XIP feature here
-	 */
-	if (get_mem_type() == GPMC_NOR) {
-		int size;
-		printf("Booting from NOR Flash...\n");
-		size = nor_read_boot(buf);
-		if (size > 0)
-			buf += size;
+	/* if u-boot not found on mmc or
+         * nand read result is erased data
+         * then serial boot 
+         */
+	first_instruction = (int *)CFG_LOADADDR;
+	if((buf == (uchar *)CFG_LOADADDR) || (*first_instruction == 0xffffffff)) {
+		printf("u-boot.bin not found or blank nand contents - attempting serial boot . . .\n");
+		do_load_serial_bin(CFG_LOADADDR, 115200);
 	}
-#endif
-
-	if (buf == (uchar *)CFG_LOADADDR)
-		hang();
 
 	/* go run U-Boot and never return */
-  	printf("Starting OS Bootloader...\n");
  	((init_fnc_t *)CFG_LOADADDR)();
 
 	/* should never come here */
@@ -135,7 +155,9 @@ void hang (void)
 	/* call board specific hang function */
 	board_hang();
 
-	/* if board_hang() returns, hange here */
+	/* if board_hang() returns, hang here */
+#ifdef CFG_PRINTF
 	printf("X-Loader hangs\n");
+#endif
 	for (;;);
 }

@@ -64,8 +64,12 @@ void snd_soc_jack_report(struct snd_soc_jack *jack, int status, int mask)
 	int enable;
 	int oldstatus;
 
-	if (!jack)
+	//printk("{RD} %s - %s\n",__FILE__, __FUNCTION__);
+	
+	if (!jack){
+		printk("ERROR %s - %s !JACK\n",__FILE__, __FUNCTION__);
 		return;
+	}
 
 	codec = jack->codec;
 
@@ -78,8 +82,11 @@ void snd_soc_jack_report(struct snd_soc_jack *jack, int status, int mask)
 
 	/* The DAPM sync is expensive enough to be worth skipping.
 	 * However, empty mask means pin synchronization is desired. */
-	if (mask && (jack->status == oldstatus))
+	if (mask && (jack->status == oldstatus)){
+		//printk("{RD} %s - %s jack->status == oldstatus \n",__FILE__, __FUNCTION__);
 		goto out;
+	}else
+		printk("%s - %s jack status changed\n",__FILE__, __FUNCTION__);
 
 	list_for_each_entry(pin, &jack->pins, list) {
 		enable = pin->mask & jack->status;

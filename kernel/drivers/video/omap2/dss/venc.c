@@ -495,10 +495,13 @@ static int venc_panel_enable(struct omap_dss_device *dssdev)
 
 	mutex_lock(&venc.venc_lock);
 
-	if (dssdev->state != OMAP_DSS_DISPLAY_DISABLED) {
+	/* {SW} BEGIN: to rectify tv out screen problem after suspend/resume */
+   //if (dssdev->state != OMAP_DSS_DISPLAY_DISABLED) { 
+	if (dssdev->state == OMAP_DSS_DISPLAY_ACTIVE) {
 		r = -EINVAL;
 		goto err1;
 	}
+   /* {SW} END: */
 
 	r = venc_power_on(dssdev);
 	if (r)
@@ -545,6 +548,12 @@ end:
 static int venc_panel_suspend(struct omap_dss_device *dssdev)
 {
 	venc_panel_disable(dssdev);
+   /* {SW} BEGIN: to rectify tv out screen problem after suspend/resume
+    * overridden "suspended is the same as disabled with venc" */
+   mutex_lock(&venc.venc_lock);
+   dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
+   mutex_unlock(&venc.venc_lock);
+   /* {SW} END: */
 	return 0;
 }
 
