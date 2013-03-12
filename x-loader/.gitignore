@@ -1,0 +1,52 @@
+#
+# Common extensions to be excluded
+#
+.*
+*.o
+*.o.*
+*.a
+*.s
+*.i
+*.lst
+*.depend
+*.elf
+*.bin
+*.tar
+*.zip
+*.gz
+*.bz2
+*.patch
+*.diff
+
+#
+# Top-level generic files
+#
+/MLO
+/TAGS
+/System.map
+/x-load
+/x-load.map
+/x-load.bin
+/x-load.bin.ift
+
+#
+# git files that we don't want to ignore even it they are dot-files
+#
+!.gitignore
+!.mailmap
+
+#
+# Generated include files
+#
+include/config.mk
+include/config.h
+
+#
+# cscope files
+#
+cscope.*
+ncscope.*
+
+*.orig
+*~
+\#*#
