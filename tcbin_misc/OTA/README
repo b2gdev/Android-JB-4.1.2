@@ -1,0 +1,22 @@
+# Add your update files to the update folder following the folder structure described below
+
+META-INF/
+    +- com/
+       +- google/
+             +- android/
+                   +- update-binary
+                   +- updater-script (custom update script)
+system/ 
+   +- (Update files)
+data/ 
+   +- (Update files)
+
+# Run get_built_binaries.sh to get latest update-binary and signapk.jar
+
+# Create unsigned zip using 
+update$ zip -9r ../unsigned.zip * -x system/.gitignore
+
+# Run the following to create the signed update
+$ java -jar signapk.jar -w release.x509.pem release.pk8 unsigned.zip update.zip
+
+# Enter release key password when promted

@@ -35,6 +35,10 @@
 /* diag events */
 #define DIAG_EVENT_STATUS_UPDATE	0
 
+/*{KW}: RX event handler FLAGs */
+#define SYS_NOFLAG		0x0000
+#define SYS_RESUMING	0x0001
+
 typedef int (event_handler) (unsigned int arg);
 
 struct device_data{

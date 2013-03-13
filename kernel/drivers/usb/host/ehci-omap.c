@@ -820,8 +820,9 @@ static int ehci_omap_bus_suspend(struct usb_hcd *hcd)
 	int ret;
 
 	ret = ehci_bus_suspend(hcd);
-
-	ehci_omap_dev_suspend(bus->controller);
+	
+// {SW}: To avoid kernel crash during suspend/resume	
+	//ehci_omap_dev_suspend(bus->controller);
 
 	return ret;
 }
@@ -830,14 +831,16 @@ static int ehci_omap_bus_resume(struct usb_hcd *hcd)
 	struct usb_bus *bus = hcd_to_bus(hcd);
 	int ret;
 
-	ehci_omap_dev_resume(bus->controller);
+// {SW}: To avoid kernel crash during suspend/resume	
+	//ehci_omap_dev_resume(bus->controller);
 
 	ret = ehci_bus_resume(hcd);
 
 	return ret;
 }
 static const struct dev_pm_ops ehci_omap_dev_pm_ops = {
-	.suspend	= ehci_omap_dev_suspend,
+// {SW}: To avoid kernel crash during suspend/resume	
+	.suspend_noirq	= ehci_omap_dev_suspend,
 	.resume_noirq	= ehci_omap_dev_resume,
 };
 #define EHCI_OMAP_DEV_PM_OPS (&ehci_omap_dev_pm_ops)
@@ -1068,6 +1071,9 @@ static int ehci_hcd_omap_remove(struct platform_device *pdev)
 		device_remove_file(&pdev->dev, &dev_attr_port3);
 
 	usb_remove_hcd(hcd);
+// {SW} BEGIN: To avoid kernel crash during omap_stop_ehc()
+	msleep(1000);
+// {SW} END:	
 	omap_stop_ehc(omap, hcd);
 	iounmap(hcd->regs);
 	for (i = 0 ; i < OMAP3_HS_USB_PORTS ; i++) {

@@ -6,36 +6,45 @@ cd out/target/product/beagleboard
 rm -rf android_rootfs
 rm -rf rootfs.tar.bz2
 
-mkdir android_rootfs
-mkdir -p android_rootfs/usr/bin/
-mkdir -p android_rootfs/usr/modules/
-mkdir -p android_rootfs/system/etc/
 
-cp -r root/* android_rootfs
-cp -r system android_rootfs
-cp -rfd ../../../../tcbin_misc/busybox/* android_rootfs/usr/bin/
-chmod -R +x android_rootfs/usr/bin/
-cp ../../../../tcbin_misc/gps.conf android_rootfs/system/etc/
-cp ../../../../tcbin_misc/init.omap3beagleboard.rc android_rootfs/
+
+mkdir -p system/usr/bin/
+mkdir -p system/usr/modules/
+mkdir -p system/etc/
+
+cp -rfd ../../../../tcbin_misc/busybox/* system/usr/bin/
+chmod -R +x system/usr/bin/
+chmod 777 system/usr/bin/busybox
+cp ../../../../tcbin_misc/gps.conf system/etc/
 
 # copy drivers
-cd android_rootfs
-cp ../../../../../kernel/drivers/accessibility/braille/metec/metec_flat20.ko ./usr/modules/
-cp ../../../../../kernel/drivers/input/keyboard/cp430_keypad/cp430_keypad.ko ./usr/modules/
-cp ../../../../../kernel/drivers/mfd/cp430-core/cp430_core.ko ./usr/modules/
-cp ../../../../../kernel/drivers/misc/lm3553/lm3553.ko ./usr/modules/
-cp ../../../../../kernel/drivers/misc/cp430_charger/cp430_charger.ko ./usr/modules/
-cp ../../../../../kernel/drivers/power/bq27x00_battery.ko ./usr/modules/
-# copy TCBIN-Text-Viewer
-mkdir -p data/app
-cp ../data/app/TCBIN-Text-Viewer.apk data/app/
+cp ../../../../kernel/drivers/accessibility/braille/metec/metec_flat20.ko ./system/usr/modules/
+cp ../../../../kernel/drivers/input/keyboard/cp430_keypad/cp430_keypad.ko ./system/usr/modules/
+cp ../../../../kernel/drivers/mfd/cp430-core/cp430_core.ko ./system/usr/modules/
+cp ../../../../kernel/drivers/misc/cp430_charger/cp430_charger.ko ./system/usr/modules/
+cp ../../../../kernel/drivers/power/tcbin_power/cp430_power/cp430_power.ko ./system/usr/modules/
+cp ../../../../kernel/drivers/net/usb/sierra_net.ko ./system/usr/modules/
+cp ../../../../kernel/drivers/usb/serial/sierra.ko ./system/usr/modules/
+
 # other test apps
-cp ../../../../../tcbin_misc/AndroSensor_1.9.4.4a.apk data/app/
-cp ../../../../../tcbin_misc/com.chartcross.gpstest-1.apk data/app/
-cp ../../../../../tcbin_misc/MarineCompass.apk data/app/
-cp ../../../../../tcbin_misc/Easy_Voice_Recorder.apk data/app/
-cp ../../../../../tcbin_misc/Angry_Birds_2.1.1.apk data/app/
-cd ../
+cp ../../../../tcbin_misc/AndroSensor_1.9.4.4a.apk system/app/
+cp ../../../../tcbin_misc/MarineCompass.apk system/app/
+cp ../../../../tcbin_misc/Easy_Voice_Recorder.apk system/app/
+cp ../../../../tcbin_misc/BrailleBack.apk system/app/
+cp ../../../../tcbin_misc/TalkBack.apk system/app/
+#cp ../../../../tcbin_misc/BrailleBack.apk system/app/
+cp ../../../../tcbin_misc/ESFileExplorer.apk system/app/
+cp ../../../../tcbin_misc/BIGLauncherFREE.apk system/app/
+
+# move TCBIN-Text-Viewer
+#mv ./data/app/TCBIN-Text-Viewer.apk system/app/
+
+mkdir android_rootfs
+cp -r root/* android_rootfs
+cp -r system android_rootfs
+cp -r data android_rootfs
+
+rm android_rootfs/fstab.omap3beagleboard
 
 ../../../../build/tools/mktarball.sh ../../../host/linux-x86/bin/fs_get_stats android_rootfs . rootfs rootfs.tar.bz2
 

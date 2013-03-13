@@ -28,8 +28,10 @@
 #include <linux/pm.h>
 #include <linux/i2c/twl.h>
 #include <linux/platform_device.h>
+#include <linux/gpio.h>
 
 #include <asm/mach-types.h>
+#include <mach/gpio.h>
 
 #include <plat/smartreflex.h>
 
@@ -705,6 +707,11 @@ void twl4030_power_off(void)
    /* Make sure that the chip does not restart just after put in to off
     * Meanwhile chip will only be started by pushing PWRON key
     */
+    
+    /*{KW}: inform MSP430 about power status, set to low */
+    printk("Power status gpio down\r\n");
+    gpio_set_value(11, 0);
+    
    err = twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, STARTON_PWON,
                           TWL4030_PM_MASTER_CFG_P1_TRANSITION);
    if (err)
@@ -793,10 +800,10 @@ int twl4030_power_init(struct twl4030_power_data *twl4030_scripts)
    /* Reset by the PWRON key push, lasting longer than 8 seconds 
     * Additional function. Will only print a warning if fails
     */
-   /*err = twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, STOPON_PWRON,
+   err = twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, STOPON_PWRON,
                           TWL4030_PM_MASTER_P1_SW_EVENTS);
    if (err)
-      pr_warning("TWL4030 Unable to setup STOPON_PWRON\n");*/
+      pr_warning("TWL4030 Unable to setup STOPON_PWRON\n");
 
    /* Board has to be wired properly to use this feature */
    if (twl4030_scripts->use_poweroff && !pm_power_off) {

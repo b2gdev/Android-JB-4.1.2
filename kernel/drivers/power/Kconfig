@@ -28,6 +28,15 @@ config TCBIN_SYSTEM_POWER
 	depends on MACH_OMAP3_BEAGLE
 	help
 	  TCBIN system power driver.
+	  
+config TCBIN_CP430_POWER
+	tristate "Support for CP430 Power Driver"
+	default m
+        ---help---
+	 Provides support for CP430 Power Status Information for TCBIN.
+
+	 If unsure, say N.
+	 	  
 # {PS} END:
 
 config APM_POWER

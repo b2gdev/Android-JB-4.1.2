@@ -948,7 +948,10 @@ static struct clk dpll5_ck = {
 	.parent		= &sys_ck,
 	.dpll_data	= &dpll5_dd,
 	.round_rate	= &omap2_dpll_round_rate,
-	.set_rate	= &omap3_noncore_dpll_set_rate,
+	/* {SW} BEGIN: Fix the issue due to USB host clock drift (sprz319e erratum 2.1) */
+	//.set_rate	= &omap3_noncore_dpll_set_rate,
+	.set_rate	= &omap3_dpll5_set_rate,
+    /* {SW} END: */
 	.clkdm_name	= "dpll5_clkdm",
 	.recalc		= &omap3_dpll_recalc,
 };

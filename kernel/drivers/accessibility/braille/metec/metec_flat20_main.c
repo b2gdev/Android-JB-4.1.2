@@ -10,6 +10,7 @@
 #include <linux/fcntl.h>	
 #include <linux/cdev.h>
 #include <linux/platform_device.h>
+#include <linux/earlysuspend.h>
 
 #include <asm/system.h>		
 #include <asm/uaccess.h>	
@@ -17,7 +18,6 @@
 
 /* {PK} Local includes */
 #include "metec_flat20.h"		
-#include "metec_flat20_ioctl.h"		
 #include "debug.h"
 #include "cp430.h"
 
@@ -32,16 +32,28 @@ static DECLARE_WAIT_QUEUE_HEAD(command_response_received_wq);
 
 int proc_enable = 1; /* {PK} Proc file. Enabled by default. Can be changed via the module param. used in dubug.h */
 
+unsigned short masked_flag = SYS_NOFLAG; /*{KW}: separate flag from rx event arg */
 
 /************************** CP430 Callbacks **************************/
-
+/** {KW}:
+ * Called by cp430_core driver on data reception for this device.
+ * @arg: 32bit value containing 2 fields as follows.
+ * -----------------------------------------
+ * |   16bit FLAG      | 16bit data length |
+ * -----------------------------------------
+ * FLAG could be one of: SYS_NOFLAG   (0x0000)
+ * 						 SYS_RESUMING (0x0001) 
+ **/
 int bus_receive_event_handler(unsigned int arg)
 {
-	if (arg > 0) {
-		unsigned char *buffer = kmalloc(arg, GFP_KERNEL);
+	unsigned int masked_arg = arg & 0x0000FFFF; /*{KW}: ignore the MSB 16bit FLAG */
+	masked_flag = (arg & 0xFFFF0000) >> 16;
+		
+	if (masked_arg > 0) {
+		unsigned char *buffer = kmalloc(masked_arg, GFP_KERNEL);
 		
 		if (buffer) {
-			if (cp430_core_read(CP430_DEV_DISPLAY, buffer, arg) < 0) {
+			if (cp430_core_read(CP430_DEV_DISPLAY, buffer, masked_arg) < 0) {
 				PDEBUG("metec_flat20: cp430_core_read failed\r\n");
 			}
 			else {
@@ -143,7 +155,7 @@ control_display(unsigned char control)
 }
 
 static int
-clear_display(void)
+clear_display(struct metec_flat20_dev_info *dev, int is_suspend)
 {
 	int ret = 0;
 	unsigned char cmd_packet[MAX_BRAILLE_LINE_SIZE + METEC_FLAT20_PACKET_OVERHEAD + CP430_PACKET_OVERHEAD];
@@ -166,10 +178,16 @@ clear_display(void)
 	}
 	
 	if (ret >= 0) {
-		wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (5 * HZ));
+		if(is_suspend)
+			wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (HZ/2)); //{RD} Reduced time-out from 5sec to 500ms to allow suspend
+		else			
+			wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (5 * HZ));
+			
 		if( 1 == atomic_read(&cmd_reply_received_flag))
 		{	
 			PDEBUG("metec_flat20: command response received\r\n");
+			if(!is_suspend)
+				memset(dev->display_data, 0, sizeof(dev->display_data));
 		}
 		else
 		{
@@ -182,7 +200,7 @@ clear_display(void)
 }
 
 static int 
-write_to_braille(struct metec_flat20_dev_info *dev, unsigned char * user_data)
+write_to_braille(struct metec_flat20_dev_info *dev, unsigned char * user_data, int is_resume)
 {
 	int ret = 0;
 	unsigned char i = 0;
@@ -239,10 +257,19 @@ write_to_braille(struct metec_flat20_dev_info *dev, unsigned char * user_data)
 	
 	if (ret >= 0) {
 		/* Wait for the command response */
-		wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (5 * HZ));
+		if(is_resume)
+			wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (HZ/2));//{RD} Reduced time-out from 5sec to 500ms to allow resume
+		else
+			wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (5 * HZ));
+			
 		if( 1 == atomic_read(&cmd_reply_received_flag))
 		{	
 			PDEBUG("metec_flat20: command response received\r\n");
+			
+			if(!is_resume){ //store written value
+				memset(dev->display_data, 0, sizeof(dev->display_data));
+				memcpy(dev->display_data, user_data, sizeof(dev->display_data));
+			}
 		}
 		else
 		{
@@ -319,7 +346,7 @@ metec_flat20_write(struct file *filp, const char __user *user_buf, size_t count,
 		max_char_count = MIN(sizeof(user_data), count);
 		memcpy(user_data, buffer, max_char_count);
 				
-		ret = write_to_braille(dev, user_data);
+		ret = write_to_braille(dev, user_data,0);
 		if (ret < 0) {
 			retval = -EFAULT;
 			goto out;
@@ -389,7 +416,7 @@ metec_flat20_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
 			}
 		break;
 		case METEC_FLAT20_CLEAR_DISPLAY:
-			ret = clear_display();
+			ret = clear_display(dev, 0);
 			if (ret < 0) 
 				ret = -EFAULT;
 		break;
@@ -406,7 +433,7 @@ metec_flat20_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
 				break;
 			}
 			
-			ret = write_to_braille(dev, user_data);
+			ret = write_to_braille(dev, user_data,0);
 			if (ret < 0) {
 				ret = -EFAULT;
 			}
@@ -466,7 +493,7 @@ metec_flat20_platform_suspend(struct platform_device *device, pm_message_t state
 	
 	printk(KERN_INFO "metec_flat20: %s\r\n",__FUNCTION__);
 	
-	clear_display();
+//	clear_display(metec_flat20_dev,1);
 	
 	return ret;
 }
@@ -478,6 +505,8 @@ metec_flat20_platform_resume(struct platform_device *device)
 	
 	printk(KERN_INFO "metec_flat20: %s\r\n",__FUNCTION__);
 	
+	//write_to_braille(metec_flat20_dev, metec_flat20_dev->display_data,1);
+	
 	return ret;
 }
 
@@ -488,6 +517,32 @@ static struct platform_driver metec_flat20_platform_driver = {
 		.owner  = THIS_MODULE,
 		.name	= METEC_FLAT20_PLATFORM_NAME,
 	},
+};
+
+/************************ Early suspend functions *********************/
+static void 
+metec_flat20_early_suspend(struct early_suspend *h)
+{	
+	printk(KERN_INFO "metec_flat20: %s\r\n",__FUNCTION__);
+	
+//	clear_display(metec_flat20_dev,1);
+	
+	return;
+}
+
+static void 
+metec_flat20_late_resume(struct early_suspend *h)
+{	
+	printk(KERN_INFO "metec_flat20: %s\r\n",__FUNCTION__);
+	
+	write_to_braille(metec_flat20_dev, metec_flat20_dev->display_data,1);
+	
+	return;
+}
+
+static struct early_suspend metec_flat20_early_suspend_handler = {
+	.suspend = metec_flat20_early_suspend,
+	.resume = metec_flat20_late_resume,
 };
 
 /************************** Device Init/Exit **************************/
@@ -645,6 +700,10 @@ metec_flat20_mod_init(void)
 	if (ret < 0) {
 		goto err_chr_driver;
 	}
+	
+		
+	/*{KW}: early suspend */
+	register_early_suspend(&metec_flat20_early_suspend_handler);
 
 	sema_init(&metec_flat20_dev->sem, 1);
 	
@@ -670,8 +729,14 @@ metec_flat20_mod_init(void)
 		printk(KERN_INFO "metec_flat20: cp430_device_register success\r\n");
 	}
 	
-	clear_display(); /* {PK} Clear the display when driver is ready */
-
+	clear_display(metec_flat20_dev, 0); /* {PK} Clear the display when driver is ready */
+	// {RD} Start Msg
+	/*unsigned char user_data[MAX_BRAILLE_LINE_SIZE];
+	unsigned char user_msg[3] = {};	//B2G		
+	memset(user_data, 0, sizeof(user_data));
+	memcpy(user_data,user_msg,sizeof(user_msg));	
+	write_to_braille(metec_flat20_dev, user_data,0);*/
+	
 	printk("metec_flat20: Driver Version: %s\n", DRIVER_VERSION);
 	
 	return 0; /* {PK} success */
@@ -717,6 +782,10 @@ metec_flat20_mod_exit(void)
 	if (metec_flat20_remove_proc() < 0) {
 		printk(KERN_ERR "metec_flat20: metec_flat20_remove_proc failed\r\n");
 	}
+	
+		
+	/*{KW}: early suspend remove*/
+	unregister_early_suspend(&metec_flat20_early_suspend_handler);
 	
 	/* {PK} Remove char device */
 	cdev_del(&metec_flat20_dev->cdev);

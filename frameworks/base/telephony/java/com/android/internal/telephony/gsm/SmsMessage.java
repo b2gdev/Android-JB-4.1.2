@@ -915,6 +915,12 @@ public class SmsMessage extends SmsMessageBase {
                 //This should be processed in the same way as MTI == 0 (Deliver)
             parseSmsDeliver(p, firstByte);
             break;
+/* {RD} START : Sierra */
+        /* sent message */
+        case 1:
+            parseSmsSubmit(p, firstByte);
+            break;
+/* {RD} START : Sierra */
         case 2:
             parseSmsStatusReport(p, firstByte);
             break;
@@ -924,6 +930,64 @@ public class SmsMessage extends SmsMessageBase {
         }
     }
 
+/* {RD} START : Sierra  */
+    private void parseSmsSubmit(PduParser p, int firstByte) {
+        int vpLength = 0;
+        
+        replyPathPresent = (firstByte & 0x80) == 0x80;
+        
+        /* TP-Validity-Period (TP-VP)
+         * TS23.040 9.2.3.12
+         */
+        switch (firstByte & 0x18) {
+            case 0:
+                vpLength = 0;
+                break;
+                
+            case 0x10:
+                vpLength = 1;
+                break;
+                
+            case 0x08:
+            case 0x18:
+                vpLength = 7;
+                break;
+                
+            default:
+                break;
+        }
+
+        /* TP-Message-Reference, doesn't care and skip it */
+        p.getByte();
+        
+        originatingAddress = p.getAddress();
+
+        if (originatingAddress != null) {
+            Log.v(LOG_TAG, "SMS originating address: " + originatingAddress.address);
+        }
+
+        // TP-Protocol-Identifier (TP-PID)
+        // TS 23.040 9.2.3.9
+        protocolIdentifier = p.getByte();
+
+        // TP-Data-Coding-Scheme
+        // see TS 23.038
+        dataCodingScheme = p.getByte();
+
+        Log.v(LOG_TAG, "SMS TP-PID:" + protocolIdentifier 
+                    + " data coding scheme: " + dataCodingScheme);
+        
+        /*  TP-Validity-Period, skip it */
+        for (int i=0; i<vpLength; i++){
+            p.getByte();
+        }
+
+        boolean hasUserDataHeader = (firstByte & 0x40) == 0x40;
+
+        parseUserData(p, hasUserDataHeader);
+    }
+/* {RD} START : Sierra  */
+    
     /**
      * Parses a SMS-STATUS-REPORT message.
      *

@@ -642,6 +642,7 @@ struct input_keymap_entry {
 #define KEY_BRL_DOT10		0x1fa  /*{KW} this is not used. only 9 Braille keys available */
 
 /* {KW} 0x1fb - 0x1ff working range */
+#define KEY_DUMMY_WAKEUP	0x1fb  /*{KW} Unmapped key code for wakeup from suspend*/ 
 
 #define KEY_NUMERIC_0		0x200	/* used by phones, remote controls, */
 #define KEY_NUMERIC_1		0x201	/* and other keypads */

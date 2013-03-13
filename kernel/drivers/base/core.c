@@ -22,6 +22,8 @@
 #include <linux/kallsyms.h>
 #include <linux/mutex.h>
 #include <linux/async.h>
+#include <linux/pm_runtime.h>
+#include <linux/delay.h>
 
 #include "base.h"
 #include "power/power.h"
@@ -1654,6 +1656,18 @@ EXPORT_SYMBOL_GPL(device_move);
 /**
  * device_shutdown - call ->shutdown() on each device to shutdown.
  */
+/*{KW}: start
+ * device_shutdown function is modified (try_lock based) */
+static int __try_lock(struct device *dev)
+{
+	int i = 0;
+
+	while (!device_trylock(dev) && i++ < 100)
+		msleep(10);
+
+	return i < 100;
+}
+
 void device_shutdown(void)
 {
 	struct device *dev;
@@ -1665,8 +1679,17 @@ void device_shutdown(void)
 	 * devices offline, even as the system is shutting down.
 	 */
 	while (!list_empty(&devices_kset->list)) {
+
+		int nonlocked;
+
 		dev = list_entry(devices_kset->list.prev, struct device,
 				kobj.entry);
+		/*
+		 * hold reference count of device's parent to
+		 * prevent it from being freed because parent's
+		 * lock is to be held
+		 */
+		get_device(dev->parent);
 		get_device(dev);
 		/*
 		 * Make sure the device is off the kset list, in the
@@ -1675,20 +1698,48 @@ void device_shutdown(void)
 		list_del_init(&dev->kobj.entry);
 		spin_unlock(&devices_kset->list_lock);
 
+		/* hold lock to avoid race with .probe/.release */
+		if (dev->parent && !__try_lock(dev->parent))
+			nonlocked = 2;
+		else if (!__try_lock(dev))
+			nonlocked = 1;
+		else
+			nonlocked = 0;
+
+		if (nonlocked)
+			printk(KERN_EMERG "%s : can't hold %slock for shutdown\n", dev_name(dev),
+					nonlocked == 1 ? "" : "parent ");
+
+		/* Don't allow any more runtime suspends */
+		pm_runtime_get_noresume(dev);
+		pm_runtime_barrier(dev);
+
 		if (dev->bus && dev->bus->shutdown) {
 			dev_dbg(dev, "shutdown\n");
 			dev->bus->shutdown(dev);
 		} else if (dev->driver && dev->driver->shutdown) {
 			dev_dbg(dev, "shutdown\n");
-			dev->driver->shutdown(dev);
+			/*{KW}: Delay is introduced to eliminate any timing issues with pvrsrvkm */
+			if(strcmp(dev_name(dev), "pvrsrvkm") != 0)
+			{
+				dev->driver->shutdown(dev);
+			}			
 		}
+
+		if (!nonlocked)
+			device_unlock(dev);
+		if (dev->parent && nonlocked != 2)
+			device_unlock(dev->parent);
+
 		put_device(dev);
+		put_device(dev->parent);
 
 		spin_lock(&devices_kset->list_lock);
 	}
 	spin_unlock(&devices_kset->list_lock);
 	async_synchronize_full();
 }
+/*{KW}: end*/
 
 /*
  * Device logging functions

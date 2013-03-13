@@ -579,7 +579,10 @@ static int omap2430_suspend(struct device *dev)
 		return 0;
 
 	omap2430_low_level_exit(musb);
-	otg_set_suspend(musb->xceiv, 1);
+// {SW} BEGIN: To avoid kernel halt during system resume	
+	//otg_set_suspend(musb->xceiv, 1);
+	msleep(20);
+// {SW} END:	
 	musb_save_context(musb);
 	omap2430_save_context(musb);
 	clk_disable(glue->clk);
@@ -607,7 +610,11 @@ static int omap2430_resume(struct device *dev)
 	omap2430_restore_context(musb);
 	omap2430_low_level_init(musb);
 	musb_restore_context(musb);
-	otg_set_suspend(musb->xceiv, 0);
+	
+// {SW} BEGIN: To avoid kernel halt during system resume	
+	//otg_set_suspend(musb->xceiv, 0);
+	msleep(20);
+// {SW} END:
 
 	return 0;
 }

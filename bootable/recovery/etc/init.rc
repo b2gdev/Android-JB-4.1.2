@@ -1,23 +1,26 @@
 on early-init
     start ueventd
-
+	mkdir /system
+    mkdir /data
+    mkdir /cache
+    mkdir /sdcard
+    mkdir /misc
+	
 on init
-    export PATH /sbin
+
+loglevel 3
+    export PATH /sbin:/usr/bin:/system/bin
     export ANDROID_ROOT /system
     export ANDROID_DATA /data
     export EXTERNAL_STORAGE /sdcard
 
-    symlink /system/etc /etc
-
-    mkdir /sdcard
-    mkdir /system
-    mkdir /data
-    mkdir /cache
-    mount /tmp /tmp tmpfs
-
-    chown root shell /tmp
-    chmod 0775 /tmp
-
+    symlink /system/etc /etc    
+    
+    mkdir /tmp/recovery
+    chown root shell /tmp/recovery
+	chmod 0775 /tmp/recovery    	
+	chmod 0777 /usr/bin/ubi*
+	
     write /sys/class/android_usb/android0/enable 0
     write /sys/class/android_usb/android0/idVendor 18D1
     write /sys/class/android_usb/android0/idProduct D001
@@ -29,6 +32,11 @@ on init
 
 on boot
 
+	insmod /usr/modules/cp430_core.ko
+    insmod /usr/modules/cp430_keypad.ko
+    insmod /usr/modules/metec_flat20.ko
+    chmod 666 /dev/braille0
+
     ifup lo
     hostname localhost
     domainname localdomain
@@ -38,15 +46,25 @@ on boot
 service ueventd /sbin/ueventd
     critical
 
+service console /usr/bin/sh
+    class core
+    console
+    disabled
+#    user shell
+    group log    
+    
 service recovery /sbin/recovery
+	disabled
 
 service adbd /sbin/adbd recovery
     disabled
-
+        
 # Always start adbd on userdebug and eng builds
 on property:ro.debuggable=1
-    write /sys/class/android_usb/android0/enable 1
+    write /sys/class/android_usb/android0/enable 1        
     start adbd
+    start console
+    start recovery
 
 # Restart adbd so it can run as root
 on property:service.adb.root=1

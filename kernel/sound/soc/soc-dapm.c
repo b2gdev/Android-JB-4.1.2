@@ -550,7 +550,9 @@ int dapm_reg_event(struct snd_soc_dapm_widget *w,
 		   struct snd_kcontrol *kcontrol, int event)
 {
 	unsigned int val;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	if (SND_SOC_DAPM_EVENT_ON(event))
 		val = w->on_val;
 	else
@@ -899,6 +901,10 @@ static int dapm_power_widgets(struct snd_soc_codec *codec, int event)
 	int power;
 	int sys_power = 0;
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	/* Check which widgets we need to power and store them in
 	 * lists indicating if they should be powered up or down.
 	 */
@@ -1095,6 +1101,10 @@ void snd_soc_dapm_debugfs_init(struct snd_soc_codec *codec)
 	struct snd_soc_dapm_widget *w;
 	struct dentry *d;
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	if (!codec->debugfs_dapm)
 		return;
 
@@ -1298,6 +1308,9 @@ static int snd_soc_dapm_set_pin(struct snd_soc_codec *codec,
  */
 int snd_soc_dapm_sync(struct snd_soc_codec *codec)
 {
+		#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	return dapm_power_widgets(codec, SND_SOC_DAPM_STREAM_NOP);
 }
 EXPORT_SYMBOL_GPL(snd_soc_dapm_sync);
@@ -1311,7 +1324,7 @@ static int snd_soc_dapm_add_route(struct snd_soc_codec *codec,
 	const char *control = route->control;
 	const char *source = route->source;
 	int ret = 0;
-
+	
 	/* find src and dest widgets */
 	list_for_each_entry(w, &codec->dapm_widgets, list) {
 
@@ -1433,6 +1446,10 @@ int snd_soc_dapm_add_routes(struct snd_soc_codec *codec,
 {
 	int i, ret;
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
+	
 	for (i = 0; i < num; i++) {
 		ret = snd_soc_dapm_add_route(codec, route);
 		if (ret < 0) {
@@ -1459,7 +1476,9 @@ EXPORT_SYMBOL_GPL(snd_soc_dapm_add_routes);
 int snd_soc_dapm_new_widgets(struct snd_soc_codec *codec)
 {
 	struct snd_soc_dapm_widget *w;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	list_for_each_entry(w, &codec->dapm_widgets, list)
 	{
 		if (w->new)
@@ -1534,7 +1553,9 @@ int snd_soc_dapm_get_volsw(struct snd_kcontrol *kcontrol,
 	int max = mc->max;
 	unsigned int invert = mc->invert;
 	unsigned int mask = (1 << fls(max)) - 1;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	ucontrol->value.integer.value[0] =
 		(snd_soc_read(widget->codec, reg) >> shift) & mask;
 	if (shift != rshift)
@@ -1576,7 +1597,9 @@ int snd_soc_dapm_put_volsw(struct snd_kcontrol *kcontrol,
 	unsigned int val, val2, val_mask;
 	int connect;
 	int ret;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	val = (ucontrol->value.integer.value[0] & mask);
 
 	if (invert)
@@ -1642,7 +1665,9 @@ int snd_soc_dapm_get_enum_double(struct snd_kcontrol *kcontrol,
 	struct snd_soc_dapm_widget *widget = snd_kcontrol_chip(kcontrol);
 	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
 	unsigned int val, bitmask;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	for (bitmask = 1; bitmask < e->max; bitmask <<= 1)
 		;
 	val = snd_soc_read(widget->codec, e->reg);
@@ -1672,7 +1697,9 @@ int snd_soc_dapm_put_enum_double(struct snd_kcontrol *kcontrol,
 	unsigned int val, mux, change;
 	unsigned int mask, bitmask;
 	int ret = 0;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	for (bitmask = 1; bitmask < e->max; bitmask <<= 1)
 		;
 	if (ucontrol->value.enumerated.item[0] > e->max - 1)
@@ -1722,7 +1749,9 @@ int snd_soc_dapm_get_enum_virt(struct snd_kcontrol *kcontrol,
 			       struct snd_ctl_elem_value *ucontrol)
 {
 	struct snd_soc_dapm_widget *widget = snd_kcontrol_chip(kcontrol);
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	ucontrol->value.enumerated.item[0] = widget->value;
 
 	return 0;
@@ -1744,7 +1773,9 @@ int snd_soc_dapm_put_enum_virt(struct snd_kcontrol *kcontrol,
 		(struct soc_enum *)kcontrol->private_value;
 	int change;
 	int ret = 0;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	if (ucontrol->value.enumerated.item[0] >= e->max)
 		return -EINVAL;
 
@@ -1778,7 +1809,9 @@ int snd_soc_dapm_get_value_enum_double(struct snd_kcontrol *kcontrol,
 	struct snd_soc_dapm_widget *widget = snd_kcontrol_chip(kcontrol);
 	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
 	unsigned int reg_val, val, mux;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	reg_val = snd_soc_read(widget->codec, e->reg);
 	val = (reg_val >> e->shift_l) & e->mask;
 	for (mux = 0; mux < e->max; mux++) {
@@ -1820,7 +1853,9 @@ int snd_soc_dapm_put_value_enum_double(struct snd_kcontrol *kcontrol,
 	unsigned int val, mux, change;
 	unsigned int mask;
 	int ret = 0;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	if (ucontrol->value.enumerated.item[0] > e->max - 1)
 		return -EINVAL;
 	mux = ucontrol->value.enumerated.item[0];
@@ -1868,6 +1903,9 @@ EXPORT_SYMBOL_GPL(snd_soc_dapm_put_value_enum_double);
 int snd_soc_dapm_info_pin_switch(struct snd_kcontrol *kcontrol,
 				 struct snd_ctl_elem_info *uinfo)
 {
+		#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	uinfo->type = SNDRV_CTL_ELEM_TYPE_BOOLEAN;
 	uinfo->count = 1;
 	uinfo->value.integer.min = 0;
@@ -1888,7 +1926,9 @@ int snd_soc_dapm_get_pin_switch(struct snd_kcontrol *kcontrol,
 {
 	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
 	const char *pin = (const char *)kcontrol->private_value;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	mutex_lock(&codec->mutex);
 
 	ucontrol->value.integer.value[0] =
@@ -1911,7 +1951,9 @@ int snd_soc_dapm_put_pin_switch(struct snd_kcontrol *kcontrol,
 {
 	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
 	const char *pin = (const char *)kcontrol->private_value;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	mutex_lock(&codec->mutex);
 
 	if (ucontrol->value.integer.value[0])
@@ -1940,7 +1982,9 @@ int snd_soc_dapm_new_control(struct snd_soc_codec *codec,
 	const struct snd_soc_dapm_widget *widget)
 {
 	struct snd_soc_dapm_widget *w;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	if ((w = dapm_cnew_widget(widget)) == NULL)
 		return -ENOMEM;
 
@@ -1971,7 +2015,9 @@ int snd_soc_dapm_new_controls(struct snd_soc_codec *codec,
 	int num)
 {
 	int i, ret;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	for (i = 0; i < num; i++) {
 		ret = snd_soc_dapm_new_control(codec, widget);
 		if (ret < 0) {
@@ -2003,7 +2049,9 @@ int snd_soc_dapm_stream_event(struct snd_soc_pcm_runtime *rtd,
 {
 	struct snd_soc_codec *codec = rtd->codec;
 	struct snd_soc_dapm_widget *w;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	if (stream == NULL)
 		return 0;
 
@@ -2014,7 +2062,11 @@ int snd_soc_dapm_stream_event(struct snd_soc_pcm_runtime *rtd,
 			continue;
 		pr_debug("widget %s\n %s stream %s event %d\n",
 			 w->name, w->sname, stream, event);
+	
 		if (strstr(w->sname, stream)) {
+			#ifdef CONFIG_MFD_WM8994_DEBUG
+			printk("[%08u] - %s - %s widget %s\n %s stream %s event %d\n", (unsigned int)jiffies, __FILE__, __FUNCTION__,w->name, w->sname, stream, event);	/* {PS} */
+			#endif
 			switch(event) {
 			case SND_SOC_DAPM_STREAM_START:
 				w->active = 1;
@@ -2049,6 +2101,9 @@ EXPORT_SYMBOL_GPL(snd_soc_dapm_stream_event);
  */
 int snd_soc_dapm_enable_pin(struct snd_soc_codec *codec, const char *pin)
 {
+		#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	return snd_soc_dapm_set_pin(codec, pin, 1);
 }
 EXPORT_SYMBOL_GPL(snd_soc_dapm_enable_pin);
@@ -2068,7 +2123,9 @@ EXPORT_SYMBOL_GPL(snd_soc_dapm_enable_pin);
 int snd_soc_dapm_force_enable_pin(struct snd_soc_codec *codec, const char *pin)
 {
 	struct snd_soc_dapm_widget *w;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	list_for_each_entry(w, &codec->dapm_widgets, list) {
 		if (!strcmp(w->name, pin)) {
 			pr_debug("dapm: %s: pin %s\n", codec->name, pin);
@@ -2094,6 +2151,9 @@ EXPORT_SYMBOL_GPL(snd_soc_dapm_force_enable_pin);
  */
 int snd_soc_dapm_disable_pin(struct snd_soc_codec *codec, const char *pin)
 {
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 	return snd_soc_dapm_set_pin(codec, pin, 0);
 }
 EXPORT_SYMBOL_GPL(snd_soc_dapm_disable_pin);
@@ -2114,6 +2174,9 @@ EXPORT_SYMBOL_GPL(snd_soc_dapm_disable_pin);
  */
 int snd_soc_dapm_nc_pin(struct snd_soc_codec *codec, const char *pin)
 {
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 	return snd_soc_dapm_set_pin(codec, pin, 0);
 }
 EXPORT_SYMBOL_GPL(snd_soc_dapm_nc_pin);
@@ -2130,7 +2193,9 @@ EXPORT_SYMBOL_GPL(snd_soc_dapm_nc_pin);
 int snd_soc_dapm_get_pin_status(struct snd_soc_codec *codec, const char *pin)
 {
 	struct snd_soc_dapm_widget *w;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
 	list_for_each_entry(w, &codec->dapm_widgets, list) {
 		if (!strcmp(w->name, pin))
 			return w->connected;
@@ -2154,7 +2219,10 @@ EXPORT_SYMBOL_GPL(snd_soc_dapm_get_pin_status);
 int snd_soc_dapm_ignore_suspend(struct snd_soc_codec *codec, const char *pin)
 {
 	struct snd_soc_dapm_widget *w;
-
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
+	
 	list_for_each_entry(w, &codec->dapm_widgets, list) {
 		if (!strcmp(w->name, pin)) {
 			w->ignore_suspend = 1;
@@ -2175,6 +2243,9 @@ EXPORT_SYMBOL_GPL(snd_soc_dapm_ignore_suspend);
  */
 void snd_soc_dapm_free(struct snd_soc_codec *codec)
 {
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif	
 	snd_soc_dapm_sys_remove(codec->dev);
 	dapm_free_widgets(codec);
 }

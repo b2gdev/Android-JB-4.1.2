@@ -692,7 +692,8 @@ ext_dirs := \
 	../../external/nist-sip/java \
 	../../external/apache-http/src \
 	../../external/tagsoup/src \
-	../../external/libphonenumber/java/src
+	../../external/libphonenumber/java/src \
+	../ex/tcbin/
 
 ext_src_files := $(call all-java-files-under,$(ext_dirs))
 

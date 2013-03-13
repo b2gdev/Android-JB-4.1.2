@@ -26,15 +26,18 @@ keylayouts := \
     Vendor_046d_Product_c532.kl \
     Vendor_054c_Product_0268.kl \
     Vendor_05ac_Product_0239.kl \
-    Vendor_22b8_Product_093d.kl
+    Vendor_22b8_Product_093d.kl \
+    cp430_keypad.kl    
 
 keycharmaps := \
     Generic.kcm \
     Virtual.kcm \
     qwerty.kcm \
-    qwerty2.kcm
+    qwerty2.kcm \
+    cp430_keypad.kcm
 
 keyconfigs := \
     qwerty.idc \
-    qwerty2.idc
+    qwerty2.idc \
+    cp430_keypad.idc
 

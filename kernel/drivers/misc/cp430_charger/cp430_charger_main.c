@@ -33,16 +33,28 @@ static DECLARE_WAIT_QUEUE_HEAD(command_response_received_wq);
 
 int proc_enable = 1;
 
+unsigned short masked_flag = SYS_NOFLAG; /*{KW}: separate flag from rx event arg */
 
 /************************** CP430 Callbacks **************************/
-
+/** {KW}:
+ * Called by cp430_core driver on data reception for this device.
+ * @arg: 32bit value containing 2 fields as follows.
+ * -----------------------------------------
+ * |   16bit FLAG      | 16bit data length |
+ * -----------------------------------------
+ * FLAG could be one of: SYS_NOFLAG   (0x0000)
+ * 						 SYS_RESUMING (0x0001) 
+ **/
 int bus_receive_event_handler(unsigned int arg)
 {
-	if (arg > 0) {
-		unsigned char *buffer = kmalloc(arg, GFP_KERNEL);
+	unsigned int masked_arg = arg & 0x0000FFFF; /*{KW}: ignore the MSB 16bit FLAG */
+	masked_flag = (arg & 0xFFFF0000) >> 16;
+	
+	if (masked_arg > 0) {
+		unsigned char *buffer = kmalloc(masked_arg, GFP_KERNEL);
 		
 		if (buffer) {
-			if (cp430_core_read(CP430_DEV_CHARGER, buffer, arg) < 0) {
+			if (cp430_core_read(CP430_DEV_CHARGER, buffer, masked_arg) < 0) {
 				PDEBUG("batt_charger: cp430_core_read failed\r\n");
 			}
 			else {

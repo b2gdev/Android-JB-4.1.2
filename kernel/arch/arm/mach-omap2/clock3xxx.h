@@ -10,6 +10,9 @@
 
 int omap3xxx_clk_init(void);
 int omap3_dpll4_set_rate(struct clk *clk, unsigned long rate);
+/* {SW} BEGIN: Fix the issue due to USB host clock drift (sprz319e erratum 2.1) */
+int omap3_dpll5_set_rate(struct clk *clk, unsigned long rate);
+/* {SW} END: */
 int omap3_core_dpll_m2_set_rate(struct clk *clk, unsigned long rate);
 void omap3_clk_lock_dpll5(void);
 

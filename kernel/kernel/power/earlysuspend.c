@@ -93,7 +93,9 @@ static void early_suspend(struct work_struct *work)
 
 	if (debug_mask & DEBUG_SUSPEND)
 		pr_info("early_suspend: call handlers\n");
-	list_for_each_entry(pos, &early_suspend_handlers, link) {
+	/*{KW}: to correct the order of suspend/resume */
+	//list_for_each_entry(pos, &early_suspend_handlers, link) {
+	list_for_each_entry_reverse(pos, &early_suspend_handlers, link) {
 		if (pos->suspend != NULL)
 			pos->suspend(pos);
 	}
@@ -131,7 +133,9 @@ static void late_resume(struct work_struct *work)
 	}
 	if (debug_mask & DEBUG_SUSPEND)
 		pr_info("late_resume: call handlers\n");
-	list_for_each_entry_reverse(pos, &early_suspend_handlers, link)
+	/*{KW}: to correct the order of suspend/resume */
+	//list_for_each_entry_reverse(pos, &early_suspend_handlers, link) 
+	list_for_each_entry(pos, &early_suspend_handlers, link)
 		if (pos->resume != NULL)
 			pos->resume(pos);
 	if (debug_mask & DEBUG_SUSPEND)

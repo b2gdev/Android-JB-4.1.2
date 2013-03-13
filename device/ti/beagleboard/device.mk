@@ -17,27 +17,51 @@
 
 PRODUCT_COPY_FILES := \
 	device/ti/beagleboard/init.omap3beagleboard.rc:root/init.omap3beagleboard.rc \
+	device/ti/beagleboard/beagleboard.xml:system/etc/sound/beagleboard.xml \
 	device/ti/beagleboard/vold.fstab:system/etc/vold.fstab \
+	device/ti/beagleboard/fstab.omap3beagleboard:root/fstab.omap3beagleboard \
 	device/ti/beagleboard/media_codecs.xml:system/etc/media_codecs.xml \
-	device/ti/beagleboard/mixer_paths.xml:system/etc/mixer_paths.xml
+	device/ti/beagleboard/audio_policy.conf:system/etc/audio_policy.conf
 
+PRODUCT_COPY_FILES += \
+	frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml \
+	frameworks/native/data/etc/android.hardware.usb.host.xml:system/etc/permissions/android.hardware.usb.host.xml
 
+PRODUCT_COPY_FILES += \
+	frameworks/native/data/etc/android.hardware.sensor.accelerometer.xml:system/etc/permissions/android.hardware.sensor.accelerometer.xml \
+    frameworks/native/data/etc/android.hardware.sensor.compass.xml:system/etc/permissions/android.hardware.sensor.compass.xml
+
+PRODUCT_COPY_FILES += \
+	frameworks/native/data/etc/android.hardware.wifi.xml:system/etc/permissions/android.hardware.wifi.xml \
+	frameworks/native/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml \
+	frameworks/native/data/etc/android.hardware.bluetooth.xml:system/etc/permissions/android.hardware.bluetooth.xml \
+    system/bluetooth/data/main.nonsmartphone.conf:system/etc/bluetooth/main.conf
+
+PRODUCT_COPY_FILES += \
+	device/ti/beagleboard/sierra_binaries/lib/libswims.so:system/lib/libswims.so \
+	device/ti/beagleboard/sierra_binaries/lib/libsierraat-ril.so:system/lib/libsierraat-ril.so \
+	device/ti/beagleboard/sierra_binaries/lib/hw/libswigpsat.so:system/lib/hw/libswigpsat.so \
+	device/ti/beagleboard/sierra_binaries/lib/libswisdkapi.so:system/lib/libswisdkapi.so
+
+PRODUCT_COPY_FILES += \
+	device/ti/beagleboard/sierra_binaries/bin/swisdk:system/bin/swisdk \
+	device/ti/beagleboard/sierra_binaries/bin/swifwdnld:system/bin/swifwdnld \
+	device/ti/beagleboard/sierra_binaries/bin/SierraDMLog:system/bin/SierraDMLog \
+	device/ti/beagleboard/sierra_binaries/bin/init.dhcpcd:system/bin/init.dhcpcd \
+	device/ti/beagleboard/sierra_binaries/bin/init.ril-daemon:system/bin/init.ril-daemon
+			
 PRODUCT_PROPERTY_OVERRIDES := \
 	hwui.render_dirty_regions=false \
 	ro.sf.lcd_density=120
 
 PRODUCT_PROPERTY_OVERRIDES += \
-	persist.sys.usb.config=adb
-
-PRODUCT_PROPERTY_OVERRIDES += \
 	persist.sys.strictmode.visual=0 \
 	persist.sys.strictmode.disable=1
 
-# Uncomment the following to enable USB Mass Storage gadget mode
-#PRODUCT_PROPERTY_OVERRIDES += \
-#	persist.sys.usb.config=mass_storage,adb
+PRODUCT_PROPERTY_OVERRIDES += \
+	persist.sys.usb.config=mass_storage,adb
 
-PRODUCT_CHARACTERISTICS := tablet,nosdcard
+PRODUCT_CHARACTERISTICS := tablet
 
 DEVICE_PACKAGE_OVERLAYS := \
     device/ti/beagleboard/overlay
@@ -54,14 +78,13 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
         audio.primary.beagleboard \
+		audio_policy.beagleboard \
         tinycap \
         tinymix \
         tinyplay
 
 PRODUCT_PACKAGES += \
-	dhcpcd.conf \
-	TQS_D_1.7.ini \
-	calibrator
+	dhcpcd.conf
 
 # Filesystem management tools
 PRODUCT_PACKAGES += \
@@ -70,9 +93,33 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
 	camera.omap3
 
-# FileManager Application
+# WI-Fi
 PRODUCT_PACKAGES += \
-        FileManager-1.1.6
+	hostapd.conf \
+	wifical.sh \
+	TQS_D_1.7.ini \
+	TQS_D_1.7_127x.ini \
+	TQS_S_2.6.ini \
+	crda \
+	regulatory.bin \
+	calibrator
+	
+PRODUCT_PROPERTY_OVERRIDES += \
+	 wifi.interface=wlan0
 
+# libsensors
+PRODUCT_PACKAGES += \
+	sensors.beagleboard
+		 
+# Bluetooth A2DP audio support
+PRODUCT_PACKAGES += \
+        audio.a2dp.default
+
+# BlueZ test tools
+PRODUCT_PACKAGES += \
+	hciconfig \
+	hcitool	        
 
 $(call inherit-product, frameworks/native/build/tablet-dalvik-heap.mk)
+$(call inherit-product-if-exists, hardware/ti/wpan/wl12xx-bluetooth/wl12xx_bt_products.mk)
+$(call inherit-product-if-exists, hardware/ti/wlan/mac80211/firmware/wl12xx_wlan_fw_products.mk)

@@ -1,0 +1,53 @@
+1) Setting up build environment
+===============================
+
+1.1) Dependancies
+==================
+
+from: http://processors.wiki.ti.com/index.php/TI-Android-JB-4.1.2-DevKit-4.0.0_DeveloperGuide
+
+
+For 64-bit Ubuntu 10.04
+The following command installs the required packages for setting up the android build host:
+  $ sudo apt-get install git-core gnupg flex bison gperf build-essential \
+  zip curl zlib1g-dev libc6-dev lib32ncurses5-dev ia32-libs \
+  x11proto-core-dev libx11-dev lib32readline5-dev lib32z-dev \
+  libgl1-mesa-dev g++-multilib mingw32 tofrodos python-markdown \
+  libxml2-utils xsltproc minicom tftpd uboot-mkimage expect
+
+For 64-bit Ubuntu 12.04
+The following command installs the required packages for setting up the android build host:
+  $ sudo apt-get install git-core gnupg flex bison gperf build-essential \
+  zip curl libc6-dev libncurses5-dev:i386 x11proto-core-dev \
+  libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-glx:i386 \
+  libgl1-mesa-dev g++-multilib mingw32 openjdk-6-jdk tofrodos \
+  python-markdown libxml2-utils xsltproc zlib1g-dev:i386 \
+  minicom tftpd uboot-mkimage expect
+  $ sudo ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
+
+For 64-bit Ubuntu 14.04
+In addition to 12.04 dependancies and the following,
+apt-get install libswitch-perl
+http://www.ubuntuupdates.org/package/core/raring/main/base/uboot-mkimage
+
+
+1.2) Toolchain setup
+=====================
+Setup the toolchain path to point to arm-eabi- tools in prebuilts/gcc/linux-x86/arm/arm-eabi-4.6/bin
+  $ export PATH=$HOME/rowboat-android/prebuilts/gcc/linux-x86/arm/arm-eabi-4.6/bin:$PATH
+
+
+
+2) Building
+============
+2.1) Refer build_all.sh for build instructions
+2.2) Use nandfs_build.sh to build NAND filesystem
+
+
+3) Deployment
+==============
+3.1) Use U-boot commands listed in the NAND_setup document to setup the macros required to copy the NAND partitions
+
+
+More info at: from: http://processors.wiki.ti.com/index.php/TI-Android-JB-4.1.2-DevKit-4.0.0_DeveloperGuide
+

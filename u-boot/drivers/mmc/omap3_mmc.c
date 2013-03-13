@@ -52,7 +52,8 @@ const unsigned short mmc_transspeed_val[15][4] = {
 
 mmc_card_data cur_card_data;
 static block_dev_desc_t mmc_blk_dev;
-static hsmmc_t *mmc_base = (hsmmc_t *)OMAP_HSMMC_BASE;
+static hsmmc_t *mmc_base;// = (hsmmc_t *)OMAP_HSMMC_BASE;
+static int current_dev = -1;
 
 block_dev_desc_t *mmc_get_dev(int dev)
 {
@@ -68,12 +69,20 @@ unsigned char mmc_board_init(void)
 	twl4030_power_mmc_init();
 #endif
 
-	writel(readl(&t2_base->pbias_lite) | PBIASLITEPWRDNZ1 |
-		PBIASSPEEDCTRL0 | PBIASLITEPWRDNZ0,
-		&t2_base->pbias_lite);
-
-	writel(readl(&t2_base->devconf0) | MMCSDIO1ADPCLKISEL,
-		&t2_base->devconf0);
+	switch(current_dev){
+		case 1:		
+			writel(readl(&t2_base->pbias_lite) | PBIASLITEPWRDNZ1 |
+				PBIASSPEEDCTRL0 | PBIASLITEPWRDNZ0,
+				&t2_base->pbias_lite);
+			writel(readl(&t2_base->devconf0) | MMCSDIO1ADPCLKISEL,
+				&t2_base->devconf0);
+			break;
+		case 2:
+		case 3:
+			writel(readl(&t2_base->devconf1) | MMCSDIO2ADPCLKISEL,
+				&t2_base->devconf1);
+			break;
+	}
 #endif
 	return 1;
 }
@@ -513,8 +522,36 @@ unsigned long mmc_bread(int dev_num, unsigned long blknr, lbaint_t blkcnt,
 	return 1;
 }
 
+int mmc_set_dev(int dev){
+	
+	if(dev < -1){
+		printf("Unknown device\n");
+		return 1;
+	}else{
+		switch(dev){
+			case 1:
+				mmc_base = (hsmmc_t *)OMAP_HSMMC_BASE_MMC1;
+				break;
+			case 2:
+				mmc_base = (hsmmc_t *)OMAP_HSMMC_BASE_MMC2;
+				break;
+			case 3:
+				mmc_base = (hsmmc_t *)OMAP_HSMMC_BASE_MMC3;
+				break;
+			default:
+				printf("unknown device\n");
+				return 1;
+		}
+		current_dev = dev;
+	}
+	return 0;
+}
+
 int mmc_legacy_init(int verbose)
 {
+	if(mmc_set_dev(verbose) != 0)
+		return 0;
+		
 	if (configure_mmc(&cur_card_data) != 1)
 		return 1;
 
@@ -526,7 +563,8 @@ int mmc_legacy_init(int verbose)
 
 	/* FIXME fill in the correct size (is set to 32MByte) */
 	mmc_blk_dev.blksz = MMCSD_SECTOR_SIZE;
-	mmc_blk_dev.lba = 0x10000;
+	//mmc_blk_dev.lba = 0x10000;
+	mmc_blk_dev.lba = cur_card_data.size;
 	mmc_blk_dev.removable = 0;
 	mmc_blk_dev.block_read = mmc_bread;
 

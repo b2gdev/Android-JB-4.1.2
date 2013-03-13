@@ -273,6 +273,8 @@ static __inline__ int abortboot(int bootdelay)
 
 void main_loop (void)
 {
+	//unsigned char regval; //{RD}
+	//int ret; //{RD}
 #ifndef CONFIG_SYS_HUSH_PARSER
 	static char lastcommand[CONFIG_SYS_CBSIZE] = { 0, };
 	int len;
@@ -346,6 +348,11 @@ void main_loop (void)
 	install_auto_complete();
 #endif
 
+
+//{RD}
+	//ret = twl4030_i2c_read_u8(TWL4030_CHIP_RTC,&regval,12);
+	//printf("{RD} twl ret: %d, val: %d\n",ret, regval);
+
 #ifdef CONFIG_PREBOOT
 	if ((p = getenv ("preboot")) != NULL) {
 # ifdef CONFIG_AUTOBOOT_KEYED
@@ -385,6 +392,13 @@ void main_loop (void)
 	}
 	else
 #endif /* CONFIG_POST */
+
+	//{RD}
+	s = getenv("dorecovery");
+	if(simple_strtol(s, NULL, 10)==1){
+		s = getenv ("recoverycmd");
+		printf ("Booting Recovery kernel...\n");
+	}else{
 #ifdef CONFIG_BOOTCOUNT_LIMIT
 	if (bootlimit && (bootcount > bootlimit)) {
 		printf ("Warning: Bootlimit (%u) exceeded. Using altbootcmd.\n",
@@ -393,7 +407,8 @@ void main_loop (void)
 	}
 	else
 #endif /* CONFIG_BOOTCOUNT_LIMIT */
-		s = getenv ("bootcmd");
+		s = getenv ("bootcmd");		
+	}
 
 	debug ("### main_loop: bootcmd=\"%s\"\n", s ? s : "<UNDEFINED>");
 

@@ -7,10 +7,10 @@ define filechk_version.h
 			"$(shell git describe --dirty)";')
 endef
 
-$(obj)/version.h: .git/HEAD .git/index .git/refs/tags
-	@$(call filechk,version.h)
+#$(obj)/version.h: .git/HEAD .git/index .git/refs/tags
+#	@$(call filechk,version.h)
 
-$(obj)/main.c: $(src)/version.h
+#$(obj)/main.c: $(src)/version.h
 
 # convert all wl12xx-objs to $(src)/file form
 define WL12XX_OBJS_SRC

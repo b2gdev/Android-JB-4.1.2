@@ -5,16 +5,11 @@ hardware/ti/sgx/tools/devmem2/Obj
 kernel/arch/arm/boot/compressed
 out
 v8.log
-!image_folder/Boot_Images/boot.scr
-!image_folder/Boot_Images/MLO
-!image_folder/Boot_Images/u-boot.bin
-!image_folder/Boot_Images/uImage
-!image_folder/Filesystem/rootfs.tar.bz2
+image_folder/
 hardware/ti/sgx/gfx_rel_es5.x_android/devmem2
 hardware/ti/sgx/gfx_rel_es5.x_android/omaplfb.ko
 hardware/ti/sgx/gfx_rel_es5.x_android/pvrsrvkm.ko
 hardware/ti/sgx/eurasiacon/binary2_omap4430_android_release
-!kernel/.config
 hardware/ti/wlan/mac80211/compat/.tmp_versions/
 tcbin_misc/mtd-utils/ubifs.img
 .repo

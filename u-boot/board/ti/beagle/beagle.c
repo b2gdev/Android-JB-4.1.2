@@ -37,6 +37,7 @@
 #include <asm/arch/gpio.h>
 #include <asm/mach-types.h>
 #include "beagle.h"
+#include <linux/mtd/nand.h>
 
 /* {PS} BEGIN: */
 static int beagle_revision = REVISION_C4; /* {PS} : This u-boot is only for Rev C4 based design */ 
@@ -105,7 +106,16 @@ int misc_init_r(void)
 {
 	struct gpio *gpio5_base = (struct gpio *)OMAP34XX_GPIO5_BASE;
 	struct gpio *gpio6_base = (struct gpio *)OMAP34XX_GPIO6_BASE;
-
+	int ret;
+	unsigned char val;
+	char *s;
+	
+	char *ecc[3]     = { "nandecc", "sw", NULL, };
+	char addr[32];
+	char *read[6] = { "nand", "read", NULL,
+				"0xF80000", "0x1000", NULL, };
+	unsigned char buf[4096];				
+				
 	/*
 	 * Configure drive strength for IO cells
 	 */
@@ -136,7 +146,7 @@ int misc_init_r(void)
 					TWL4030_PM_RECEIVER_VAUX2_DEV_GRP,
 					TWL4030_PM_RECEIVER_DEV_GRP_P1);
 		/* {KW}: setenv("mpurate", "720"); */
-		setenv("mpurate", "1000"); /*{KW}: value for beagle-XM */
+		setenv("mpurate", "1000"); /*{KW}: value for beagle-XM */		
 		break;
 	case REVISION_XM:
 	case REVISION_XMC:
@@ -152,7 +162,25 @@ int misc_init_r(void)
 	default:
 		printf("Beagle unknown 0x%02x\n", beagle_revision);
 	}
-
+	
+	// {RD} Begin: check conditions to load recovery mode	
+	twl4030_i2c_read_u8(TWL4030_CHIP_RTC,&val,(TWL4030_BASEADD_RTC+12));	
+	if(val == 14){		
+		printf("Entering recovery mode via TWL RTC flag\n");
+		setenv("dorecovery","1");		
+	}else{
+		do_switch_ecc(NULL, 0, 2, ecc);
+		sprintf(addr, "0x%x", buf);
+		read[2] = addr;
+		do_nand(NULL, 0, 5, read);
+		if(!strncmp(buf+2048, "boot-recovery", 13)){
+				printf("Entering recovery mode via bootloader control block flag\n");
+				setenv("dorecovery","1");
+		}else
+			setenv("dorecovery","0");		
+	}								
+	// {RD} End: 
+		
 	/* Configure GPIOs to output */
 	
 	/* {PS} BEGIN */
@@ -176,6 +204,7 @@ int misc_init_r(void)
 	omap_request_gpio(98);				/* {PS} : CAM_nRST			*/
 	omap_request_gpio(167);				/* {PS} : CAM_PWDN			*/
 	omap_request_gpio(157);				/* {PS} : CAM_LED_nRST		*/
+	omap_request_gpio(11);				/* {KW} : JTAG_EMU0			*/
 	omap_request_gpio(12);				/* {PS} : CP_INT			*/
 	omap_request_gpio(13);				/* {PS} : 3GM_UART_DCD_INT	*/
 	omap_request_gpio(14);				/* {PS} : ACC_INT			*/
@@ -206,6 +235,7 @@ int misc_init_r(void)
 	omap_set_gpio_direction(98, 0);		/* {PS} : CAM_nRST			*/
 	omap_set_gpio_direction(167, 0);	/* {PS} : CAM_PWDN			*/
 	omap_set_gpio_direction(157, 0);	/* {PS} : CAM_LED_nRST		*/
+	omap_set_gpio_direction(11, 0);		/* {KW} : JTAG_EMU0			*/	
 	omap_set_gpio_direction(12, 1);		/* {PS} : CP_INT			*/	/* Input */
 	omap_set_gpio_direction(13, 1);		/* {PS} : 3GM_UART_DCD_INT	*/	/* Input */
 	omap_set_gpio_direction(14, 1);		/* {PS} : ACC_INT			*/	/* Input */
@@ -236,6 +266,7 @@ int misc_init_r(void)
 	omap_set_gpio_dataout(98, 0);		/* {PS} : CAM_nRST			- LOW	- Reset Camera */
 	omap_set_gpio_dataout(167, 1);		/* {PS} : CAM_PWDN			- HIGH 	- Power down Camera */
 	omap_set_gpio_dataout(157, 0);		/* {PS} : CAM_LED_nRST		- LOW 	- Reset Camera LED driver */
+	omap_set_gpio_dataout(11, 0);		/* {KW} : JTAG_EMU0			- LOW	- PWR STATUS Gpio pin low */
 	omap_set_gpio_dataout(16, 0);		/* {PS} : 3GM_PWR_nEN		- LOW	- Turn on 3G modem power supply */
 	omap_set_gpio_dataout(21, 0);		/* {PS} : USB_PWR_EN		- LOW	- Turn off USB Hub power supply */
 	omap_set_gpio_dataout(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */
@@ -257,7 +288,7 @@ int misc_init_r(void)
 	/* {PS} END: */
 	
 	dieid_num_r();
-
+	
 	return 0;
 }
 

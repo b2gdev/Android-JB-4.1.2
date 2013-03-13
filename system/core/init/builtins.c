@@ -390,7 +390,24 @@ int do_mount(int nargs, char **args)
         }
 
         goto exit_success;
-    } else if (!strncmp(source, "loop@", 5)) {
+    } else if (!strncmp(source, "ubi@", 4)) {
+		// {RD}
+        n = ubi_attach_mtd(source + 4);
+        if (n < 0) {
+            return -1;
+        }
+
+        sprintf(tmp, "/dev/ubi%d_0", n);
+
+        if (wait)
+            wait_for_file(tmp, COMMAND_RETRY_TIMEOUT);
+        if (mount(tmp, target, system, flags, options) < 0) {
+            ubi_detach_dev(n);
+            return -1;
+        }
+
+        goto exit_success;
+    }else if (!strncmp(source, "loop@", 5)) {
         int mode, loop, fd;
         struct loop_info info;
 

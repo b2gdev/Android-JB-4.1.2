@@ -31,7 +31,9 @@
 typedef struct t2 {
 	unsigned char res1[0x274];
 	unsigned int devconf0;		/* 0x274 */
-	unsigned char res2[0x2A8];
+	unsigned char res2[0x60];
+	unsigned int devconf1;		/* 0x2D8 */
+	unsigned char res3[0x244];
 	unsigned int pbias_lite;	/* 0x520 */
 } t2_t;
 
@@ -41,10 +43,15 @@ typedef struct t2 {
 #define PBIASSPEEDCTRL0			(1 << 2)
 #define PBIASLITEPWRDNZ1		(1 << 9)
 
+#define MMCSDIO2ADPCLKISEL		(1 << 6)
+
 /*
  * OMAP HSMMC register definitions
  */
-#define OMAP_HSMMC_BASE		0x4809C000
+//#define OMAP_HSMMC_BASE		0x4809C000
+#define OMAP_HSMMC_BASE_MMC1		0x4809C000
+#define OMAP_HSMMC_BASE_MMC2		0x480B4000
+#define OMAP_HSMMC_BASE_MMC3		0x480AD000
 
 typedef struct hsmmc {
 	unsigned char res1[0x10];

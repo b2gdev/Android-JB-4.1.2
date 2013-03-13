@@ -51,11 +51,12 @@ public class UsbService extends IUsbManager.Stub {
         if (pm.hasSystemFeature(PackageManager.FEATURE_USB_HOST)) {
             mHostManager = new UsbHostManager(context, mSettingsManager);
         }
-        if (new File("/sys/class/android_usb").exists()) {
-            mDeviceManager = new UsbDeviceManager(context, mSettingsManager);
-        }
-        else if(new File("/sys/devices/platform/usb_mass_storage/lun0/file").exists())
-            mDeviceManager = new LegacyUsbDeviceManager(context, mSettingsManager);
+// {RD} support only legacy usb device
+        //if (new File("/sys/class/android_usb").exists()) {
+        //    mDeviceManager = new UsbDeviceManager(context, mSettingsManager);
+        //}
+	//else if(Resources.getSystem().getBoolean(com.android.internal.R.bool.config_usesLegacyUsbDeviceManager))
+	    mDeviceManager = new LegacyUsbDeviceManager(context, mSettingsManager);
     }
 
     public void systemReady() {

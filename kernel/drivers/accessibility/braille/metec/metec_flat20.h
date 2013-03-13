@@ -22,6 +22,8 @@
 #define METEC_FLAT20_DEV_CLASS_NAME	"accessibility"
 #define METEC_FLAT20_DEV_NAME		"braille0"
 
+#include "metec_flat20_ioctl.h"	
+
 struct metec_flat20_dev_info
 {
 	int major;
@@ -32,6 +34,7 @@ struct metec_flat20_dev_info
 	struct class *dev_class;
 	struct platform_device *platform_dev;
 	struct proc_dir_entry *proc_dir;
+	unsigned char display_data[MAX_BRAILLE_LINE_SIZE];
 };
 
 #define CMD_DISPLAY_ON_OFF		0x01

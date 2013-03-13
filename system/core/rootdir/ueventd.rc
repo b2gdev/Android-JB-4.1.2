@@ -30,6 +30,8 @@
 /dev/graphics/*           0660   root       graphics
 /dev/msm_hw3dm            0660   system     graphics
 /dev/input/*              0660   root       input
+# {RD} : make all input event nodes readable and writable for media group: added support for brailleback
+/dev/input/event*         0666   media       input
 /dev/eac                  0660   root       audio
 /dev/cam                  0660   root       camera
 /dev/pmem                 0660   system     graphics
@@ -76,6 +78,9 @@
 # CDMA radio interface MUX
 /dev/ts0710mux*           0640   radio      radio
 /dev/ppp                  0660   radio      vpn
+
+# {RD} Sierra RIL related
+/dev/ttyUSB*              0660   radio      radio
 
 # sysfs properties
 /sys/devices/virtual/input/input*   enable      0660  root   input

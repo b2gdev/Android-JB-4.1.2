@@ -66,6 +66,11 @@ int omap3_noncore_dpll_set_rate(struct clk *clk, unsigned long rate);
 int omap3_noncore_dpll_enable(struct clk *clk);
 void omap3_noncore_dpll_disable(struct clk *clk);
 
+/* {SW} BEGIN: Fix the issue due to USB host clock drift (sprz319e erratum 2.1) */
+int omap3_noncore_dpll_program(struct clk *clk, u16 m, u8 n, u16 freqsel);
+int omap2_clksel_force_divisor(struct clk *clk, int new_div);
+/* {SW} END: */
+
 #ifdef CONFIG_OMAP_RESET_CLOCKS
 void omap2_clk_disable_unused(struct clk *clk);
 #else

@@ -409,7 +409,18 @@ void ScreenRecoveryUI::Print(const char *fmt, ...)
                 text_row = (text_row + 1) % text_rows;
                 if (text_row == text_top) text_top = (text_top + 1) % text_rows;
             }
-            if (*ptr != '\n') text[text_row][text_col++] = *ptr;
+            if (*ptr != '\n') {
+				if(text_col == 0){
+					text[text_row][text_col++] = ' ';
+					text[text_row][text_col++] = ' ';
+					text[text_row][text_col++] = ' ';
+					text[text_row][text_col++] = ' ';
+					text[text_row][text_col++] = ' ';
+					text[text_row][text_col++] = ' ';
+					text[text_row][text_col++] = ' ';
+				}
+				text[text_row][text_col++] = *ptr;
+            }
         }
         text[text_row][text_col] = '\0';
         update_screen_locked();
@@ -430,7 +441,8 @@ void ScreenRecoveryUI::StartMenu(const char* const * headers, const char* const 
         menu_top = i;
         for (; i < text_rows; ++i) {
             if (items[i-menu_top] == NULL) break;
-            strncpy(menu[i], items[i-menu_top], text_cols-1);
+            strncpy(menu[i], "    ", 4); // {RD} overscan fix
+            strncpy(menu[i]+4, items[i-menu_top], text_cols-1-4);            
             menu[i][text_cols-1] = '\0';
         }
         menu_items = i - menu_top;

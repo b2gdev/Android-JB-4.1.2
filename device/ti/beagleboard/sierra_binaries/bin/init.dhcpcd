@@ -1,0 +1,10 @@
+#!/system/usr/bin/sh
+
+# remove lease file
+/system/usr/bin/rm /data/misc/dhcp/dhcpcd-wwan0.lease
+
+# clear dhcp result
+/system/bin/setprop "dhcp.wwan0.result" ""
+
+# start dhcpcd
+/system/bin/dhcpcd -B -d -o subnet_mask -o routers  -o domain_name_servers -o classless_static_routes wwan0

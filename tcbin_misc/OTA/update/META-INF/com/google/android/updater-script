@@ -1,0 +1,36 @@
+ui_print("********************************************");
+ui_print("             ZONE24X7 INC ");
+ui_print("            b2g OTA v3.4.1 ");
+ui_print("********************************************");
+show_progress(0.1000000, 0);
+ui_print("Flashing Kernel...");
+assert(package_extract_file("norm_uImage", "/tmp/norm_uImage"),
+write_raw_image("/tmp/norm_uImage","Kernel"),
+delete("/tmp/norm_uImage"));
+ui_print("Kernel image flashed...");
+ui_print("");
+set_progress(0.25000);
+ui_print("Flashing recovery Kernel...");
+assert(package_extract_file("bk_uImage", "/tmp/bk_uImage"),
+write_raw_image("/tmp/bk_uImage","recovery"),
+delete("/tmp/bk_uImage"));
+ui_print("Recovery Kernel image flashed...");
+ui_print("");
+set_progress(0.40000);
+ui_print("Flashing system image...");
+unmount("/system");
+assert(package_extract_file("ubi_system.img", "/tmp/ubi_system.img"),
+write_raw_image("/tmp/ubi_system.img","system"),
+delete("/tmp/ubi_system.img"));
+ui_print("system image flashed...");
+ui_print("");
+set_progress(0.75000);
+ui_print("Flashing data image...");
+unmount("/data");
+assert(package_extract_file("ubi_data.img", "/tmp/ubi_data.img"),
+write_raw_image("/tmp/ubi_data.img","userdata"),
+delete("/tmp/ubi_data.img"));
+ui_print("data image flashed...");
+ui_print("Clear Cache...");
+wipe_cache();
+show_progress(1.0, 10);

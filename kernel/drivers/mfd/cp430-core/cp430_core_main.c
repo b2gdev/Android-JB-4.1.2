@@ -1,5 +1,3 @@
-
-// #include <linux/config.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
@@ -19,6 +17,7 @@
 
 #include <asm/system.h>		/* cli(), *_flags */
 #include <asm/uaccess.h>	/* copy_*_user */
+#include <asm/atomic.h>     /* {KW} */
 
 #include <linux/interrupt.h>
 #include <mach/gpio.h>
@@ -26,7 +25,8 @@
 #include "cp430_core.h"		/* local definitions */
 #include "cp430_ioctl.h"
 #include "debug.h"
-
+#include "cp430.h"	        /* {KW} */
+#include <linux/earlysuspend.h> /* {RD} */
 
 MODULE_AUTHOR("Prasad Samaraweera");
 MODULE_LICENSE("Dual BSD/GPL");
@@ -58,12 +58,32 @@ static int tx_logging_count = 0;
 static DECLARE_WAIT_QUEUE_HEAD(command_response_received_wq);
 static int command_response_received_flag = 0;
 
+/* {KW}: Maintain suspend resume status, Initiallized to suspend */
+static atomic_t is_sys_suspend = ATOMIC_INIT(1);
+/* {KW}: RX event handler Flag to be sent */
+static unsigned int rx_event_handler_flag = SYS_NOFLAG;
+
+unsigned short masked_flag = SYS_NOFLAG; /*{KW}: separate flag from rx event arg */
+/** {KW}:
+ * Called by cp430_core driver on data reception for this device.
+ * @arg: 32bit value containing 2 fields as follows.
+ * -----------------------------------------
+ * |   16bit FLAG      | 16bit data length |
+ * -----------------------------------------
+ * FLAG could be one of: SYS_NOFLAG   (0x0000)
+ * 						 SYS_RESUMING (0x0001) 
+ **/
+
 int cp430_dev_receive_event_handler(unsigned int arg)
-{
+{	
+	unsigned int masked_arg = arg & 0x0000FFFF; /*{KW}: ignore the MSB 16bit FLAG */
+	
 	unsigned char* buffer = kmalloc(1024, GFP_KERNEL);
 	
+	masked_flag = (arg & 0xFFFF0000) >> 16;
+	
 	if (buffer != NULL) {
-		if (cp430_core_read(CP430_CORE, buffer, arg) < 0) {
+		if (cp430_core_read(CP430_CORE, buffer, masked_arg) < 0) {
 			PDEBUG("cp430_dev : receive data fail\r\n");
 		}
 		else {
@@ -317,6 +337,7 @@ void process_rx_fifo(unsigned long unused)
 {
 	unsigned char c = 0x00;
 	int retval = 0;
+	unsigned int rx_arg;
 
 	PDEBUG("> : %s\r\n", __FUNCTION__);
     PDEBUG("kfifo_len(&core_device->rx_fifo) = %d\n", kfifo_len(&core_device->rx_fifo));
@@ -348,12 +369,10 @@ void process_rx_fifo(unsigned long unused)
 		switch(rx_state) {
 			case RX_STATE_HEADER1 : {
 				if (0x43 == c) {
-					// PDEBUG("c = %02x, rx_state = RX_STATE_HEADER1, next rx_state = RX_STATE_HEADER2\n", c);
 					rx_state = RX_STATE_HEADER2;
 				}
 				else {
 					// out of sync
-					// PDEBUG("c = %02x, rx_state = RX_STATE_HEADER1, next rx_state = RX_STATE_HEADER1\n", c);
 					rx_state = RX_STATE_HEADER1;
 				}		
 				
@@ -530,7 +549,9 @@ void process_rx_fifo(unsigned long unused)
 					}
 					else {
 						if (devices[active_rx_device].data != NULL) {
-							devices[active_rx_device].data->receive_event_handler(kfifo_len(&devices[active_rx_device].rx_fifo));
+							rx_arg = (rx_event_handler_flag << 16) | kfifo_len(&devices[active_rx_device].rx_fifo);							
+							devices[active_rx_device].data->receive_event_handler(rx_arg);							
+							rx_event_handler_flag = SYS_NOFLAG;
 						}
 						else {
 							PERROR("Error ! trying to call receive_event_handler in unregistered device\r\n");
@@ -538,18 +559,6 @@ void process_rx_fifo(unsigned long unused)
 						rx_state = RX_STATE_HEADER1;
 					}
 				}
-// 				else if (0x43 == c) {
-// 					// looks like start of a new packet, even though the END of previous packet is missing
-// 					PDEBUG("Error ! packet END is missing\r\n");
-// 
-// 					if (devices[active_rx_device].data != NULL) {
-// 						devices[active_rx_device].data->receive_event_handler(kfifo_len(devices[active_rx_device].rx_fifo));
-// 					}
-// 					else {
-// 						PERROR("Error ! trying to call receive_event_handler in unregistered device\r\n");
-// 					}						
-// 					rx_state = RX_STATE_HEADER2;
-// 				}
 				else {
 					// out of sync
 					rx_state = RX_STATE_HEADER1;	
@@ -855,52 +864,6 @@ int cp430_core_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-//ssize_t cp430_core_read(struct file *filp, char __user *buf, size_t count,
-//                loff_t *f_pos)
-//{
-//	struct cp430_core_device *dev = filp->private_data; 
-//	ssize_t retval = 0;
-//
-//	
-//	PDEBUG("> : %s\r\n",__FUNCTION__);
-//	
-//	if (down_interruptible(&dev->sem))
-//		return -ERESTARTSYS;
-//
-//	/* .. */
-//	
-//	/* .. */
-//	
-//	*f_pos += count;
-//	retval = count;
-//
-//	up(&dev->sem);
-//	return retval;
-//}
-
-//ssize_t cp430_core_write(struct file *filp, const char __user *buf, size_t count,
-//                loff_t *f_pos)
-//{
-//	struct cp430_core_device *dev = filp->private_data;
-//	ssize_t retval = -ENOMEM;
-//
-//
-//	PDEBUG("> : %s\r\n",__FUNCTION__);
-//	
-//	if (down_interruptible(&dev->sem))
-//		return -ERESTARTSYS;
-//
-//	/* .. */
-//	
-//	/* .. */
-//	
-//	*f_pos += count;
-//	retval = count;
-//
-//	up(&dev->sem);
-//	return retval;
-//}
-
 long cp430_core_ioctl(struct file *filp,
                  unsigned int cmd, unsigned long arg)
 {
@@ -971,12 +934,25 @@ static int __devexit cp430_spi_remove(struct spi_device *spi_device)
 static void cp430_spi_shutdown(struct spi_device *spi_device)
 {
 	PDEBUG("> : %s\r\n",__FUNCTION__);
+	/*{KW}: Set suspend resume status. Set to suspend */
+	atomic_set(&is_sys_suspend, 1);
 }
 
 static int cp430_spi_suspend(struct spi_device *spi_device, pm_message_t mesg)
 {
+	int i       = 0;
 	PDEBUG("> : %s\r\n",__FUNCTION__);
-
+	for (i = 1; i < CP430_DEVICE_COUNT; i++) {
+		
+		if ((kfifo_len(&devices[i].tx_fifo) > 0) || (kfifo_len(&devices[i].rx_fifo) > 0) ){
+								
+				PERROR("%s : suspend FAILED! Device is busy...\r\n", __FUNCTION__);
+				return -EBUSY;
+		}			
+	}
+	/*{KW}: Set suspend resume status. Set to suspend */
+	//atomic_set(&is_sys_suspend, 1);  // {RD} Moved to early suspend
+	
 	return 0;	
 }
 
@@ -984,6 +960,9 @@ static int cp430_spi_resume(struct spi_device *spi_device)
 {
 	PDEBUG("> : %s\r\n",__FUNCTION__);
 
+	/*{KW}: Set suspend resume status. Set to not suspend */
+	//atomic_set(&is_sys_suspend, 0); // {RD} Moved to late resume
+	
 	return 0;	
 }
 
@@ -999,6 +978,35 @@ static struct spi_driver cp430_spi_driver = {
 	.shutdown	= cp430_spi_shutdown,
 	.suspend	= cp430_spi_suspend,
 	.resume		= cp430_spi_resume,
+};
+
+/* {RD} */
+/************************ Early suspend functions *********************/
+static void 
+cp430_core_early_suspend(struct early_suspend *h)
+{	
+	printk(KERN_INFO "core: %s\r\n",__FUNCTION__);	
+	
+	/*{RD}: Set suspend resume status. Set to suspend */
+	atomic_set(&is_sys_suspend, 1);
+	
+	return;
+}
+
+static void 
+cp430_core_late_resume(struct early_suspend *h)
+{
+	printk(KERN_INFO "core: %s\r\n",__FUNCTION__);
+	
+	/*{RD}: Set suspend resume status. Set to not suspend */
+	atomic_set(&is_sys_suspend, 0);
+	
+	return;
+}
+
+static struct early_suspend cp430_core_early_suspend_handler = {
+	.suspend = cp430_core_early_suspend,
+	.resume = cp430_core_late_resume,
 };
 
 void cp430_core_cleanup_module(void)
@@ -1088,6 +1096,9 @@ void cp430_core_cleanup_module(void)
 		kfree(core_device);
 	}
 
+	/*{RD}: early suspend/ resume */
+	unregister_early_suspend(&cp430_core_early_suspend_handler);
+	
 exit:
 	do{}while(0);
 }
@@ -1124,6 +1135,10 @@ static irqreturn_t cp430_core_interrupt(int irq, void *dev_id)
 	
 	if (use_rx_wq){
 		PDEBUG("> : queue_work(dev->rx_wq, &dev->rx_work)\r\n");	
+		if(atomic_read(&is_sys_suspend) > 0)
+		{
+			rx_event_handler_flag = SYS_RESUMING;
+		}
 		queue_work(dev->rx_wq, &dev->rx_work);
 	}
 	else{
@@ -1149,21 +1164,32 @@ static int init_interrupt(struct cp430_core_device *dev)
 
 	dev->irq = gpio_to_irq(CP430_IRQ_GPIO);
 	if (dev->irq < 0)
+	{
+		result = -EFAULT;
 		goto fail_irq;
+	}
 
-	result   = request_irq(dev->irq, cp430_core_interrupt, IRQF_TRIGGER_FALLING, DEVICE_NAME, dev);
+	result = request_irq(dev->irq, cp430_core_interrupt, IRQF_TRIGGER_FALLING, DEVICE_NAME, dev);
+	if (result < 0)
+		goto fail_irq;
+		
+	result = enable_irq_wake(dev->irq);
+	if (result < 0)
+		goto fail_irq_req;
 	
 	PDEBUG("< : %s - result = %d\r\n", __FUNCTION__, result);
 	
 	return result;
     
+fail_irq_req:
+	free_irq(dev->irq, dev);
 fail_irq:
 	gpio_free(CP430_IRQ_GPIO);
 fail:
 	printk(KERN_ERR "%s: can't get assigned irq %i\n", DEVICE_NAME, dev->irq);
 	dev->irq = -1;
 
-    return -EFAULT;
+    return result;
 }
 
 static int init_variables(struct cp430_core_device *dev)
@@ -1212,6 +1238,9 @@ static int init_variables(struct cp430_core_device *dev)
 		sema_init(&devices[i].rx_sema, 1);
 		sema_init(&devices[i].tx_sema, 1);
 	}
+	
+	/*{KW}: Init suspend resume status. Set to not suspend */
+	atomic_set(&is_sys_suspend, 0);
 
 	return 0;
 }
@@ -1434,6 +1463,10 @@ int cp430_core_init_module(void)
 		PDEBUG("cp430_dev : time out\r\n");
 	}
 
+	/*{RD}: early suspend/ resume */
+	register_early_suspend(&cp430_core_early_suspend_handler);
+	
+	
 	return 0;
 
   fail:

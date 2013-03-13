@@ -41,6 +41,12 @@
 #include "log.h"
 #include "util.h"
 
+//{RD}
+#include <sys/ioctl.h>
+#include "ubi-user.h"
+#define UBI_CTRL_DEV "/dev/ubi_ctrl"
+#define UBI_SYS_PATH "/sys/class/ubi"
+
 /*
  * android_name_to_id - returns the integer uid/gid associated with the given
  * name, or -1U on error.
@@ -462,4 +468,98 @@ void import_kernel_cmdline(int in_qemu,
         import_kernel_nv(ptr, in_qemu);
         ptr = x;
     }
+}
+
+// {RD}
+static int ubi_dev_read_int(int dev, const char *file, int def)
+{
+    int fd, val = def;
+    char path[128], buf[64];
+
+    sprintf(path, UBI_SYS_PATH "/ubi%d/%s", dev, file);
+    wait_for_file(path, 5);
+    fd = open(path, O_RDONLY);
+    if (fd == -1) {
+        return val;
+    }
+
+    if (read(fd, buf, 64) > 0) {
+        val = atoi(buf);
+    }
+
+    close(fd);
+    return val;
+}
+
+int ubi_attach_mtd(const char *name)
+{
+    int ret;
+    int mtd_num, ubi_num;
+    int ubi_ctrl, ubi_dev;
+    int vols, avail_lebs, leb_size;
+    char path[128];
+    struct ubi_attach_req attach_req;
+    struct ubi_mkvol_req mkvol_req;
+   
+    mtd_num = mtd_name_to_number(name);
+    if (mtd_num == -1) {
+        return -1;
+    }
+
+    ubi_ctrl = open(UBI_CTRL_DEV, O_RDONLY);
+    if (ubi_ctrl == -1) {
+        return -1;
+    }
+
+    memset(&attach_req, 0, sizeof(struct ubi_attach_req));
+    attach_req.ubi_num = UBI_DEV_NUM_AUTO;
+    attach_req.mtd_num = mtd_num;
+
+    ret = ioctl(ubi_ctrl, UBI_IOCATT, &attach_req);
+    if (ret == -1) {
+        close(ubi_ctrl);
+        return -1;
+    }
+
+    ubi_num = attach_req.ubi_num;
+   
+    vols = ubi_dev_read_int(ubi_num, "volumes_count", -1);
+    if (vols == 0) {
+        sprintf(path, "/dev/ubi%d", ubi_num);
+        ubi_dev = open(path, O_RDONLY);
+        if (ubi_dev == -1) {
+            close(ubi_ctrl);
+            return ubi_num;
+        }
+       
+        avail_lebs = ubi_dev_read_int(ubi_num, "avail_eraseblocks", 0);
+        leb_size = ubi_dev_read_int(ubi_num, "eraseblock_size", 0);
+
+        memset(&mkvol_req, 0, sizeof(struct ubi_mkvol_req));
+        mkvol_req.vol_id = UBI_VOL_NUM_AUTO;
+        mkvol_req.alignment = 1;
+        mkvol_req.bytes = (long long)avail_lebs * leb_size;
+        mkvol_req.vol_type = UBI_DYNAMIC_VOLUME;
+        ret = snprintf(mkvol_req.name, UBI_MAX_VOLUME_NAME + 1, "%s", name);
+        mkvol_req.name_len = ret;
+        ioctl(ubi_dev, UBI_IOCMKVOL, &mkvol_req);
+        close(ubi_dev);
+    }
+
+    close(ubi_ctrl);
+    return ubi_num;
+}
+
+int ubi_detach_dev(int dev)
+{
+    int ret, ubi_ctrl;
+
+    ubi_ctrl = open(UBI_CTRL_DEV, O_RDONLY);
+    if (ubi_ctrl == -1) {
+        return -1;
+    }
+
+    ret = ioctl(ubi_ctrl, UBI_IOCDET, &dev);
+    close(ubi_ctrl);
+    return ret;
 }

@@ -64,11 +64,12 @@ static const char *LAST_LOG_FILE = "/cache/recovery/last_log";
 static const char *LAST_INSTALL_FILE = "/cache/recovery/last_install";
 static const char *CACHE_ROOT = "/cache";
 static const char *SDCARD_ROOT = "/sdcard";
-static const char *TEMPORARY_LOG_FILE = "/tmp/recovery.log";
-static const char *TEMPORARY_INSTALL_FILE = "/tmp/last_install";
+static const char *TEMPORARY_LOG_FILE = "/tmp/recovery/recovery.log";
+static const char *TEMPORARY_INSTALL_FILE = "/tmp/recovery/last_install";
 static const char *SIDELOAD_TEMP_DIR = "/tmp/sideload";
 
 RecoveryUI* ui = NULL;
+//char *npath;
 
 /*
  * The recovery tool communicates with the main system through /cache files.
@@ -135,6 +136,7 @@ static const int MAX_ARGS = 100;
 // open a given path, mounting partitions as necessary
 FILE*
 fopen_path(const char *path, const char *mode) {
+	
     if (ensure_path_mounted(path) != 0) {
         LOGE("Can't mount %s\n", path);
         return NULL;
@@ -408,7 +410,7 @@ copy_sideloaded_package(const char* original_path) {
 
 static const char**
 prepend_title(const char* const* headers) {
-    const char* title[] = { "Android system recovery <"
+    const char* title[] = { "       Android system recovery <"
                             EXPAND(RECOVERY_API_VERSION) "e>",
                             "",
                             NULL };
@@ -489,9 +491,12 @@ static int
 update_directory(const char* path, const char* unmount_when_done,
                  int* wipe_cache, Device* device) {
     ensure_path_mounted(path);
-
-    const char* MENU_HEADERS[] = { "Choose a package to install:",
-                                   path,
+    //if(!npath)
+		//npath = (char *)malloc(100*sizeof(char *));
+	//memset(npath,0,100*sizeof(char *));
+	//strcpy(npath+4,path);
+    const char* MENU_HEADERS[] = { "        Choose a package to install:",
+                                   "",
                                    "",
                                    NULL };
     DIR* d;
@@ -619,24 +624,24 @@ wipe_data(int confirm, Device* device) {
         static const char** title_headers = NULL;
 
         if (title_headers == NULL) {
-            const char* headers[] = { "Confirm wipe of all user data?",
-                                      "  THIS CAN NOT BE UNDONE.",
+            const char* headers[] = { "       Confirm wipe of all user data?",
+                                      "         THIS CAN NOT BE UNDONE.",
                                       "",
                                       NULL };
             title_headers = prepend_title((const char**)headers);
         }
 
-        const char* items[] = { " No",
-                                " No",
-                                " No",
-                                " No",
-                                " No",
-                                " No",
-                                " No",
-                                " Yes -- delete all user data",   // [7]
-                                " No",
-                                " No",
-                                " No",
+        const char* items[] = { "       No",
+                                "       No",
+                                "       No",
+                                "       No",
+                                "       No",
+                                "       No",
+                                "       No",
+                                "       Yes -- delete all user data",   // [7]
+                                "       No",
+                                "       No",
+                                "       No",
                                 NULL };
 
         int chosen_item = get_menu_selection(title_headers, items, 1, 0, device);
@@ -647,9 +652,14 @@ wipe_data(int confirm, Device* device) {
 
     ui->Print("\n-- Wiping data...\n");
     device->WipeData();
-    erase_volume("/data");
-    erase_volume("/cache");
-    ui->Print("Data wipe complete.\n");
+    if (erase_volume("/data")) {
+		ui->Print("Data wipe failed.\n");
+	} else {
+		if (erase_volume("/cache"))
+			ui->Print("Data wipe failed.\n");
+		else
+			ui->Print("Data wipe complete.\n");
+	}        
 }
 
 static void
@@ -657,7 +667,7 @@ prompt_and_wait(Device* device) {
     const char* const* headers = prepend_title(device->GetMenuHeaders());
 
     for (;;) {
-        finish_recovery(NULL);
+        //finish_recovery(NULL);
         ui->SetProgressType(RecoveryUI::EMPTY);
 
         int chosen_item = get_menu_selection(headers, device->GetMenuItems(), 0, 0, device);
@@ -679,9 +689,12 @@ prompt_and_wait(Device* device) {
                 break;
 
             case Device::WIPE_CACHE:
-                ui->Print("\n-- Wiping cache...\n");
-                erase_volume("/cache");
-                ui->Print("Cache wipe complete.\n");
+                ui->Print("\n-- Wiping cache...\n");               
+                if (erase_volume("/cache")) {
+					ui->Print("Cache wipe failed.\n");
+				} else {
+					ui->Print("Cache wipe complete.\n");
+				}                    
                 if (!ui->IsTextVisible()) return;
                 break;
 
@@ -778,10 +791,11 @@ main(int argc, char **argv) {
     }
 
     printf("Starting recovery on %s", ctime(&start));
-
+	//npath = NULL;
+	
     Device* device = make_device();
     ui = device->GetUI();
-
+	
     ui->Init();
     ui->SetBackground(RecoveryUI::NONE);
     load_volume_table();
@@ -792,7 +806,7 @@ main(int argc, char **argv) {
     const char *update_package = NULL;
     int wipe_data = 0, wipe_cache = 0;
     bool just_exit = false;
-
+	
     int arg;
     while ((arg = getopt_long(argc, argv, "", OPTIONS, NULL)) != -1) {
         switch (arg) {
@@ -821,7 +835,7 @@ main(int argc, char **argv) {
         ui->Print("Warning:  No file_contexts\n");
     }
 #endif
-
+	
     device->StartRecovery();
 
     printf("Command:");
@@ -860,9 +874,9 @@ main(int argc, char **argv) {
         }
         if (status != INSTALL_SUCCESS) ui->Print("Installation aborted.\n");
     } else if (wipe_data) {
-        if (device->WipeData()) status = INSTALL_ERROR;
+        //if (device->WipeData()) status = INSTALL_ERROR;
         if (erase_volume("/data")) status = INSTALL_ERROR;
-        if (wipe_cache && erase_volume("/cache")) status = INSTALL_ERROR;
+        if (erase_volume("/cache")) status = INSTALL_ERROR;
         if (status != INSTALL_SUCCESS) ui->Print("Data wipe failed.\n");
     } else if (wipe_cache) {
         if (wipe_cache && erase_volume("/cache")) status = INSTALL_ERROR;
@@ -873,12 +887,16 @@ main(int argc, char **argv) {
 
     if (status != INSTALL_SUCCESS) ui->SetBackground(RecoveryUI::ERROR);
     if (status != INSTALL_SUCCESS || ui->IsTextVisible()) {
+		ui->ShowText(true); //{RD}
+		ui->Print("\n Error occurred while auto updating... \n Please select the action you want to do\n");
         prompt_and_wait(device);
     }
 
     // Otherwise, get ready to boot the main system...
     finish_recovery(send_intent);
     ui->Print("Rebooting...\n");
+    //if(!npath)
+		//free(npath);
     android_reboot(ANDROID_RB_RESTART, 0, 0);
     return EXIT_SUCCESS;
 }
