@@ -24,9 +24,7 @@
 
 #include "SensorDevice.h"
 #include "SensorInterface.h"
-
-#include "Fusion.h"
-#include "SensorFusion.h"
+#include "SecondOrderLowPassFilter.h"
 
 // ---------------------------------------------------------------------------
 namespace android {
@@ -34,24 +32,18 @@ namespace android {
 
 class RotationVectorSensor : public SensorInterface {
     SensorDevice& mSensorDevice;
-    SensorFusion& mSensorFusion;
+    Sensor mAcc;
+    Sensor mMag;
+    float mMagData[3];
+    double mAccTime;
+    double mMagTime;
+    SecondOrderLowPassFilter mALowPass;
+    CascadedBiquadFilter mAX, mAY, mAZ;
+    SecondOrderLowPassFilter mMLowPass;
+    CascadedBiquadFilter mMX, mMY, mMZ;
 
 public:
-    RotationVectorSensor();
-    virtual bool process(sensors_event_t* outEvent,
-            const sensors_event_t& event);
-    virtual status_t activate(void* ident, bool enabled);
-    virtual status_t setDelay(void* ident, int handle, int64_t ns);
-    virtual Sensor getSensor() const;
-    virtual bool isVirtual() const { return true; }
-};
-
-class GyroDriftSensor : public SensorInterface {
-    SensorDevice& mSensorDevice;
-    SensorFusion& mSensorFusion;
-
-public:
-    GyroDriftSensor();
+    RotationVectorSensor(sensor_t const* list, size_t count);
     virtual bool process(sensors_event_t* outEvent,
             const sensors_event_t& event);
     virtual status_t activate(void* ident, bool enabled);

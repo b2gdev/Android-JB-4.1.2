@@ -21,23 +21,26 @@ PRODUCT_COPY_FILES := \
 	device/ti/beagleboard/media_codecs.xml:system/etc/media_codecs.xml \
 	device/ti/beagleboard/mixer_paths.xml:system/etc/mixer_paths.xml
 
+PRODUCT_COPY_FILES += \
+	frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml \
+	frameworks/native/data/etc/android.hardware.usb.host.xml:system/etc/permissions/android.hardware.usb.host.xml
+
+PRODUCT_COPY_FILES += \
+	frameworks/native/data/etc/android.hardware.sensor.accelerometer.xml:system/etc/permissions/android.hardware.sensor.accelerometer.xml \
+    frameworks/native/data/etc/android.hardware.sensor.compass.xml:system/etc/permissions/android.hardware.sensor.compass.xml
 
 PRODUCT_PROPERTY_OVERRIDES := \
 	hwui.render_dirty_regions=false \
 	ro.sf.lcd_density=120
 
 PRODUCT_PROPERTY_OVERRIDES += \
-	persist.sys.usb.config=adb
-
-PRODUCT_PROPERTY_OVERRIDES += \
 	persist.sys.strictmode.visual=0 \
 	persist.sys.strictmode.disable=1
 
-# Uncomment the following to enable USB Mass Storage gadget mode
-#PRODUCT_PROPERTY_OVERRIDES += \
-#	persist.sys.usb.config=mass_storage,adb
+PRODUCT_PROPERTY_OVERRIDES += \
+	persist.sys.usb.config=mass_storage,adb
 
-PRODUCT_CHARACTERISTICS := tablet,nosdcard
+PRODUCT_CHARACTERISTICS := tablet
 
 DEVICE_PACKAGE_OVERLAYS := \
     device/ti/beagleboard/overlay
@@ -69,6 +72,10 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
 	camera.omap3
+
+# libsensors
+PRODUCT_PACKAGES += \
+	sensors.beagleboard
 
 # FileManager Application
 PRODUCT_PACKAGES += \

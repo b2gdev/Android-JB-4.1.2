@@ -14,45 +14,60 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_ORIENTATION_SENSOR_H
-#define ANDROID_ORIENTATION_SENSOR_H
+#ifndef ANDROID_SECOND_ORDER_LOW_PASS_FILTER_H
+#define ANDROID_SECOND_ORDER_LOW_PASS_FILTER_H
 
 #include <stdint.h>
 #include <sys/types.h>
 
-#include <gui/Sensor.h>
-
-#include "SensorDevice.h"
-#include "SensorInterface.h"
-#include "SecondOrderLowPassFilter.h"
-
 // ---------------------------------------------------------------------------
+
 namespace android {
 // ---------------------------------------------------------------------------
 
-class OrientationSensor : public SensorInterface {
-    SensorDevice& mSensorDevice;
-    Sensor mAcc;
-    Sensor mMag;
-    float mMagData[3];
-    double mAccTime;
-    double mMagTime;
-    SecondOrderLowPassFilter mALowPass;
-    CascadedBiquadFilter mAX, mAY, mAZ;
-    SecondOrderLowPassFilter mMLowPass;
-    CascadedBiquadFilter mMX, mMY, mMZ;
+class BiquadFilter;
 
+/*
+ * State of a 2nd order low-pass IIR filter
+ */
+class SecondOrderLowPassFilter {
+    friend class BiquadFilter;
+    float iQ, fc;
+    float K, iD;
+    float a0, a1;
+    float b1, b2;
 public:
-    OrientationSensor(sensor_t const* list, size_t count);
-    virtual bool process(sensors_event_t* outEvent,
-            const sensors_event_t& event);
-    virtual status_t activate(void* ident, bool enabled);
-    virtual status_t setDelay(void* ident, int handle, int64_t ns);
-    virtual Sensor getSensor() const;
-    virtual bool isVirtual() const { return true; }
+    SecondOrderLowPassFilter(float Q, float fc);
+    void setSamplingPeriod(float dT);
+};
+
+/*
+ * Implements a Biquad IIR filter
+ */
+class BiquadFilter {
+    float x1, x2;
+    float y1, y2;
+    const SecondOrderLowPassFilter& s;
+public:
+    BiquadFilter(const SecondOrderLowPassFilter& s);
+    float init(float in);
+    float operator()(float in);
+};
+
+/*
+ * Two cascaded biquad IIR filters
+ * (4-poles IIR)
+ */
+class CascadedBiquadFilter {
+    BiquadFilter mA;
+    BiquadFilter mB;
+public:
+    CascadedBiquadFilter(const SecondOrderLowPassFilter& s);
+    float init(float in);
+    float operator()(float in);
 };
 
 // ---------------------------------------------------------------------------
 }; // namespace android
 
-#endif // ANDROID_ORIENTATION_SENSOR_H
+#endif // ANDROID_SECOND_ORDER_LOW_PASS_FILTER_H
