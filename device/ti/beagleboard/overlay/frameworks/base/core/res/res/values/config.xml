@@ -27,6 +27,10 @@
     <!-- This device does not allow sms service. -->
     <bool name="config_sms_capable">false</bool>
 
+	<!-- {RD} Whether a software navigation bar should be shown. NOTE: in the future this may be
+          autodetected from the Configuration. -->
+    <bool name="config_showNavigationBar">true</bool>
+
     <!-- Regex of wired ethernet ifaces -->
     <string translatable="false" name="config_ethernet_iface_regex">usb\\d</string>
 

@@ -27,6 +27,7 @@ PRODUCT_PACKAGES += \
         LiveWallpapersPicker \
         MagicSmokeWallpapers \
         VisualizationWallpapers \
+        TCBIN-Text-Viewer \
         librs_jni
 
 PRODUCT_PROPERTY_OVERRIDES := \
@@ -40,5 +41,5 @@ $(call inherit-product, device/ti/beagleboard/device.mk)
 PRODUCT_NAME := beagleboard
 PRODUCT_DEVICE := beagleboard
 PRODUCT_BRAND := Android
-PRODUCT_MODEL := BeagleBoard
-PRODUCT_MANUFACTURER := Texas_Instruments_Inc
+PRODUCT_MODEL := TEAM_CBI_NOTETAKER
+PRODUCT_MANUFACTURER := Zone24x7_Inc
