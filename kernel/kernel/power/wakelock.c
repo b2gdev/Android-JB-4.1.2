@@ -323,7 +323,8 @@ static int power_suspend_late(struct device *dev)
 }
 
 static struct dev_pm_ops power_driver_pm_ops = {
-	.suspend_noirq = power_suspend_late,
+	// {SW}: To avoid kernel crash during suspen/resume
+	.suspend = power_suspend_late,
 };
 
 static struct platform_driver power_driver = {

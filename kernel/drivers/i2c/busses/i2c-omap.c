@@ -364,7 +364,15 @@ static int omap_i2c_init(struct omap_i2c_dev *dev)
 
 		} else if (dev->rev >= OMAP_I2C_REV_ON_3430) {
 			dev->syscstate = SYSC_AUTOIDLE_MASK;
-			dev->syscstate |= SYSC_ENAWAKEUP_MASK;
+
+// {SW} BEGIN: To disable i2c-2 wakeup interrupts
+			//dev->syscstate |= SYSC_ENAWAKEUP_MASK;
+			if (dev->adapter.nr == 2 || dev->speed == 100)
+				dev->syscstate &= ~SYSC_ENAWAKEUP_MASK;
+			else
+				dev->syscstate |= SYSC_ENAWAKEUP_MASK;
+// {SW} END:
+			
 			dev->syscstate |= (SYSC_IDLEMODE_SMART <<
 			      __ffs(SYSC_SIDLEMODE_MASK));
 			dev->syscstate |= (SYSC_CLOCKACTIVITY_FCLK <<
@@ -381,6 +389,14 @@ static int omap_i2c_init(struct omap_i2c_dev *dev)
 			if (dev->rev < OMAP_I2C_REV_ON_4430)
 				omap_i2c_write_reg(dev, OMAP_I2C_WE_REG,
 								dev->westate);
+			
+// {SW} BEGIN: To disable i2c-2 wakeup interrupts			
+			if (dev->adapter.nr == 2 || dev->speed == 100){
+				dev->westate = 0;
+				omap_i2c_write_reg(dev, OMAP_I2C_WE_REG, dev->westate);
+			}
+// {SW} END:
+					
 		}
 	}
 	omap_i2c_write_reg(dev, OMAP_I2C_CON_REG, 0);

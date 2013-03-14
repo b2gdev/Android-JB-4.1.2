@@ -23,12 +23,12 @@ cd android_rootfs
 cp ../../../../../kernel/drivers/accessibility/braille/metec/metec_flat20.ko ./usr/modules/
 cp ../../../../../kernel/drivers/input/keyboard/cp430_keypad/cp430_keypad.ko ./usr/modules/
 cp ../../../../../kernel/drivers/mfd/cp430-core/cp430_core.ko ./usr/modules/
-cp ../../../../../kernel/drivers/misc/lm3553/lm3553.ko ./usr/modules/
 cp ../../../../../kernel/drivers/misc/cp430_charger/cp430_charger.ko ./usr/modules/
-cp ../../../../../kernel/drivers/power/bq27x00_battery.ko ./usr/modules/
+
 # copy TCBIN-Text-Viewer
 mkdir -p data/app
 cp ../data/app/TCBIN-Text-Viewer.apk data/app/
+
 # other test apps
 cp ../../../../../tcbin_misc/AndroSensor_1.9.4.4a.apk data/app/
 cp ../../../../../tcbin_misc/com.chartcross.gpstest-1.apk data/app/
