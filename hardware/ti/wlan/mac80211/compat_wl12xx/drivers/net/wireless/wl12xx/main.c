@@ -49,7 +49,7 @@
 #include "boot.h"
 #include "testmode.h"
 #include "scan.h"
-#include "version.h"
+//#include "version.h"
 
 #define WL1271_BOOT_RETRIES 3
 
@@ -7161,8 +7161,8 @@ static struct platform_driver wl12xx_driver = {
 
 static int __init wl12xx_init(void)
 {
-	wl1271_info("driver version: %s", wl12xx_git_head);
-	wl1271_info("compilation time: %s", wl12xx_timestamp);
+	//wl1271_info("driver version: %s", wl12xx_git_head);
+	//wl1271_info("compilation time: %s", wl12xx_timestamp);
 
 	return platform_driver_register(&wl12xx_driver);
 }

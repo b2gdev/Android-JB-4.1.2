@@ -30,9 +30,7 @@ else
 endif
 
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
-LOCAL_SRC_FILES := \
-	audio_hw.c \
-	audio_route.c
+LOCAL_SRC_FILES := audio_hw.c
 LOCAL_C_INCLUDES += \
 	external/tinyalsa/include \
 	external/expat/lib \

@@ -19,8 +19,8 @@ rowboat: sgx wl12xx_compat
 CLEAN_RULE = sgx_clean wl12xx_compat_clean kernel_clean clean
 else
 ifeq ($(TARGET_PRODUCT), beagleboard)
-rowboat: sgx
-CLEAN_RULE = sgx_clean kernel_clean clean
+rowboat: sgx wl12xx_compat
+CLEAN_RULE = sgx_clean wl12xx_compat_clean kernel_clean clean
 else
 ifeq ($(TARGET_PRODUCT), omap3evm)
 rowboat: sgx wl12xx_compat

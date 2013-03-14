@@ -499,7 +499,7 @@ public class PowerManagerService extends IPowerManager.Stub
             synchronized (mLocks) {
                 // STAY_ON_WHILE_PLUGGED_IN, default to when plugged into AC
                 mStayOnConditions = getInt(STAY_ON_WHILE_PLUGGED_IN,
-                        BatteryManager.BATTERY_PLUGGED_AC);
+                        BatteryManager.BATTERY_PLUGGED_USB); //{RD} : changed stay_on_conditions to BATTERY_PLUGGED_USB
                 updateWakeLockLocked();
 
                 // SCREEN_OFF_TIMEOUT, default to 15 seconds
@@ -766,7 +766,7 @@ public class PowerManagerService extends IPowerManager.Stub
 
     private void updateWakeLockLocked() {
         final int stayOnConditions = getStayOnConditionsLocked();
-        if (stayOnConditions != 0 && mBatteryService.isPowered(stayOnConditions)) {
+        if (mStayOnConditions != 0 && mBatteryService.isPowered(mStayOnConditions)) {
             // keep the device on if we're plugged in and mStayOnWhilePluggedIn is set.
             mStayOnWhilePluggedInScreenDimLock.acquire();
             mStayOnWhilePluggedInPartialLock.acquire();

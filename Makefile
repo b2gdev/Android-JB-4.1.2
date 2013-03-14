@@ -19,8 +19,8 @@ rowboat: sgx wl12xx_compat
 CLEAN_RULE = sgx_clean wl12xx_compat_clean kernel_clean clean
 else
 ifeq ($(TARGET_PRODUCT), beagleboard)
-rowboat: sgx
-CLEAN_RULE = sgx_clean kernel_clean clean
+rowboat: sgx wl12xx_compat
+CLEAN_RULE = sgx_clean wl12xx_compat_clean kernel_clean clean
 else
 ifeq ($(TARGET_PRODUCT), omap3evm)
 rowboat: sgx wl12xx_compat
@@ -75,19 +75,11 @@ sgx: kernel_build
 sgx_clean:
 	$(MAKE) -C hardware/ti/sgx ANDROID_ROOT_DIR=$(ANDROID_INSTALL_DIR) clean
 
-ifeq ($(WILINK), wl18xx)
-wl12xx_compat: kernel_build
-	$(MAKE) -C hardware/ti/wlan/mac80211/compat_wl18xx ANDROID_ROOT_DIR=$(ANDROID_INSTALL_DIR) CROSS_COMPILE=arm-eabi- ARCH=arm install
-
-wl12xx_compat_clean:
-	$(MAKE) -C hardware/ti/wlan/mac80211/compat_wl18xx ANDROID_ROOT_DIR=$(ANDROID_INSTALL_DIR) CROSS_COMPILE=arm-eabi- ARCH=arm clean
-else
 wl12xx_compat: kernel_build
 	$(MAKE) -C hardware/ti/wlan/mac80211/compat_wl12xx ANDROID_ROOT_DIR=$(ANDROID_INSTALL_DIR) CROSS_COMPILE=arm-eabi- ARCH=arm install
 
 wl12xx_compat_clean:
 	$(MAKE) -C hardware/ti/wlan/mac80211/compat_wl12xx ANDROID_ROOT_DIR=$(ANDROID_INSTALL_DIR) CROSS_COMPILE=arm-eabi- ARCH=arm clean
-endif
 
 u-boot_build:
 ifeq ($(TARGET_PRODUCT), beaglebone)

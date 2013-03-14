@@ -21,6 +21,8 @@ on early-init
     symlink /storage/usb2 /usbdrive2
     symlink /storage/usb2 /mnt/usb2
     
+    insmod /usr/modules/bq27x00_battery.ko
+    
 on post-fs-data
     mkdir /data/misc/dhcp 0770 dhcp dhcp
     mkdir /data/misc/camera 0770 media media
@@ -63,8 +65,7 @@ on boot
 	insmod /usr/modules/cp430_core.ko
 	insmod /usr/modules/cp430_keypad.ko
 	insmod /usr/modules/metec_flat20.ko
-	insmod /usr/modules/lm3553.ko
-	insmod /usr/modules/bq27x00_battery.ko
+	insmod /usr/modules/lm3553.ko	
 	chmod 666 /dev/braille0
 	# {KW} END:
 
@@ -90,10 +91,7 @@ on boot
 on fs
 
     # This board does not have battery, force battery-level to 100%
-    setprop hw.nobattery false
-
-	# Power Management Patches
-    setprop hw.nopm true
+    setprop hw.nobattery true
     
 	# Using landscape lcd
     setprop lcd.landscape true
