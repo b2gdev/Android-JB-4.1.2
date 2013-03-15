@@ -17,7 +17,6 @@
 
 /* {PK} Local includes */
 #include "metec_flat20.h"		
-#include "metec_flat20_ioctl.h"		
 #include "debug.h"
 #include "cp430.h"
 
@@ -143,7 +142,7 @@ control_display(unsigned char control)
 }
 
 static int
-clear_display(void)
+clear_display(struct metec_flat20_dev_info *dev, int is_suspend)
 {
 	int ret = 0;
 	unsigned char cmd_packet[MAX_BRAILLE_LINE_SIZE + METEC_FLAT20_PACKET_OVERHEAD + CP430_PACKET_OVERHEAD];
@@ -166,10 +165,16 @@ clear_display(void)
 	}
 	
 	if (ret >= 0) {
-		wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (5 * HZ));
+		if(is_suspend)
+			wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (HZ/2)); //{RD} Reduced time-out from 5sec to 500ms to allow suspend
+		else			
+			wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (5 * HZ));
+			
 		if( 1 == atomic_read(&cmd_reply_received_flag))
 		{	
 			PDEBUG("metec_flat20: command response received\r\n");
+			if(!is_suspend)
+				memset(dev->display_data, 0, sizeof(dev->display_data));
 		}
 		else
 		{
@@ -182,7 +187,7 @@ clear_display(void)
 }
 
 static int 
-write_to_braille(struct metec_flat20_dev_info *dev, unsigned char * user_data)
+write_to_braille(struct metec_flat20_dev_info *dev, unsigned char * user_data, int is_resume)
 {
 	int ret = 0;
 	unsigned char i = 0;
@@ -239,10 +244,19 @@ write_to_braille(struct metec_flat20_dev_info *dev, unsigned char * user_data)
 	
 	if (ret >= 0) {
 		/* Wait for the command response */
-		wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (5 * HZ));
+		if(is_resume)
+			wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (HZ/2));//{RD} Reduced time-out from 5sec to 500ms to allow resume
+		else
+			wait_event_timeout(command_response_received_wq, (atomic_read(&cmd_reply_received_flag) != 0), (5 * HZ));
+			
 		if( 1 == atomic_read(&cmd_reply_received_flag))
 		{	
 			PDEBUG("metec_flat20: command response received\r\n");
+			
+			if(!is_resume){ //store written value
+				memset(dev->display_data, 0, sizeof(dev->display_data));
+				memcpy(dev->display_data, user_data, sizeof(dev->display_data));
+			}
 		}
 		else
 		{
@@ -319,7 +333,7 @@ metec_flat20_write(struct file *filp, const char __user *user_buf, size_t count,
 		max_char_count = MIN(sizeof(user_data), count);
 		memcpy(user_data, buffer, max_char_count);
 				
-		ret = write_to_braille(dev, user_data);
+		ret = write_to_braille(dev, user_data,0);
 		if (ret < 0) {
 			retval = -EFAULT;
 			goto out;
@@ -389,7 +403,7 @@ metec_flat20_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
 			}
 		break;
 		case METEC_FLAT20_CLEAR_DISPLAY:
-			ret = clear_display();
+			ret = clear_display(dev, 0);
 			if (ret < 0) 
 				ret = -EFAULT;
 		break;
@@ -406,7 +420,7 @@ metec_flat20_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
 				break;
 			}
 			
-			ret = write_to_braille(dev, user_data);
+			ret = write_to_braille(dev, user_data,0);
 			if (ret < 0) {
 				ret = -EFAULT;
 			}
@@ -466,7 +480,7 @@ metec_flat20_platform_suspend(struct platform_device *device, pm_message_t state
 	
 	printk(KERN_INFO "metec_flat20: %s\r\n",__FUNCTION__);
 	
-	clear_display();
+	clear_display(metec_flat20_dev,1);
 	
 	return ret;
 }
@@ -477,6 +491,8 @@ metec_flat20_platform_resume(struct platform_device *device)
 	int ret = 0;
 	
 	printk(KERN_INFO "metec_flat20: %s\r\n",__FUNCTION__);
+	
+	write_to_braille(metec_flat20_dev, metec_flat20_dev->display_data,1);
 	
 	return ret;
 }
@@ -670,7 +686,7 @@ metec_flat20_mod_init(void)
 		printk(KERN_INFO "metec_flat20: cp430_device_register success\r\n");
 	}
 	
-	clear_display(); /* {PK} Clear the display when driver is ready */
+	clear_display(metec_flat20_dev, 0); /* {PK} Clear the display when driver is ready */
 
 	printk("metec_flat20: Driver Version: %s\n", DRIVER_VERSION);
 	
