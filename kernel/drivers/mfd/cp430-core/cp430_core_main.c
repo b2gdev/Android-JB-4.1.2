@@ -975,8 +975,16 @@ static void cp430_spi_shutdown(struct spi_device *spi_device)
 
 static int cp430_spi_suspend(struct spi_device *spi_device, pm_message_t mesg)
 {
+	int i       = 0;
 	PDEBUG("> : %s\r\n",__FUNCTION__);
-
+	for (i = 1; i < CP430_DEVICE_COUNT; i++) {
+		
+		if ((kfifo_len(&devices[i].tx_fifo) > 0) || (kfifo_len(&devices[i].rx_fifo) > 0) ){
+								
+				PERROR("%s : suspend FAILED! Device is busy...\r\n", __FUNCTION__);
+				return -EBUSY;
+		}			
+	}
 	return 0;	
 }
 
