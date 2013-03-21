@@ -51,6 +51,7 @@ try_update_binary(const char *path, ZipArchive *zip, int* wipe_cache) {
     const ZipEntry* binary_entry =
             mzFindZipEntry(zip, ASSUMED_UPDATE_BINARY_NAME);
     if (binary_entry == NULL) {
+		LOGE("Can't make find %s\n", ASSUMED_UPDATE_BINARY_NAME);
         mzCloseZipArchive(zip);
         return INSTALL_CORRUPT;
     }
@@ -278,14 +279,15 @@ really_install_package(const char *path, int* wipe_cache)
     ui->SetProgressType(RecoveryUI::DETERMINATE);
     ui->ShowProgress(VERIFICATION_PROGRESS_FRACTION, VERIFICATION_PROGRESS_TIME);
 
+	// {RD} : temp disable verification
     int err;
-    err = verify_file(path, loadedKeys, numKeys);
+    /*err = verify_file(path, loadedKeys, numKeys);
     free(loadedKeys);
     LOGI("verify_file returned %d\n", err);
     if (err != VERIFY_SUCCESS) {
         LOGE("signature verification failed\n");
         return INSTALL_CORRUPT;
-    }
+    }*/
 
     /* Try to open the package.
      */

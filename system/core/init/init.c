@@ -673,6 +673,9 @@ static void export_kernel_boot_props(void)
     snprintf(tmp, PROP_VALUE_MAX, "%d", revision);
     property_set("ro.revision", tmp);
 
+	//{RD}
+	property_set("ro.ubifs","1");
+
     /* TODO: these are obsolete. We should delete them */
     if (!strcmp(bootmode,"factory"))
         property_set("ro.factorytest", "1");

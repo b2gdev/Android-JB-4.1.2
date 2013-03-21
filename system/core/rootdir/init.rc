@@ -11,13 +11,16 @@ import /init.trace.rc
 on early-init
     # Set init and its forked children's oom_adj.
     write /proc/1/oom_adj -16
-
+    
     start ueventd
 
 # create mountpoints
-    mkdir /mnt 0775 root system
-
-	chmod 777 /usr/bin/busybox
+    mkdir /mnt 0775 root system    
+	mkdir /system
+    mkdir /data 0771 system system
+    mkdir /cache 0770 system cache			
+	mount_all /fstab.omap3beagleboard	
+	
 	
 on init
 
@@ -26,8 +29,8 @@ sysclktz 0
 loglevel 3
 
 # setup the global environment
-    export PATH /sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin:/usr/bin
-	export LD_LIBRARY_PATH /vendor/lib:/system/lib:/usr/lib
+    export PATH /sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin:/system/usr/bin
+	export LD_LIBRARY_PATH /vendor/lib:/system/lib:/system/usr/lib
     export ANDROID_BOOTLOGO 1
     export ANDROID_ROOT /system
     export ANDROID_ASSETS /system/app
@@ -49,11 +52,8 @@ loglevel 3
     mount cgroup none /acct cpuacct
     mkdir /acct/uid
 
-    mkdir /system
-    mkdir /data 0771 system system
-    mkdir /cache 0770 system cache
     mkdir /config 0500 root root
-
+    
     # Directory for putting things only root should see.
     mkdir /mnt/secure 0700 root root
 
@@ -114,14 +114,14 @@ loglevel 3
 # Allow everybody to read the xt_qtaguid resource tracking misc dev.
 # This is needed by any process that uses socket tagging.
     chmod 0644 /dev/xt_qtaguid
-
+    
 #on fs
 # mount mtd partitions
-    # Mount /system rw first to give the filesystem a chance to save a checkpoint
-#    mount yaffs2 mtd@system /system
-#    mount yaffs2 mtd@system /system ro remount
-#    mount yaffs2 mtd@userdata /data nosuid nodev
-#    mount yaffs2 mtd@cache /cache nosuid nodev
+# Mount /system rw first to give the filesystem a chance to save a checkpoint
+#	mount ubifs mtd@system /system
+#    mount ubifs mtd@system /system ro remount
+#    mount ubifs mtd@userdata /data nosuid nodev
+#    mount ubifs mtd@cache /cache nosuid nodev
 
 on post-fs
     # once everything is setup, no need to modify /
@@ -346,7 +346,7 @@ service ueventd /sbin/ueventd
     class core
     critical
 
-service console /usr/bin/sh
+service console /system/usr/bin/sh
     class core
     console
     disabled

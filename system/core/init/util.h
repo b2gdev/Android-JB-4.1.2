@@ -39,4 +39,8 @@ int wait_for_file(const char *filename, int timeout);
 void open_devnull_stdio(void);
 void get_hardware_name(char *hardware, unsigned int *revision);
 void import_kernel_cmdline(int in_qemu, void (*import_kernel_nv)(char *name, int in_qemu));
+
+//{RD}
+int ubi_attach_mtd(const char *name);
+int ubi_detach_dev(int dev);
 #endif

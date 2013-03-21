@@ -67,6 +67,7 @@
 #include <plat/mcspi.h>					/* {PS} */
 #include <linux/i2c/lis331dlh.h>		/* {PS} */
 #include <linux/i2c/hmc5883l.h>			/* {RD} */
+#include <linux/reboot.h>				/* {RD} */
 #include "mux.h"
 #include "hsmmc.h"
 #include "timer-gp.h"
@@ -86,7 +87,51 @@
 #define GOOGLE_PRODUCT_ID		0x9018
 #define GOOGLE_ADB_PRODUCT_ID		0x9015
 
+/* {RD} REBOOT_MODE */
+#define REBOOT_MODE_NONE		0
+#define REBOOT_MODE_DOWNLOAD		1
+#define REBOOT_MODE_CHARGING		3
+#define REBOOT_MODE_RECOVERY		4
+#define REBOOT_MODE_FAST_BOOT		5
+
 int is_bt_on = 0; /* {RD} */
+
+static int tcbin_notifier_call(struct notifier_block *this,
+					unsigned long code, void *_cmd)
+{
+	int ret;
+	unsigned char val;
+	int mode = REBOOT_MODE_NONE;	
+
+	if ((code == SYS_RESTART) && _cmd) {
+		if (!strcmp((char *)_cmd, "recovery"))
+			mode = REBOOT_MODE_RECOVERY;
+		else if (!strcmp((char *)_cmd, "bootloader"))
+			mode = REBOOT_MODE_FAST_BOOT;
+		else
+			return NOTIFY_DONE;
+			
+		printk(KERN_INFO "Reboot notifier call with mode: %s\n",(char *)_cmd);
+			
+		ret = twl_i2c_write_u8(TWL4030_MODULE_RTC,
+			(10+mode), 12);
+		if (ret != 0)
+			printk(KERN_ERR "twl i2c write error: %d\n",ret);
+	
+		//ret = twl_i2c_read_u8(TWL4030_MODULE_RTC,
+		//		&val, 12);
+		//if (ret != 0)
+		//	printk(KERN_ERR "twl i2c write error: %d\n",ret);																		
+	}	
+
+				
+	return NOTIFY_DONE;
+}
+
+static struct notifier_block tcbin_reboot_notifier = {
+	.notifier_call = tcbin_notifier_call,
+};
+
 static char *usb_functions_adb[] = {
 	"adb",
 };
@@ -336,8 +381,28 @@ static struct mtd_partition omap3beagle_nand_partitions[] = {
 		.size		= 32 * NAND_BLOCK_SIZE,
 	},
 	{
-		.name		= "File System",
+		.name		= "recovery",
 		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x680000 */
+		.size		= 72 * NAND_BLOCK_SIZE,
+	},
+	{
+		.name		= "misc",
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0xF80000 */
+		.size		= 8 * NAND_BLOCK_SIZE,
+	},
+	{
+		.name		= "system",
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x1080000 */
+		.size		= 1280 * NAND_BLOCK_SIZE,
+	},
+	{
+		.name		= "cache",
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0xB080000 */
+		.size		= 768 * NAND_BLOCK_SIZE,
+	},
+	{
+		.name		= "userdata",
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x11080000 */
 		.size		= MTDPART_SIZ_FULL,
 	},
 };
@@ -791,7 +856,9 @@ static int beagle_twl_gpio_setup(struct device *dev,
 	struct omap_mmc_platform_data *pdata2;
 	struct device *dev2;
 // {RD} END
-  
+	int ret;
+	unsigned char val;
+	
 	if (omap3_beagle_get_rev() == OMAP3BEAGLE_BOARD_XM || omap3_beagle_get_rev() == OMAP3BEAGLE_BOARD_XMC) {
 		mmc[0].gpio_wp = -EINVAL;
 	} else if ((omap3_beagle_get_rev() == OMAP3BEAGLE_BOARD_C1_3) ||
@@ -846,7 +913,19 @@ static int beagle_twl_gpio_setup(struct device *dev,
 		pdata2->slots[0].set_power = wl12xx_set_power;
 	}
 // {RD} END:
-
+	
+	// {RD}
+	ret = twl_i2c_read_u8(TWL4030_MODULE_RTC, &val, 12);
+		if (ret != 0)
+			printk(KERN_ERR "twl i2c write error: %d\n",ret);	
+		else{
+			if(val >= 10){			
+				ret = twl_i2c_write_u8(TWL4030_MODULE_RTC,0, 12);
+				if (ret != 0)
+					printk(KERN_ERR "twl i2c write error: %d\n",ret);
+			}
+	}	
+	
 	return 0;
 }
 
@@ -1577,7 +1656,8 @@ static void __init omap3_tcbin_gpio_init(void)
 static void __init omap3_beagle_init(void)
 {
 	
-  printk("%s BEAGLEBOARD INIT\n", __FUNCTION__);
+	printk("%s BEAGLEBOARD INIT\n", __FUNCTION__);
+	
 	omap3_mux_init(board_mux, OMAP_PACKAGE_CBB);
 	omap3_beagle_init_rev();
 	
@@ -1622,23 +1702,8 @@ static void __init omap3_beagle_init(void)
 #endif
 	omap3_beagle_pm_init();
 
-// {RD} BEGIN
-
-// /* {PS} BEGIN: */
-// #ifdef CONFIG_WL12XX_PLATFORM_DATA
-// 	/* WL12xx WLAN Init */
-// 	printk("%s WL12xx WLAN Init\n", __FUNCTION__);
-// 	if (wl12xx_set_platform_data(&tcbin_wlan_data))
-// 		pr_err("error setting wl12xx data\n");
-// 	/* platform_device_register(&tcbin_wlan_regulator); */ /* {PS} */
-// #endif
-// 	
-// #ifdef CONFIG_SND_SOC_WL1271BT
-// 	wl1271bt_clk_setup();
-// #endif	
-// /* {PS} END: */	
-
-// {RD} END
+	//{RD}
+	register_reboot_notifier(&tcbin_reboot_notifier);					
 }
 
 MACHINE_START(OMAP3_BEAGLE, "OMAP3 Beagle Board")

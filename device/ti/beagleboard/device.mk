@@ -19,6 +19,7 @@ PRODUCT_COPY_FILES := \
 	device/ti/beagleboard/init.omap3beagleboard.rc:root/init.omap3beagleboard.rc \
 	device/ti/beagleboard/beagleboard.xml:system/etc/sound/beagleboard.xml \
 	device/ti/beagleboard/vold.fstab:system/etc/vold.fstab \
+	device/ti/beagleboard/fstab.omap3beagleboard:root/fstab.omap3beagleboard \
 	device/ti/beagleboard/media_codecs.xml:system/etc/media_codecs.xml \
 	device/ti/beagleboard/audio_policy.conf:system/etc/audio_policy.conf
 

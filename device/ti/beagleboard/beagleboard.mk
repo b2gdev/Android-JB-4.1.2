@@ -21,14 +21,8 @@
 # lines, full and toro, hence its name.
 #
 
-# Live Wallpapers
 PRODUCT_PACKAGES += \
-        LiveWallpapers \
-        LiveWallpapersPicker \
-        MagicSmokeWallpapers \
-        VisualizationWallpapers \
-        TCBIN-Text-Viewer \
-        librs_jni
+        TCBIN-Text-Viewer
 
 PRODUCT_PROPERTY_OVERRIDES := \
         net.dns1=8.8.8.8 \
