@@ -1,0 +1,8 @@
+# Example script
+show_progress(0.1000000, 0);
+mount("ubifs", "UBI", "ubi0:system", "/system");
+set_progress(0.50000);
+package_extract_dir("system","/system");
+set_perm(0,0,0644,"/system/app/LauncherPro-0.8.6.apk");
+unmount("/system");
+show_progress(1.0, 10);

@@ -68,6 +68,7 @@ int verify_file(const char* path, const RSAPublicKey *pKeys, unsigned int numKey
     }
 
     if (footer[2] != 0xff || footer[3] != 0xff) {
+		LOGE("failed footer check footer[2] = %X, footer[3] = %X\n", footer[2] , footer[3]);
         fclose(f);
         return VERIFY_FAILURE;
     }

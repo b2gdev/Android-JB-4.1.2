@@ -69,6 +69,7 @@ static const char *TEMPORARY_INSTALL_FILE = "/tmp/recovery/last_install";
 static const char *SIDELOAD_TEMP_DIR = "/tmp/sideload";
 
 RecoveryUI* ui = NULL;
+//char *npath;
 
 /*
  * The recovery tool communicates with the main system through /cache files.
@@ -490,9 +491,12 @@ static int
 update_directory(const char* path, const char* unmount_when_done,
                  int* wipe_cache, Device* device) {
     ensure_path_mounted(path);
-
+    //if(!npath)
+		//npath = (char *)malloc(100*sizeof(char *));
+	//memset(npath,0,100*sizeof(char *));
+	//strcpy(npath+4,path);
     const char* MENU_HEADERS[] = { "        Choose a package to install:",
-                                   path,
+                                   "",
                                    "",
                                    NULL };
     DIR* d;
@@ -787,10 +791,11 @@ main(int argc, char **argv) {
     }
 
     printf("Starting recovery on %s", ctime(&start));
-
+	//npath = NULL;
+	
     Device* device = make_device();
     ui = device->GetUI();
-
+	
     ui->Init();
     ui->SetBackground(RecoveryUI::NONE);
     load_volume_table();
@@ -890,6 +895,8 @@ main(int argc, char **argv) {
     // Otherwise, get ready to boot the main system...
     finish_recovery(send_intent);
     ui->Print("Rebooting...\n");
+    //if(!npath)
+		//free(npath);
     android_reboot(ANDROID_RB_RESTART, 0, 0);
     return EXIT_SUCCESS;
 }

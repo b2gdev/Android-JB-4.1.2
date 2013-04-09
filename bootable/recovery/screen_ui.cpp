@@ -441,7 +441,8 @@ void ScreenRecoveryUI::StartMenu(const char* const * headers, const char* const 
         menu_top = i;
         for (; i < text_rows; ++i) {
             if (items[i-menu_top] == NULL) break;
-            strncpy(menu[i], items[i-menu_top], text_cols-1);
+            strncpy(menu[i], "    ", 4); // {RD} overscan fix
+            strncpy(menu[i]+4, items[i-menu_top], text_cols-1-4);            
             menu[i][text_cols-1] = '\0';
         }
         menu_items = i - menu_top;
