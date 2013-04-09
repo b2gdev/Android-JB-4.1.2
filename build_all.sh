@@ -1,17 +1,17 @@
 #!/bin/sh
 
 
-#echo "#############################################################################################"
-#echo "Building X-Loader ..."
-#echo "#############################################################################################"
-#make -C x-loader/ CROSS_COMPILE=arm-eabi- distclean
-#make -C x-loader/ CROSS_COMPILE=arm-eabi- omap3530beagle_config
-#make -C x-loader/ CROSS_COMPILE=arm-eabi-
-#cd x-loader/
-#./signGP ./x-load.bin
-#mv x-load.bin.ift MLO
-#cd ..
-#cp ./x-loader/MLO ./image_folder/Boot_Images/
+echo "#############################################################################################"
+echo "Building X-Loader ..."
+echo "#############################################################################################"
+make -C x-loader/ CROSS_COMPILE=arm-eabi- distclean
+make -C x-loader/ CROSS_COMPILE=arm-eabi- omap3530beagle_config
+make -C x-loader/ CROSS_COMPILE=arm-eabi-
+cd x-loader/
+./signGP ./x-load.bin
+mv x-load.bin.ift MLO
+cd ..
+cp ./x-loader/MLO ./image_folder/Boot_Images/
 
 echo "#############################################################################################"
 echo "Building U-boot ..."
