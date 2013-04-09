@@ -34,6 +34,8 @@ cp -r root/* android_rootfs
 cp -r system android_rootfs
 cp -r data android_rootfs
 
+rm android_rootfs/fstab.omap3beagleboard
+
 ../../../../build/tools/mktarball.sh ../../../host/linux-x86/bin/fs_get_stats android_rootfs . rootfs rootfs.tar.bz2
 
 cd ../../../../
