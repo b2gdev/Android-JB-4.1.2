@@ -87,7 +87,7 @@ on boot
 on fs
 
     # This board does not have battery, force battery-level to 100%
-    setprop hw.nobattery false
+    setprop hw.nobattery true
     
 	# Using landscape lcd
     setprop lcd.landscape true

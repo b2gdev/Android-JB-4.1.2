@@ -68,7 +68,8 @@ int wm8994_reg_read(struct wm8994 *wm8994, unsigned short reg)
 	ret = wm8994_read(wm8994, reg, 2, &val);
 	
 	#ifdef CONFIG_MFD_WM8994_DEBUG
-	printk("[%08u] - %s - %s - reg = 0x%04x - val = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, reg, val);	/* {PS} */
+	//printk("[%08u] - %s - %s - reg = 0x%04x - val = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, reg, val);	/* {PS} */
+	printk(" %s - %s - reg = 0x%04x - val = 0x%04x\n", __FILE__, __FUNCTION__, reg, val);	/* {PS} */
 	#endif	
 
 	mutex_unlock(&wm8994->io_lock);

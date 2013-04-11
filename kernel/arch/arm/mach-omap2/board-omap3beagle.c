@@ -1312,7 +1312,7 @@ static struct wm8994_pdata wm8994_pdata = {
         .micbias2_lvl = 0,		/* {PS} TODO */
 
         /* Jack detect threashold levels, see datasheet for values */
-        .jd_scthr = 2,			/* {PS} TODO */
+        .jd_scthr = 1,			/* {PS} TODO */  //{RD} 2 -> 1
         .jd_thr = 0,			/* {PS} TODO */  //{RD} 2 -> 0
 };
 /* {PS} END: wm8994 regulator info.  */

@@ -37,6 +37,7 @@
 
 #include "../codecs/wm8994.h"		/* {PS} */
 
+// {RD} Using smdk_wm8994 as reference
 
 static int omap3beagle_hw_params(struct snd_pcm_substream *substream,
 	struct snd_pcm_hw_params *params)
@@ -44,7 +45,7 @@ static int omap3beagle_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_dai *codec_dai = rtd->codec_dai;
 	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
-	unsigned int fmt,pll_out;
+	unsigned int pll_out;
 	int ret;			
 
 	//printk("%s - %s\n",__FILE__, __FUNCTION__);
@@ -52,61 +53,32 @@ static int omap3beagle_hw_params(struct snd_pcm_substream *substream,
 		printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__); /* {PS} */
 	#endif	
 
-// {RD} BEGIN:
-	/*switch (params_channels(params)) {
-	case 2: // Stereo I2S mode 
-		fmt =	SND_SOC_DAIFMT_I2S |
-			SND_SOC_DAIFMT_NB_NF |
-			SND_SOC_DAIFMT_CBM_CFM;
-		break;
-	case 4: // Four channel TDM mode 
-		fmt =	SND_SOC_DAIFMT_DSP_A |
-			SND_SOC_DAIFMT_IB_NF |
-			SND_SOC_DAIFMT_CBM_CFM;
-		break;
-	default:
-		return -EINVAL;
-	}*/
-	fmt =	SND_SOC_DAIFMT_I2S |
-			SND_SOC_DAIFMT_NB_NF |
-			SND_SOC_DAIFMT_CBM_CFM;
+	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
+		printk("[%08u] - %s - %s Rate:%d\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, params_rate(params)); /* {PS} */
+	#endif
 			
 	if (params_rate(params) == 8000 || params_rate(params) == 11025)
 		pll_out = params_rate(params) * 512;
 	else
-		pll_out = params_rate(params) * 256;
-		
-	//printk("{RD} %s - %s: params_rate(params):%d\n",__FILE__, __FUNCTION__,params_rate(params));
-	//printk("{RD} %s - %s: pll_out:%d\n",__FILE__, __FUNCTION__,pll_out);
-// {RD} END:
+		pll_out = params_rate(params) * 256;		
 
 	/* Set codec DAI configuration */
-	ret = snd_soc_dai_set_fmt(codec_dai, fmt);
+	ret = snd_soc_dai_set_fmt(codec_dai, SND_SOC_DAIFMT_I2S
+					 | SND_SOC_DAIFMT_NB_NF
+					 | SND_SOC_DAIFMT_CBM_CFM);
 	if (ret < 0) {
 		printk(KERN_ERR "can't set codec DAI configuration\n");
 		return ret;
 	}
 
 	/* Set cpu DAI configuration */
-	ret = snd_soc_dai_set_fmt(cpu_dai, fmt);
+	ret = snd_soc_dai_set_fmt(cpu_dai, SND_SOC_DAIFMT_I2S
+					 | SND_SOC_DAIFMT_NB_NF
+					 | SND_SOC_DAIFMT_CBM_CFM);
 	if (ret < 0) {
 		printk(KERN_ERR "can't set cpu DAI configuration\n");
 		return ret;
 	}
-
-	/* Set the codec system clock for DAC and ADC */
-	
-	//printk("{RD} %s - %s: CP1\n",__FILE__, __FUNCTION__);
-	
-// {RD} BEGIN:	
-	/*// {PS} BEGIN:
-	ret = snd_soc_dai_set_sysclk(codec_dai, WM8994_SYSCLK_MCLK1, 24576000,
-				     SND_SOC_CLOCK_IN);	
-	#if 0
-	ret = snd_soc_dai_set_sysclk(codec_dai, 0, 26000000,
-				     SND_SOC_CLOCK_IN);
-	#endif
-	// {PS} END:*/
 	
 	ret = snd_soc_dai_set_pll(codec_dai, WM8994_FLL1, WM8994_FLL_SRC_MCLK1,
 					24576000, pll_out);
@@ -119,14 +91,6 @@ static int omap3beagle_hw_params(struct snd_pcm_substream *substream,
 					pll_out, SND_SOC_CLOCK_IN);
 	if (ret < 0){
 		printk(KERN_ERR "can't set snd_soc_dai_set_sysclk configuration\n");
-		return ret;
-	}
-// {RD} END:	
-
-//printk("{RD} %s - %s: CP2\n",__FILE__, __FUNCTION__);
-
-	if (ret < 0) {
-		printk(KERN_ERR "can't set codec system clock\n");
 		return ret;
 	}
 
@@ -237,38 +201,10 @@ static int __init omap3beagle_soc_init(void)
 	platform_set_drvdata(omap3beagle_snd_device, &snd_soc_omap3beagle);
 
 	ret = platform_device_add(omap3beagle_snd_device);
-	if (ret)
-		goto err1;
-
-/*// {RD} BEGIN:		
-	//ret = snd_soc_dai_set_sysclk(codec_dai, WM8994_SYSCLK_MCLK2,
-	//			     32768, SND_SOC_CLOCK_IN);
-	//if (ret < 0)
-	//	return ret;
-	printk("{RD} %s - %s snd_soc_omap3beagle:%p\n",__FILE__, __FUNCTION__,&snd_soc_omap3beagle);
-	
-	ret = snd_soc_jack_new(&snd_soc_omap3beagle, "Headset",
-			       SND_JACK_HEADSET | SND_JACK_MECHANICAL |
-			       SND_JACK_BTN_0 | SND_JACK_BTN_1 |
-			       SND_JACK_BTN_2 | SND_JACK_BTN_3 |
-			       SND_JACK_BTN_4 | SND_JACK_BTN_5,
-			       &tcbin_headset);
-			       
-	printk("{RD} %s - %s jack done\n",__FILE__, __FUNCTION__);
-	
-	if (ret)
-		goto err1;
-
-	/// This will check device compatibility itself
-	wm8994_mic_detect(&snd_soc_omap3beagle, &tcbin_headset, 2, SND_JACK_HEADSET, SND_JACK_HEADPHONE);
-	
-// {RD} END:*/
-
-	return 0;
-
-err1:
-	printk(KERN_ERR "Unable to add platform device\n");
-	platform_device_put(omap3beagle_snd_device);
+	if (ret){
+		printk(KERN_ERR "Unable to add platform device\n");
+		platform_device_put(omap3beagle_snd_device);
+	}	
 
 	return ret;
 }

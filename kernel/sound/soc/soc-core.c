@@ -960,6 +960,10 @@ static int soc_suspend(struct device *dev)
 	struct snd_soc_card *card = platform_get_drvdata(pdev);
 	int i;
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	#endif
+	
 	/* If the initialization of this soc device failed, there is no codec
 	 * associated with it. Just bail out in this case.
 	 */
@@ -1080,6 +1084,10 @@ static void soc_resume_deferred(struct work_struct *work)
 	struct platform_device *pdev = to_platform_device(card->dev);
 	int i;
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s \n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {RD} */
+	#endif
+	
 	/* our power state is still SNDRV_CTL_POWER_D3hot from suspend time,
 	 * so userspace apps are blocked from touching us
 	 */
@@ -1123,6 +1131,10 @@ static void soc_resume_deferred(struct work_struct *work)
 		}
 	}
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s pre stream event\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {RD} */
+	#endif
+	
 	for (i = 0; i < card->num_rtd; i++) {
 		struct snd_soc_dai_driver *driver = card->rtd[i].codec_dai->driver;
 
@@ -1138,6 +1150,10 @@ static void soc_resume_deferred(struct work_struct *work)
 				SND_SOC_DAPM_STREAM_RESUME);
 	}
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s post stream event\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {RD} */
+	#endif
+	
 	/* unmute any active DACs */
 	for (i = 0; i < card->num_rtd; i++) {
 		struct snd_soc_dai *dai = card->rtd[i].codec_dai;
@@ -1150,6 +1166,10 @@ static void soc_resume_deferred(struct work_struct *work)
 			drv->ops->digital_mute(dai, 0);
 	}
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s post unmute\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {RD} */
+	#endif
+	
 	for (i = 0; i < card->num_rtd; i++) {
 		struct snd_soc_dai *cpu_dai = card->rtd[i].cpu_dai;
 		struct snd_soc_platform *platform = card->rtd[i].platform;
@@ -1165,13 +1185,25 @@ static void soc_resume_deferred(struct work_struct *work)
 		}
 	}
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s post platform driver resume\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {RD} */
+	#endif
+	
 	if (card->resume_post)
 		card->resume_post(pdev);
 
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s resume work completed\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {RD} */
+	#endif
+	
 	dev_dbg(card->dev, "resume work completed\n");
 
 	/* userspace can access us now we are back as we were before */
 	snd_power_change_state(card->snd_card, SNDRV_CTL_POWER_D0);
+	
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s exit\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {RD} */
+	#endif
 }
 
 /* powers up audio subsystem after a suspend */
@@ -1186,6 +1218,9 @@ static int soc_resume(struct device *dev)
 	 * problem and may take a substantial amount of time to resume
 	 * due to I/O costs and anti-pop so handle them out of line.
 	 */
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {RD} */
+	#endif
 	for (i = 0; i < card->num_rtd; i++) {
 		struct snd_soc_dai *cpu_dai = card->rtd[i].cpu_dai;
 		if (cpu_dai->driver->ac97_control) {
