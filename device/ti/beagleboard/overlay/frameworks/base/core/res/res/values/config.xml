@@ -23,7 +23,10 @@
 
     <!-- This device is not "voice capable"; it's data-only. -->
     <bool name="config_voice_capable">false</bool>
-
+    
+    <!-- {RD} This device follow the usb mass storage gadget approach of GB kernels. -->
+    <bool name="config_usesLegacyUsbDeviceManager">true</bool>
+    
     <!-- This device does not allow sms service. -->
     <bool name="config_sms_capable">false</bool>
 

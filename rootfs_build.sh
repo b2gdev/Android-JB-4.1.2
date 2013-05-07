@@ -24,10 +24,13 @@ cp ../../../../kernel/drivers/mfd/cp430-core/cp430_core.ko ./system/usr/modules/
 cp ../../../../kernel/drivers/misc/cp430_charger/cp430_charger.ko ./system/usr/modules/
 
 # other test apps
-#cp ../../../../tcbin_misc/AndroSensor_1.9.4.4a.apk system/app/
-#cp ../../../../tcbin_misc/MarineCompass.apk system/app/
+cp ../../../../tcbin_misc/AndroSensor_1.9.4.4a.apk system/app/
+cp ../../../../tcbin_misc/MarineCompass.apk system/app/
 cp ../../../../tcbin_misc/Easy_Voice_Recorder.apk system/app/
-#cp ../../../../tcbin_misc/Angry_Birds_2.1.1.apk system/app/
+cp ../../../../tcbin_misc/Angry_Birds_2.1.1.apk system/app/
+
+# move TCBIN-Text-Viewer
+mv ./data/app/TCBIN-Text-Viewer.apk system/app/
 
 mkdir android_rootfs
 cp -r root/* android_rootfs

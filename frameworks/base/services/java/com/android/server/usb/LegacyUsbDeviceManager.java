@@ -35,6 +35,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.os.PowerManager; //{RD}
 import android.os.Process;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
@@ -58,7 +59,7 @@ import java.util.Arrays;
 public class LegacyUsbDeviceManager extends UsbDeviceManager {
 
     private static final String TAG = LegacyUsbDeviceManager.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private static final String USB_CONNECTED_MATCH =
             "DEVPATH=/devices/virtual/switch/usb_connected";
@@ -102,7 +103,10 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
     private boolean mUseUsbNotification;
     private boolean mAdbEnabled;
     private boolean mLegacy = false;
-
+     
+	private PowerManager.WakeLock mWakeLock = null; // {RD}
+	private final static String WAKELOCK_KEY = "LegacyUsbDeviceManager"; //{RD}
+	
     private class AdbSettingsObserver extends ContentObserver {
         public AdbSettingsObserver() {
             super(null);
@@ -156,6 +160,10 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
         PackageManager pm = mContext.getPackageManager();
         mHasUsbAccessory = pm.hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY);
 
+		// {RD} create wakelock
+		PowerManager powerManager= (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+		mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKELOCK_KEY);
+		
         // create a thread for our Handler
         HandlerThread thread = new HandlerThread("LegacyUsbDeviceManager",
                 Process.THREAD_PRIORITY_BACKGROUND);
@@ -172,21 +180,26 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
 
         // We do not show the USB notification if the primary volume supports mass storage.
         // The legacy mass storage UI will be used instead.
-        boolean massStorageSupported = false;
+        boolean massStorageSupported = false;                
         StorageManager storageManager = (StorageManager)
                 mContext.getSystemService(Context.STORAGE_SERVICE);
         StorageVolume[] volumes = storageManager.getVolumeList();
 
-        if (volumes.length > 0) {
-            if (Settings.Secure.getInt(mContentResolver, Settings.Secure.USB_MASS_STORAGE_ENABLED, 0) == 1 ) {
+		if (volumes.length > 0) {
+			// {RD} from ICS
+            /*if (Settings.Secure.getInt(mContentResolver, Settings.Secure.USB_MASS_STORAGE_ENABLED, 0) == 1 ) {
                 massStorageSupported = volumes[0].allowMassStorage();
             } else {
                 massStorageSupported = false;
-            }
+            }*/
+            massStorageSupported = volumes[0].allowMassStorage();
         }
 
         mUseUsbNotification = !massStorageSupported;
 
+		// {RD} force mUseUsbNotification = true
+		mUseUsbNotification = true;
+		
         // make sure the ADB_ENABLED setting value matches the current state
         Settings.Secure.putInt(mContentResolver, Settings.Secure.ADB_ENABLED, mAdbEnabled ? 1 : 0);
         if (DEBUG) Slog.d(TAG, "mAdbEnable="+mAdbEnabled);
@@ -500,8 +513,8 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
                     mConnected = (msg.arg1 == 1);
                     mConfigured = (msg.arg2 == 1);
                     updateUsbNotification();
-                    updateAdbNotification();
-
+                    updateAdbNotification();					
+        
                     if (!mConnected) {
                         // restore defaults when USB is disconnected
                         setEnabledFunctions(mDefaultFunctions, false);
@@ -509,6 +522,39 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
                     if (mBootCompleted) {
                         updateUsbState();
                     }
+                    
+                    //{RD} BEGIN: force catch wakelock when usb is pluged
+					if(mConnected && mConfigured){
+						synchronized (mWakeLock) {
+							try {
+								mWakeLock.acquire();
+								if (DEBUG) Slog.d(TAG,"Acquired wakelock");						
+							} catch (Exception e) {
+								// This is to catch a runtime exception thrown when we try to release an
+								// already released lock.
+								Slog.e(TAG, "exception in acquireWakeLock()", e);
+							}            
+						}
+					}
+					if((!mConnected) && (!mConfigured)){
+						synchronized (mWakeLock) {
+							try {
+								// Release wake lock
+								if (mWakeLock.isHeld()) {
+									mWakeLock.release();
+									if (DEBUG) Slog.d(TAG,"Released wakelock");
+								} else {
+									if (DEBUG) Slog.d(TAG,"Can't release wakelock again!");
+								}
+							} catch (Exception e) {
+								// This is to catch a runtime exception thrown when we try to release an
+								// already released lock.
+								Slog.e(TAG, "exception in releaseWakeLock()", e);
+							}
+						}
+					}
+					// {RD} END:
+					
                     break;
                 case MSG_ENABLE_ADB:
                     setAdbEnabled(msg.arg1 == 1);
@@ -549,7 +595,9 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
                     id = com.android.internal.R.string.usb_mtp_notification_title;
                 } else if (containsFunction(mCurrentFunctions, UsbManager.USB_FUNCTION_PTP)) {
                     id = com.android.internal.R.string.usb_ptp_notification_title;
-                }  else if (containsFunction(mCurrentFunctions, UsbManager.USB_FUNCTION_ACCESSORY)) {
+                }else if (containsFunction(mCurrentFunctions, UsbManager.USB_FUNCTION_MASS_STORAGE)) {
+					id = com.android.internal.R.string.usb_cd_installer_notification_title; // {RD} from ICS
+				}else if (containsFunction(mCurrentFunctions, UsbManager.USB_FUNCTION_ACCESSORY)) {
                     id = com.android.internal.R.string.usb_accessory_notification_title;
                 } else {
                     // There is a different notification for USB tethering so we don't need one here
