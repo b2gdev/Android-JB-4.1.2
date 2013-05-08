@@ -821,6 +821,10 @@ static const KeycodeLabel KEYCODES[] = {
 	/*{KW} Backward, Forward keys */
 	{ "BRL_BACK"  ,   818 },
 	{ "BRL_FORWARD"  ,   819 },
+	/*{KW}: 256 additional key codes spared (820-1075) */
+	
+	/*{KW} Unmapped key code for wakeup from suspend*/
+	{ "DUMMY_WAKEUP"  ,   1076 },
 	
 	{ NULL, 0 }
 };

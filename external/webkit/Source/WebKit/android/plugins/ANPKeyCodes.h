@@ -801,6 +801,11 @@ enum ANPKeyCodes {
 	/*{KW} Forward, backward keys*/
 	kBrlBack_ANPKeyCode       =  818,
 	kBrlForward_ANPKeyCode    =  819,
+	
+	/*{KW}: 256 additional key codes spared (820-1075) */
+	
+	/*{KW} Unmapped key code for wakeup from suspend*/
+	kDummyWakeup_ANPKeyCode    =  1076,	
 
 };
 

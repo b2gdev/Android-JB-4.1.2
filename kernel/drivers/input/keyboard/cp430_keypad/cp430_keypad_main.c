@@ -43,18 +43,31 @@ int proc_enable = 1; /* {PK} Proc file. Enabled by default. Can be changed via t
 unsigned short key_combination  = 0; /*{KW}*/
 unsigned short active_key_count = 0; /*{KW}*/
 
+unsigned short masked_flag = SYS_NOFLAG; /*{KW}: separate flag from rx event arg */
+
 
 static int keypad_process_key_input(struct tcbin_keys *key_pattern);
 
 /************************** CP430 Callbacks **************************/
-
+/** {KW}:
+ * Called by cp430_core driver on data reception for this device.
+ * @arg: 32bit value containing 2 fields as follows.
+ * -----------------------------------------
+ * |   16bit FLAG      | 16bit data length |
+ * -----------------------------------------
+ * FLAG could be one of: SYS_NOFLAG   (0x0000)
+ * 						 SYS_RESUMING (0x0001) 
+ **/
 int bus_receive_event_handler(unsigned int arg)
-{	
-	if(arg > 0) {
-		unsigned char *buffer = kmalloc(arg, GFP_KERNEL);
+{		
+	unsigned int masked_arg = arg & 0x0000FFFF; /*{KW}: ignore the MSB 16bit FLAG */
+	masked_flag = (arg & 0xFFFF0000) >> 16;
+	
+	if(masked_arg > 0) {
+		unsigned char *buffer = kmalloc(masked_arg, GFP_KERNEL);
 		
 		if (buffer) {
-			if (cp430_core_read(CP430_DEV_KEYPAD, buffer, arg) < 0) {
+			if (cp430_core_read(CP430_DEV_KEYPAD, buffer, masked_arg) < 0) {
 				PDEBUG("keypad: cp430_core_read failed\r\n");
 			}
 			else {
@@ -163,18 +176,31 @@ keypad_process_key_input(struct tcbin_keys *key_pattern)
 	unsigned int last_cursor_keys_blk1_pattern = keypad_dev->last_key_pattern.cursor_keys_blk1;
 
 	/********** Main Keys **********/
-	
 	PDEBUG("{KW}: keyboard_driver: keypad_process_key_input() is called\n");
+	
+	/*{KW}: Send dummy scan code to wake the system up, on resumin from keypad condition */
+	if(masked_flag == SYS_RESUMING){		
+		scan_code = KEY_DUMMY_WAKEUP; /*{KW} defined in input.h */
+		input_event(input, EV_KEY, scan_code, 1);
+		input_event(input, EV_KEY, scan_code, 0);
+	}
 	
 	/* {PK} POWER Key */
 	if (is_key_pressed(last_key_event->main_keys, KEY_POWER_POS) ^ is_key_pressed(main_keys, KEY_POWER_POS)) {
 		if ((!is_key_pressed(last_key_event->main_keys, KEY_POWER_POS)) & is_key_pressed(main_keys, KEY_POWER_POS)) {
-			scan_code = misc_keys[KEY_POWER_POS];
-			input_event(input, EV_KEY, scan_code, 1);
-			input_event(input, EV_KEY, scan_code, 0);
+			/*{KW}: Power key events are ignored here. They are handled by twl4030 via toggling PWRON*/
+			//scan_code = misc_keys[KEY_POWER_POS];
+			//input_event(input, EV_KEY, scan_code, 1);
+			//input_event(input, EV_KEY, scan_code, 0);
+			//printk("{KW}: power key %04x \n", scan_code);
 			xor_bit(&last_key_event->main_keys, KEY_POWER_POS);
 		}
 		else if (is_key_pressed(last_key_event->main_keys, KEY_POWER_POS) & (!is_key_pressed(main_keys, KEY_POWER_POS))) {
+			/*{KW}: Power key events are ignored here. They are handled by twl4030 via toggling PWRON*/
+			//scan_code = misc_keys[KEY_POWER_POS];
+			//input_event(input, EV_KEY, scan_code, 1);
+			//input_event(input, EV_KEY, scan_code, 0);
+			//printk("{KW}: power key %04x \n", scan_code);
 			xor_bit(&last_key_event->main_keys, KEY_POWER_POS);
 		}
 	}
@@ -382,7 +408,7 @@ keypad_platform_probe(struct platform_device *device)
 	if (NULL == input_dev) {
 		printk(KERN_INFO "keypad: input_register_device failed \r\n");
 		ret = -ENOMEM;
-		goto input_register_device;
+		goto err_input_register_device;
 	}
 	
 	/* {PK} Register device with the bus driver */
@@ -391,8 +417,7 @@ keypad_platform_probe(struct platform_device *device)
 	keypad_bus_data.transmit_event_handler = bus_transmit_event_handler;
 	if (cp430_device_register(CP430_DEV_KEYPAD, &keypad_bus_data) < 0) {
 		printk(KERN_INFO "keypad: cp430_device_register failed\r\n");
-		input_unregister_device(input_dev);
-		goto err_bus_register;
+		goto err_cp430_device_register;
 	}
 	else {
 		printk(KERN_INFO "keypad: cp430_device_register success\r\n");
@@ -405,9 +430,10 @@ keypad_platform_probe(struct platform_device *device)
 	
 	return 0;
 	
-input_register_device:
+err_cp430_device_register:
+	input_unregister_device(input_dev);
+err_input_register_device:
 	input_free_device(input_dev);
-err_bus_register:
 err_input_dev:
 	kfree(keypad_dev);
 err_fail:

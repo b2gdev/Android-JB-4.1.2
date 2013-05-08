@@ -17,6 +17,7 @@ cp ../../../../kernel/drivers/accessibility/braille/metec/metec_flat20.ko ./syst
 cp ../../../../kernel/drivers/input/keyboard/cp430_keypad/cp430_keypad.ko ./system/usr/modules/
 cp ../../../../kernel/drivers/mfd/cp430-core/cp430_core.ko ./system/usr/modules/
 cp ../../../../kernel/drivers/misc/cp430_charger/cp430_charger.ko ./system/usr/modules/
+cp ../../../../kernel/drivers/power/tcbin_power/cp430_power/cp430_power.ko ./system/usr/modules/
 
 # other test apps
 cp ../../../../tcbin_misc/AndroSensor_1.9.4.4a.apk system/app/

@@ -204,6 +204,7 @@ int misc_init_r(void)
 	omap_request_gpio(98);				/* {PS} : CAM_nRST			*/
 	omap_request_gpio(167);				/* {PS} : CAM_PWDN			*/
 	omap_request_gpio(157);				/* {PS} : CAM_LED_nRST		*/
+	omap_request_gpio(11);				/* {KW} : JTAG_EMU0			*/
 	omap_request_gpio(12);				/* {PS} : CP_INT			*/
 	omap_request_gpio(13);				/* {PS} : 3GM_UART_DCD_INT	*/
 	omap_request_gpio(14);				/* {PS} : ACC_INT			*/
@@ -234,6 +235,7 @@ int misc_init_r(void)
 	omap_set_gpio_direction(98, 0);		/* {PS} : CAM_nRST			*/
 	omap_set_gpio_direction(167, 0);	/* {PS} : CAM_PWDN			*/
 	omap_set_gpio_direction(157, 0);	/* {PS} : CAM_LED_nRST		*/
+	omap_set_gpio_direction(11, 0);		/* {KW} : JTAG_EMU0			*/	
 	omap_set_gpio_direction(12, 1);		/* {PS} : CP_INT			*/	/* Input */
 	omap_set_gpio_direction(13, 1);		/* {PS} : 3GM_UART_DCD_INT	*/	/* Input */
 	omap_set_gpio_direction(14, 1);		/* {PS} : ACC_INT			*/	/* Input */
@@ -264,6 +266,7 @@ int misc_init_r(void)
 	omap_set_gpio_dataout(98, 0);		/* {PS} : CAM_nRST			- LOW	- Reset Camera */
 	omap_set_gpio_dataout(167, 1);		/* {PS} : CAM_PWDN			- HIGH 	- Power down Camera */
 	omap_set_gpio_dataout(157, 0);		/* {PS} : CAM_LED_nRST		- LOW 	- Reset Camera LED driver */
+	omap_set_gpio_dataout(11, 0);		/* {KW} : JTAG_EMU0			- LOW	- PWR STATUS Gpio pin low */
 	omap_set_gpio_dataout(16, 0);		/* {PS} : 3GM_PWR_nEN		- LOW	- Turn on 3G modem power supply */
 	omap_set_gpio_dataout(21, 0);		/* {PS} : USB_PWR_EN		- LOW	- Turn off USB Hub power supply */
 	omap_set_gpio_dataout(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */

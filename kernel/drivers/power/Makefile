@@ -35,5 +35,6 @@ obj-$(CONFIG_CHARGER_TWL4030)	+= twl4030_charger.o
 
 # {PS} BEGIN:
 obj-y 				+= tcbin_power/
+obj-y				+= tcbin_power/cp430_power/
 # {PS} END:
 

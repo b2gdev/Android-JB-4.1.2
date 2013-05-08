@@ -1199,10 +1199,15 @@ public class KeyEvent extends InputEvent implements Parcelable {
 	/*{KW} Backward, Forward keys*/
 	public static final int KEYCODE_BRL_BACK         =   818;
 	public static final int KEYCODE_BRL_FORWARD      =   819;
-
+	
+	/*{KW}: 256 additional key codes spared (820-1075) */
+	
+	/*{KW} Unmapped keycode for wakeup from suspend */
+	public static final int KEYCODE_DUMMY_WAKEUP     =   1076;
+ 
 	// {RD} overiding LAST_KEYCODE for JB
 	//private static final int LAST_KEYCODE           = KEYCODE_ASSIST;
-    private static final int LAST_KEYCODE           = KEYCODE_BRL_FORWARD;    
+    private static final int LAST_KEYCODE           = KEYCODE_DUMMY_WAKEUP;    
 
     // NOTE: If you add a new keycode here you must also add it to:
     //  isSystem()
@@ -2012,7 +2017,9 @@ public class KeyEvent extends InputEvent implements Parcelable {
 		/*{KW} Backward, Forward keys*/
 		names.append(KEYCODE_BRL_BACK, "KEYCODE_BRL_BACK");
 		names.append(KEYCODE_BRL_FORWARD, "KEYCODE_BRL_FORWARD");
-
+		/*{KW} end*/
+		/*{KW} Unmapped key code for wakeup from suspend*/
+		names.append(KEYCODE_DUMMY_WAKEUP, "KEYCODE_DUMMY_WAKEUP");
         /*{KW} end*/
 
     };

@@ -839,7 +839,11 @@ enum {
 
 	/*{KW} Forward, backward keys*/
 	AKEYCODE_BRL_BACK      =   818,
-	AKEYCODE_BRL_FORWARD   =   819,    
+	AKEYCODE_BRL_FORWARD   =   819,
+	/*{KW}: 256 additional key codes spared (820-1075) */
+	
+	/*{KW} Unmapped key code for wakeup from suspend*/ 
+	AKEYCODE_DUMMY_WAKEUP  =   1076,     
 };
 
 #ifdef __cplusplus

@@ -19,6 +19,7 @@
 
 #include <asm/system.h>		/* cli(), *_flags */
 #include <asm/uaccess.h>	/* copy_*_user */
+#include <asm/atomic.h>     /* {KW} */
 
 #include <linux/interrupt.h>
 #include <mach/gpio.h>
@@ -26,6 +27,7 @@
 #include "cp430_core.h"		/* local definitions */
 #include "cp430_ioctl.h"
 #include "debug.h"
+#include "cp430.h"	        /* {KW} */
 
 
 MODULE_AUTHOR("Prasad Samaraweera");
@@ -58,12 +60,32 @@ static int tx_logging_count = 0;
 static DECLARE_WAIT_QUEUE_HEAD(command_response_received_wq);
 static int command_response_received_flag = 0;
 
+/* {KW}: Maintain suspend resume status, Initiallized to suspend */
+static atomic_t is_sys_suspend = ATOMIC_INIT(1);
+/* {KW}: RX event handler Flag to be sent */
+static unsigned int rx_event_handler_flag = SYS_NOFLAG;
+
+unsigned short masked_flag = SYS_NOFLAG; /*{KW}: separate flag from rx event arg */
+/** {KW}:
+ * Called by cp430_core driver on data reception for this device.
+ * @arg: 32bit value containing 2 fields as follows.
+ * -----------------------------------------
+ * |   16bit FLAG      | 16bit data length |
+ * -----------------------------------------
+ * FLAG could be one of: SYS_NOFLAG   (0x0000)
+ * 						 SYS_RESUMING (0x0001) 
+ **/
+
 int cp430_dev_receive_event_handler(unsigned int arg)
-{
+{	
+	unsigned int masked_arg = arg & 0x0000FFFF; /*{KW}: ignore the MSB 16bit FLAG */
+	
 	unsigned char* buffer = kmalloc(1024, GFP_KERNEL);
 	
+	masked_flag = (arg & 0xFFFF0000) >> 16;
+	
 	if (buffer != NULL) {
-		if (cp430_core_read(CP430_CORE, buffer, arg) < 0) {
+		if (cp430_core_read(CP430_CORE, buffer, masked_arg) < 0) {
 			PDEBUG("cp430_dev : receive data fail\r\n");
 		}
 		else {
@@ -317,6 +339,7 @@ void process_rx_fifo(unsigned long unused)
 {
 	unsigned char c = 0x00;
 	int retval = 0;
+	unsigned int rx_arg;
 
 	PDEBUG("> : %s\r\n", __FUNCTION__);
     PDEBUG("kfifo_len(&core_device->rx_fifo) = %d\n", kfifo_len(&core_device->rx_fifo));
@@ -530,7 +553,9 @@ void process_rx_fifo(unsigned long unused)
 					}
 					else {
 						if (devices[active_rx_device].data != NULL) {
-							devices[active_rx_device].data->receive_event_handler(kfifo_len(&devices[active_rx_device].rx_fifo));
+							rx_arg = (rx_event_handler_flag << 16) | kfifo_len(&devices[active_rx_device].rx_fifo);							
+							devices[active_rx_device].data->receive_event_handler(rx_arg);							
+							rx_event_handler_flag = SYS_NOFLAG;
 						}
 						else {
 							PERROR("Error ! trying to call receive_event_handler in unregistered device\r\n");
@@ -971,6 +996,8 @@ static int __devexit cp430_spi_remove(struct spi_device *spi_device)
 static void cp430_spi_shutdown(struct spi_device *spi_device)
 {
 	PDEBUG("> : %s\r\n",__FUNCTION__);
+	/*{KW}: Set suspend resume status. Set to suspend */
+	atomic_set(&is_sys_suspend, 1);
 }
 
 static int cp430_spi_suspend(struct spi_device *spi_device, pm_message_t mesg)
@@ -985,6 +1012,9 @@ static int cp430_spi_suspend(struct spi_device *spi_device, pm_message_t mesg)
 				return -EBUSY;
 		}			
 	}
+	/*{KW}: Set suspend resume status. Set to suspend */
+	atomic_set(&is_sys_suspend, 1);
+	
 	return 0;	
 }
 
@@ -992,6 +1022,9 @@ static int cp430_spi_resume(struct spi_device *spi_device)
 {
 	PDEBUG("> : %s\r\n",__FUNCTION__);
 
+	/*{KW}: Set suspend resume status. Set to not suspend */
+	atomic_set(&is_sys_suspend, 0);
+	
 	return 0;	
 }
 
@@ -1132,6 +1165,10 @@ static irqreturn_t cp430_core_interrupt(int irq, void *dev_id)
 	
 	if (use_rx_wq){
 		PDEBUG("> : queue_work(dev->rx_wq, &dev->rx_work)\r\n");	
+		if(atomic_read(&is_sys_suspend) > 0)
+		{
+			rx_event_handler_flag = SYS_RESUMING;
+		}
 		queue_work(dev->rx_wq, &dev->rx_work);
 	}
 	else{
@@ -1157,21 +1194,32 @@ static int init_interrupt(struct cp430_core_device *dev)
 
 	dev->irq = gpio_to_irq(CP430_IRQ_GPIO);
 	if (dev->irq < 0)
+	{
+		result = -EFAULT;
 		goto fail_irq;
+	}
 
-	result   = request_irq(dev->irq, cp430_core_interrupt, IRQF_TRIGGER_FALLING, DEVICE_NAME, dev);
+	result = request_irq(dev->irq, cp430_core_interrupt, IRQF_TRIGGER_FALLING, DEVICE_NAME, dev);
+	if (result < 0)
+		goto fail_irq;
+		
+	result = enable_irq_wake(dev->irq);
+	if (result < 0)
+		goto fail_irq_req;
 	
 	PDEBUG("< : %s - result = %d\r\n", __FUNCTION__, result);
 	
 	return result;
     
+fail_irq_req:
+	free_irq(dev->irq, dev);
 fail_irq:
 	gpio_free(CP430_IRQ_GPIO);
 fail:
 	printk(KERN_ERR "%s: can't get assigned irq %i\n", DEVICE_NAME, dev->irq);
 	dev->irq = -1;
 
-    return -EFAULT;
+    return result;
 }
 
 static int init_variables(struct cp430_core_device *dev)
@@ -1220,6 +1268,9 @@ static int init_variables(struct cp430_core_device *dev)
 		sema_init(&devices[i].rx_sema, 1);
 		sema_init(&devices[i].tx_sema, 1);
 	}
+	
+	/*{KW}: Init suspend resume status. Set to not suspend */
+	atomic_set(&is_sys_suspend, 0);
 
 	return 0;
 }

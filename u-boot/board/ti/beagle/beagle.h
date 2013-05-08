@@ -707,6 +707,9 @@ const omap3_sysinfo sysinfo = {
 	\
 	MUX_VAL(CP(MCSPI1_CS0),		(IDIS | PTU | EN  | M0)) /*MCSPI1_CS0*/	/* {PS} : CP_INT_RST 	- Configured as MCSPI1_CS0 */\
 	\
+	/* {PS} TEST */\
+	MUX_VAL(CP(JTAG_EMU0),	    (IDIS | PTU | DIS | M4)) /*GPIO_11*/	/* {PS} : CP_PWR_STAT 	 - Output pin */\
+	/* {PS} */\
 	MUX_VAL(CP(ETK_CLK_ES2),	(IEN  | PTD | EN  | M4)) /*GPIO_12*/	/* {PS} : CP_INT 		- Input pin */\
 	MUX_VAL(CP(ETK_CTL_ES2),	(IEN  | PTU | DIS | M4)) /*GPIO_13*/	/* {PS} : 3GM_UART_DCD_INT	- Input pin */\
 	MUX_VAL(CP(ETK_D0_ES2),		(IEN  | PTD | EN  | M4)) /*GPIO_14*/	/* {PS} : ACC_INT 		- Input pin */\
