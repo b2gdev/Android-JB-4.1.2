@@ -21,7 +21,6 @@
 #define LOG_NDEBUG 0
 
 #include <errno.h>
-#include <pthread.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -51,6 +50,13 @@
 
 #include <unistd.h>
 
+// TCBIN Delays
+#define USLEEP_DESELECT_OUTPUT 5000
+#define USLEEP_OUTPCM_INIT 15000
+#define USLEEP_INPCM_INIT 5000
+#define USLEEP_PTHEAD_SELECT_OUTPUT 400000
+#define USLEEP_WIREDACCESSORYOBSERVER_SELECT_OUTPUT 200000
+
 struct route_setting
 {
     char *ctl_name;
@@ -68,34 +74,32 @@ static int set_route_by_array(struct mixer *mixer, struct route_setting *route,
 
     /* Go through the route array and set each value */
     for (i = 0; i < len; i++) {
+		
         ctl = mixer_get_ctl_by_name(mixer, route[i].ctl_name);
         if (!ctl) {
-	    ALOGE("Unknown control '%s'\n", route[i].ctl_name);
+			ALOGE("Unknown control '%s'\n", route[i].ctl_name);
             return -EINVAL;
-	}
+		}
 
-        if (route[i].strval) {
-	    ret = mixer_ctl_set_enum_by_string(ctl, route[i].strval);
-	    if (ret != 0) {
-		ALOGE("Failed to set '%s' to '%s'\n",
-		     route[i].ctl_name, route[i].strval);
-	    } else {
-		//ALOGV("Set '%s' to '%s'\n",
-		//     route[i].ctl_name, route[i].strval);
-	    }
-	    
+		if (route[i].strval) {
+			ret = mixer_ctl_set_enum_by_string(ctl, route[i].strval);
+			if (ret != 0) {
+			ALOGE("Failed to set '%s' to '%s'\n",
+				 route[i].ctl_name, route[i].strval);
+			} else {
+			//ALOGV("Set '%s' to '%s'\n", route[i].ctl_name, route[i].strval);
+			}			
         } else {
             /* This ensures multiple (i.e. stereo) values are set jointly */
             for (j = 0; j < mixer_ctl_get_num_values(ctl); j++) {
-		ret = mixer_ctl_set_value(ctl, j, route[i].intval);
-		if (ret != 0) {
-		    ALOGE("Failed to set '%s'.%d to %d\n",
-			 route[i].ctl_name, j, route[i].intval);
-		} else {
-		    //ALOGV("Set '%s'.%d to %d\n",
-			// route[i].ctl_name, j, route[i].intval);
-		}
-	    }
+				ret = mixer_ctl_set_value(ctl, j, route[i].intval);
+				if (ret != 0) {
+					ALOGE("Failed to set '%s'.%d to %d\n",
+					 route[i].ctl_name, j, route[i].intval);
+				} else {
+					//ALOGV("Set '%s'.%d to %d\n", route[i].ctl_name, j, route[i].intval);
+				}
+			}
         }
     }
 
@@ -130,6 +134,8 @@ struct tiny_audio_device {
     struct tiny_stream_out *active_output;	
 	int is_pcm_in_active;
 	int is_pcm_out_active;
+	int is_pcm_out_init;
+	//int prev_routing;
 };
 
 struct tiny_stream_out {
@@ -160,7 +166,7 @@ struct tiny_stream_in {
     size_t frames_in;
     unsigned int requested_rate;
     int standby;
-    int source;
+    //int source;
     effect_handle_t preprocessors[MAX_PREPROCESSORS];
     int num_preprocessors;
     int16_t *proc_buf;
@@ -205,7 +211,7 @@ void select_input_devices(struct tiny_audio_device *adev)
 	unsigned int output = ((((unsigned int)adev->active_devices) & ((unsigned int)AUDIO_DEVICE_OUT_ALL)) | (((unsigned int)adev->devices) & ((unsigned int)AUDIO_DEVICE_IN_ALL)));
 	
     if (adev->active_devices == output)
-	return;
+		return;
 
     ALOGV("Changing devices %x => %x\n", adev->active_devices, output);
 
@@ -232,8 +238,10 @@ void deselect_all_output_devices(struct tiny_audio_device *adev)
     int i;
 	unsigned int output = (((unsigned int)adev->devices) & (~((unsigned int)AUDIO_DEVICE_OUT_ALL)));
 	
+	output = output | AUDIO_DEVICE_OUT_DEFAULT; // {RD} repurpose AUDIO_DEVICE_OUT_DEFAULT to represent "deselect all outouts" state
+	
     if (adev->active_devices == output)
-	return;
+		return;
 
     ALOGV("Changing devices %x => %x\n", adev->active_devices, output);
 
@@ -257,10 +265,10 @@ void deselect_all_output_devices(struct tiny_audio_device *adev)
 /* Must be called with route_lock */
 void select_devices(struct tiny_audio_device *adev)
 {
-    int i;
-
+    int i;		
+		
     if (adev->active_devices == adev->devices)
-	return;
+		return;
 
     ALOGV("Changing devices %x => %x\n", adev->active_devices, adev->devices);
 
@@ -327,7 +335,7 @@ static int out_standby(struct audio_stream *stream)
 		
 		if(!adev->in_call){			
 			deselect_all_output_devices(adev);
-			usleep(5000);
+			usleep(USLEEP_DESELECT_OUTPUT);
 		}else{
 			ALOGV("out_standby(%p) INCALL not deselecting output\n", stream);
 		}
@@ -357,38 +365,37 @@ static int out_dump(const struct audio_stream *stream, int fd)
 
 static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
 {
-    struct tiny_stream_out *out = (struct tiny_stream_out *)stream;
+    /*struct tiny_stream_out *out = (struct tiny_stream_out *)stream;
     struct tiny_audio_device *adev = out->adev;
     struct str_parms *parms;
     char *str;
     char value[32];
     int ret, val = 0;
-    bool force_input_standby = false;
+    bool force_input_standby = false;*/
 
-    ALOGV("%s\n",__FUNCTION__);
     ALOGV("%s: kvpairs:%s\n",__FUNCTION__,kvpairs);
     
-    parms = str_parms_create_str(kvpairs);
+    /*parms = str_parms_create_str(kvpairs);
 
     ret = str_parms_get_str(parms, AUDIO_PARAMETER_STREAM_ROUTING,
 			    value, sizeof(value));
     if (ret >= 0) {
         val = atoi(value);
 		ALOGV("%s: stream routing val:%d\n",__FUNCTION__,val);
-		if (val != 0) {
-			//pthread_mutex_lock(&adev->route_lock);
-			//    adev->devices &= ~AUDIO_DEVICE_OUT_ALL;
-			//    adev->devices |= val;
-			//    select_devices(adev);
-			//pthread_mutex_unlock(&adev->route_lock);
+		if(adev->prev_routing == val){	
+			pthread_mutex_lock(&out->lock);			
+			select_devices(adev);
+			usleep(5000);					
+			pthread_mutex_unlock(&out->lock);
 		} else {
-			ALOGW("output routing with no devices\n");
+			adev->prev_routing = val;
+			//ALOGW("output routing with no devices\n");
 		}
     }
 
-    str_parms_destroy(parms);
+    str_parms_destroy(parms);*/
 
-    return ret;
+    return 0; //return ret;
 }
 
 static char * out_get_parameters(const struct audio_stream *stream, const char *keys)
@@ -424,13 +431,10 @@ static ssize_t out_write(struct audio_stream_out *stream, const void* buffer,
 	adev->active_output = out;
 	
     if (!out->pcm) {
-		//ALOGV("routing output1\n");
-		//select_devices(adev);
-		//pthread_mutex_unlock(&adev->route_lock);
-		//usleep(5000);
-		//pthread_mutex_lock(&adev->route_lock);
+
 		ALOGV("out_write(%p) opening PCM\n", stream);				
-		out->pcm = pcm_open(0, 0, PCM_OUT | PCM_MMAP, &out->config);							
+		out->pcm = pcm_open(0, 0, PCM_OUT | PCM_MMAP, &out->config);
+									
 		if (!pcm_is_ready(out->pcm)) {
 			ALOGE("Failed to open output PCM: %s", pcm_get_error(out->pcm));
 			pcm_close(out->pcm);			
@@ -438,19 +442,18 @@ static ssize_t out_write(struct audio_stream_out *stream, const void* buffer,
 			pthread_mutex_unlock(&out->lock);
 			pthread_mutex_unlock(&adev->route_lock);
 			return -EBUSY;
-		}		
-				
-		pthread_mutex_unlock(&adev->route_lock);
-		usleep(5000);
-		//pthread_mutex_lock(&adev->route_lock);
-		//deselect_all_output_devices(adev);
-		//pthread_mutex_unlock(&adev->route_lock);
-		//usleep(5000);
-		pthread_mutex_lock(&adev->route_lock);
-		ALOGV("routing output2\n");
-		select_devices(adev);
-		adev->is_pcm_out_active = 1;
+		}						
 		
+		select_devices(adev);				
+		adev->is_pcm_out_init = 1;
+		
+		// Sleep to allow eventlistener to change device
+		pthread_mutex_unlock(&adev->route_lock);
+		usleep(USLEEP_OUTPCM_INIT);		
+		pthread_mutex_lock(&adev->route_lock);
+		
+		adev->is_pcm_out_init = 0;
+		adev->is_pcm_out_active = 1;
     }	
 	
     pthread_mutex_unlock(&adev->route_lock);
@@ -486,7 +489,6 @@ static int out_remove_audio_effect(const struct audio_stream *stream, effect_han
 
 static uint32_t in_get_sample_rate(const struct audio_stream *stream)
 {
-    //return 8000;
     struct tiny_stream_in *in = (struct tiny_stream_in *)stream;
     return in->requested_rate;
 }
@@ -498,12 +500,10 @@ static int in_set_sample_rate(struct audio_stream *stream, uint32_t rate)
 
 static uint32_t in_get_channels(const struct audio_stream *stream)
 {
-    //return AUDIO_CHANNEL_IN_MONO;    
     struct tiny_stream_in *in = (struct tiny_stream_in *)stream;
 
    // ALOGV("%s: channels:%d\n",__FUNCTION__,in->config.channels);
     
-    //if (in->config.channels == 1) {
 	if (in->stereo_to_mono == 1) {
         return AUDIO_CHANNEL_IN_MONO;
     } else {
@@ -523,7 +523,6 @@ static int in_set_format(struct audio_stream *stream, audio_format_t format)
 
 static int in_standby(struct audio_stream *stream)
 {
-    //{RD}       
     struct tiny_stream_in *in = (struct tiny_stream_in *)stream;
     struct tiny_audio_device *adev = in->adev;
     
@@ -532,10 +531,6 @@ static int in_standby(struct audio_stream *stream)
 	pthread_mutex_lock(&in->lock);
     
     if (in->pcm) {
-		//ALOGV("in_standby(%p) NOT closing PCM\n", stream);
-		//deselect_all_output_devices(adev);
-		//usleep(200000);
-		//adev->is_standby = 1;
 				
 		ALOGV("in_standby(%p) closing PCM\n", stream);
 		ret = pcm_close(in->pcm);
@@ -555,11 +550,11 @@ static int in_standby(struct audio_stream *stream)
 		}
 		
 		adev->is_pcm_in_active = 0;
-		in->pcm = NULL;
-	
+		in->pcm = NULL;	
     }
 	pthread_mutex_unlock(&in->lock);
 	pthread_mutex_unlock(&adev->route_lock);
+	
     return 0;
 }
 
@@ -569,33 +564,26 @@ static int in_dump(const struct audio_stream *stream, int fd)
 }
 
 static int in_set_parameters(struct audio_stream *stream, const char *kvpairs)
-{
-    //ALOGV("%s: empty\n",__FUNCTION__);
-    //return 0;
-    
-    ALOGV("%s\n",__FUNCTION__);
-    struct tiny_stream_in *in = (struct tiny_stream_in *)stream;
+{   
+    /*struct tiny_stream_in *in = (struct tiny_stream_in *)stream;
     struct tiny_audio_device *adev = in->adev;
     struct str_parms *parms;
     char *str;
     char value[32];
-    int ret, val = 0;
-    //bool do_standby = false;
+    int ret, val = 0;*/
 
 	ALOGV("%s: kvpairs:%s\n",__FUNCTION__,kvpairs);
-    parms = str_parms_create_str(kvpairs);
+    
+    /*parms = str_parms_create_str(kvpairs);
 
     ret = str_parms_get_str(parms, AUDIO_PARAMETER_STREAM_INPUT_SOURCE, value, sizeof(value));
 
-    //pthread_mutex_lock(&adev->lock);
-    //pthread_mutex_lock(&in->lock);
     if (ret >= 0) {
         val = atoi(value);
         ALOGV("%s: input source val:%d\n",__FUNCTION__,val);
-        /* no audio source uses val == 0 */
+        // no audio source uses val == 0
         if ((in->source != val) && (val != 0)) {
             in->source = val;
-            //do_standby = true;
         }
     }
 
@@ -603,18 +591,12 @@ static int in_set_parameters(struct audio_stream *stream, const char *kvpairs)
     if (ret >= 0) {
         val = atoi(value);
         ALOGV("%s: stream routing val:%d :ignoring\n",__FUNCTION__,val);
-        /*if ((adev->devices != val) && (val != 0)) {
-            adev->devices = val;
-            //do_standby = true;
-        }*/
+        //if ((adev->devices != val) && (val != 0)) {
+        //    adev->devices = val;
+        //}
     }
 
-    //if (do_standby)
-    //    do_input_standby(in);
-    //pthread_mutex_unlock(&in->lock);
-    //pthread_mutex_unlock(&adev->lock);
-
-    str_parms_destroy(parms);
+    str_parms_destroy(parms);*/
     
     return 0;
 }
@@ -667,8 +649,7 @@ static int get_next_buffer(struct resampler_buffer_provider *buffer_provider,
                                    (void*)in->buffer,
                                    in->config.period_size *
                                        audio_stream_frame_size(&in->stream.common));
-        if (in->read_status != 0) {
-            //ALOGE("get_next_buffer() pcm_read error %d", in->read_status);
+        if (in->read_status != 0) {            
             ALOGE("get_next_buffer() pcm_read error: %s", pcm_get_error(in->pcm));
             buffer->raw = NULL;
             buffer->frame_count = 0;
@@ -752,7 +733,7 @@ static ssize_t read_frames(struct tiny_stream_in *in, void *buffer, ssize_t fram
 		ALOGV("in_read(%p) opening PCM\n", stream);	
 		in->pcm = pcm_open(0, 0, PCM_IN, &in->config);	
 		
-		usleep(5000);
+		usleep(USLEEP_INPCM_INIT);
 		
 		if (!pcm_is_ready(in->pcm)) {
 			ALOGE("cannot open pcm_in driver: %s", pcm_get_error(in->pcm));
@@ -762,11 +743,8 @@ static ssize_t read_frames(struct tiny_stream_in *in, void *buffer, ssize_t fram
 			goto exit;
 		}
 		
-		ALOGV("routing output\n");		
-		select_input_devices(adev);	
-		
+		select_input_devices(adev);			
 		adev->is_pcm_in_active = 1;
-		ALOGV("in_read(%p) opened PCM successfully\n", stream);	
     }
 
 	if (in->resampler) {
@@ -776,27 +754,22 @@ static ssize_t read_frames(struct tiny_stream_in *in, void *buffer, ssize_t fram
     
     pthread_mutex_unlock(&adev->route_lock);
     
-    if (in->resampler != NULL)
-    {        
-        if(in->stereo_to_mono){
-			ALOGV("stereo_to_mono");
-			
-			ALOGV("read bytes : %d",bytes);
+    if (in->resampler != NULL) {        
+        if(in->stereo_to_mono) {
 			unsigned char rdbuff[bytes<<1];
-			ALOGV("actual read bytes<<1: %d",bytes<<1);
 			
-			ALOGV("frames_rq %d",frames_rq);
-			//frames_rq =frames_rq<<1;
-			//ALOGV("new frames_rq %d",frames_rq);
+			//ALOGV("stereo_to_mono");			
+			//ALOGV("read bytes : %d",bytes);								
+			//ALOGV("actual read bytes<<1: %d",bytes<<1);			
+			//ALOGV("frames_rq %d",frames_rq);			
 			
-			ret = read_frames(in, rdbuff, frames_rq);			
-			
-			int tmpsize = ret * audio_stream_frame_size(&in->stream.common);
-			ALOGV("read buff size : %d",tmpsize);
+			ret = read_frames(in, rdbuff, frames_rq);						
+			int tmpsize = ret * audio_stream_frame_size(&in->stream.common);			
+			//ALOGV("read buff size : %d",tmpsize);
 
 			unsigned char *outbuff = (unsigned char *)buffer;
 			memset(outbuff,0,bytes);
-			ALOGV("CP y1");
+
 			int itr=0;
 			int itr2=0;
 			
@@ -804,26 +777,20 @@ static ssize_t read_frames(struct tiny_stream_in *in, void *buffer, ssize_t fram
 			//	ALOGV("%d 0x%04x",itr2, rdbuff[itr2]);								
 			//}
 			
-			for(itr2=0; (itr2 < tmpsize) && (itr < bytes);){
-				//outbuff[itr] = (unsigned char)((rdbuff[itr2]>>1) + (rdbuff[itr2]>>1));							
-				
+			for(itr2=0; (itr2 < tmpsize) && (itr < bytes);){		
 				itr2 += 2;
 				outbuff[itr++] = rdbuff[itr2++];
 				outbuff[itr++] = rdbuff[itr2++];				
-								
-				//outbuff[itr++] = rdbuff[itr2++];
-				//itr2++;
-				//outbuff[itr++] = rdbuff[itr2++];				
-				//itr2++;
 			} 			
-			ALOGV("CP z1");
+			
 		}else{
-			ALOGV("!stereo_to_mono");
-			ALOGV("read bytes : %d",bytes);
-			ALOGV("frames_rq %d",frames_rq);
+			//ALOGV("!stereo_to_mono");
+			//ALOGV("read bytes : %d",bytes);
+			//ALOGV("frames_rq %d",frames_rq);
+			
 			ret = read_frames(in, buffer, frames_rq);
 			int tmpsize = ret * audio_stream_frame_size(&in->stream.common);
-			ALOGV("read buff size : %d",tmpsize);			
+			//ALOGV("read buff size : %d",tmpsize);			
 		}
 	}
     else{
@@ -836,8 +803,8 @@ static ssize_t read_frames(struct tiny_stream_in *in, void *buffer, ssize_t fram
     if (ret > 0)
         ret = 0;    
     
-    //if (ret == 0 && adev->mic_mute)
-    //    memset(buffer, 0, bytes);
+    if (ret == 0 && adev->mic_mute)
+        memset(buffer, 0, bytes);
     
 exit:
     if (ret < 0)
@@ -931,6 +898,23 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
     ALOGV("Opened output stream %p\n", out);
 
     *stream_out = &out->stream;
+    
+    //{RD} init
+     if (!out->pcm) {
+		ALOGV("out_write(%p) opening PCM\n", out);				
+		out->pcm = pcm_open(0, 0, PCM_OUT | PCM_MMAP, &out->config);							
+		if (!pcm_is_ready(out->pcm)) {
+			ALOGE("Failed to open output PCM: %s", pcm_get_error(out->pcm));
+			pcm_close(out->pcm);			
+			out->pcm = NULL;			
+			return 0;
+		}						
+		usleep(5000); // minor delay between PCM ON and PCM OFF						
+		ALOGV("out_standby(%p) closing PCM\n", out);
+		pcm_close(out->pcm);							
+		out->pcm = NULL;		
+    }	
+		
     return 0;
 
 err_open:
@@ -965,20 +949,15 @@ static void adev_close_output_stream(struct audio_hw_device *dev,
 
 static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 {
-    //ALOGV("%s: error\n",__FUNCTION__);se
-    //return -ENOSYS;
-    
-    ALOGV("%s\n",__FUNCTION__);
-    
-    struct tiny_audio_device *adev = (struct tiny_audio_device *)dev;
+    /*struct tiny_audio_device *adev = (struct tiny_audio_device *)dev;
     struct str_parms *parms;
     char *str;
-    char value[32];
+    char value[32];*/
     int ret = 0;
-
-	parms = str_parms_create_str(kvpairs);
-	ALOGV("%s: kvpairs:%s\n",__FUNCTION__,kvpairs);
 	
+	ALOGV("%s: kvpairs:%s\n",__FUNCTION__,kvpairs);
+
+	/*parms = str_parms_create_str(kvpairs);
 	ret = str_parms_get_str(parms, AUDIO_PARAMETER_KEY_BT_NREC, value, sizeof(value));
     if (ret >= 0) {
 		ALOGV("%s: AUDIO_PARAMETER_KEY_BT_NREC\n",__FUNCTION__);
@@ -992,14 +971,13 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 		}
     }
     
-	str_parms_destroy(parms);
+	str_parms_destroy(parms);*/
     return ret;
 }
 
 static char * adev_get_parameters(const struct audio_hw_device *dev,
                                   const char *keys)
 {
-    //return NULL;
     return strdup("");
 }
 
@@ -1030,7 +1008,7 @@ static void force_all_standby(struct tiny_audio_device *adev)
         pthread_mutex_lock(&out->lock);        
         if (out->pcm){
 			deselect_all_output_devices(adev);
-			usleep(5000);
+			usleep(USLEEP_DESELECT_OUTPUT);
 			pcm_close(out->pcm);
 			out->pcm = NULL;		
 		}
@@ -1053,10 +1031,11 @@ static void force_all_standby(struct tiny_audio_device *adev)
 
 static void select_mode(struct tiny_audio_device *adev, int new_mode)
 {
-	ALOGV("%s\n",__FUNCTION__);
+	//ALOGV("%s\n",__FUNCTION__);
 	//{RD} ToDo input output channel opening/closing with change of mode
     
     if ((new_mode == AUDIO_MODE_IN_CALL)||(new_mode == AUDIO_MODE_RINGTONE)) {
+		
 		ALOGV("Entering IN_CALL/RingTone state");
 		adev->mode == new_mode;
 							
@@ -1075,7 +1054,7 @@ static void select_mode(struct tiny_audio_device *adev, int new_mode)
             ALOGI("disabling 3G audio!\n");
             adev->devices &= ~AUDIO_DEVICE_IN_VOICE_CALL;				
 			deselect_all_output_devices(adev);
-			usleep(5000);						
+			usleep(USLEEP_DESELECT_OUTPUT);						
 			if(adev->is_pcm_out_active){																	
 				ALOGV("closing PCM\n");							
 				if (pcm_close(adev->active_output->pcm))
@@ -1093,28 +1072,20 @@ static void select_mode(struct tiny_audio_device *adev, int new_mode)
 }
 
 static int adev_set_mode(struct audio_hw_device *dev, int mode)
-{
-    //ALOGV("%s: empty\n",__FUNCTION__);
-    //return 0;
-    
-    //ALOGV("%s\n",__FUNCTION__);    
+{    
     struct tiny_audio_device *adev = (struct tiny_audio_device *)dev;
     ALOGV("%s Mode old:%d new:%d\n",__FUNCTION__,adev->mode,mode);
+    
     pthread_mutex_lock(&adev->route_lock);
-    if (adev->mode != mode) {
-        //adev->mode = mode;
+    if (adev->mode != mode) 
         select_mode(adev,mode);
-    }
     pthread_mutex_unlock(&adev->route_lock);
 
     return 0;
 }
 
 static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
-{
-    //ALOGV("%s\n: error",__FUNCTION__);
-    //return -ENOSYS;
-    
+{  
     ALOGV("%s\n",__FUNCTION__);
     struct tiny_audio_device *adev = (struct tiny_audio_device *)dev;
     adev->mic_mute = state;    
@@ -1123,8 +1094,6 @@ static int adev_set_mic_mute(struct audio_hw_device *dev, bool state)
 
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 {
-    //ALOGV("%s: error\n",__FUNCTION__);
-    //return -ENOSYS;
     ALOGV("%s\n",__FUNCTION__);
     struct tiny_audio_device *adev = (struct tiny_audio_device *)dev;
     *state = adev->mic_mute;
@@ -1379,6 +1348,7 @@ static const struct {
     { AUDIO_DEVICE_OUT_EARPIECE, "earpiece" },
     { AUDIO_DEVICE_OUT_ANLG_DOCK_HEADSET, "analog-dock" },
     { AUDIO_DEVICE_OUT_DGTL_DOCK_HEADSET, "digital-dock" },
+    { AUDIO_DEVICE_OUT_DEFAULT, "mute_out" },
 
     { AUDIO_DEVICE_IN_COMMUNICATION, "comms" },
     { AUDIO_DEVICE_IN_AMBIENT, "ambient" },
@@ -1388,6 +1358,7 @@ static const struct {
     { AUDIO_DEVICE_IN_AUX_DIGITAL, "digital" },
     { AUDIO_DEVICE_IN_BACK_MIC, "back-mic" },
 };
+// {RD} repurpose AUDIO_DEVICE_OUT_DEFAULT to represent "deselect all outouts" state
 
 static void adev_config_start(void *data, const XML_Char *elem,
 			      const XML_Char **attr)
@@ -1586,12 +1557,22 @@ static int adev_config_parse(struct tiny_audio_device *adev)
 
     return ret;
 }
-
+	
 // {RD} BEGIN:
+void *select_device_work(void *arg)
+{
+	struct tiny_audio_device *adev = (struct tiny_audio_device *)arg;
+	
+	usleep(USLEEP_PTHEAD_SELECT_OUTPUT);	
+	select_devices(adev);						
+	
+	return NULL;
+}
+
 void *event_listner(void *arg){
 	
 	struct input_event ev[64];
-	int fd, rc, rd, value, i, size = sizeof (struct input_event);
+	int fd, rc, rd, value, i,ret, size = sizeof (struct input_event);
 	size_t numEventsRead = 0;
 	short flag_mic_short, flag_mic_detect, flag_valid;	
 	struct tiny_audio_device *adev;
@@ -1601,6 +1582,7 @@ void *event_listner(void *arg){
 	DIR           *d;
 	struct dirent *dir;
 	char path[40];
+	pthread_t thread_ID;
 	
 	flag_mic_short = 0;
     flag_mic_detect = 0;
@@ -1612,15 +1594,12 @@ void *event_listner(void *arg){
 	bool node_found = false;
   
 	if(d){
-		while ((dir = readdir(d)) != NULL){
-			
-			//ALOGI("dir->d_name: %s\n",dir->d_name);
+		while ((dir = readdir(d)) != NULL){			
 			
 			if(strncmp(dir->d_name,"event",5)==0){
 				
 				strcpy (path,path_h);
 				strcat (path,dir->d_name);
-				//ALOGI("path: %s\n",path);
 					
 				if ((fd = open (path, O_RDONLY)) == -1){
 					ALOGW("%s is not readable!\n",path);
@@ -1629,13 +1608,10 @@ void *event_listner(void *arg){
 				
 				rc = ioctl(fd,EVIOCGNAME(sizeof(buf)),buf);
 				if (rc >= 0){
-					//ALOGI("EVIOCGNAME name: \"%.*s\"\n", rc, buf);
 					if(strncmp(buf,node_name,((rc>19)?19:rc))==0){
-						//ALOGI("found %s!!!\n",node_name);
 						node_found = true;
 						break;
 					}else{
-						//ALOGI("not omap3beagle Headset\n");
 						continue;						
 					}
 				}
@@ -1644,7 +1620,6 @@ void *event_listner(void *arg){
 					continue;
 				}
 			}else{
-				//ALOGI("not an event node\n");
 				continue;
 			}
 		}
@@ -1720,24 +1695,35 @@ void *event_listner(void *arg){
 				adev->devices |= AUDIO_DEVICE_IN_VOICE_CALL;
 				select_devices(adev);			
 			}else{
-				if(adev->is_pcm_out_active){
+				if(adev->is_pcm_out_init){					
 					
-					//deselect_all_output_devices(adev);
-					//usleep(5000);
-					ALOGV("selecting device while PCM active\n");
-					select_devices(adev);
-								
-					/*deselect_all_output_devices(adev);
-					usleep(5000);				
-					ALOGV("Closing PCM\n");
-					if (pcm_close(adev->active_output->pcm)){
-						ALOGE("Failed to close PCM\n");
-						select_devices(adev);	
-					}else{
-						adev->is_pcm_out_active = 0;
-						adev->active_output->pcm = NULL;
-						usleep(10000);		
-					}*/
+					ALOGV("deselecting device while PCM is initializing\n");
+					deselect_all_output_devices(adev);
+					   
+					ret = pthread_create(&thread_ID, NULL, select_device_work, adev);
+					
+					if(ret){
+						ALOGE("pthread_create FAILED with erro:%d\n",ret);	
+						select_devices(adev);
+					}
+					
+					if(!ret){		
+						ret = pthread_detach(thread_ID);						
+						if(ret){
+							ALOGE("pthread_detach FAILED with erro:%d\n",ret);
+							select_devices(adev);
+						}
+					}
+							
+				}else if(adev->is_pcm_out_active){					
+					
+					ALOGV("selecting device while PCM active\n");								
+					pthread_mutex_lock(&adev->active_output->lock);
+					deselect_all_output_devices(adev);
+					// Large delay for wired accessory detection
+					usleep(USLEEP_WIREDACCESSORYOBSERVER_SELECT_OUTPUT);
+					select_devices(adev);					
+					pthread_mutex_unlock(&adev->active_output->lock);													
 	
 				}else if(adev->is_pcm_in_active){
 					ALOGV("selecting input device while PCM active\n");
@@ -1826,10 +1812,9 @@ static int adev_open(const hw_module_t* module, const char* name,
     if (ret != 0)
 	goto err_mixer;
 
-    //select_devices(adev);
     deselect_all_output_devices(adev);    	
     *device = &adev->device.common;
-
+	
 	pthread_mutex_unlock(&adev->route_lock);
 
     return 0;
@@ -1852,7 +1837,7 @@ struct audio_module HAL_MODULE_INFO_SYM = {
         .hal_api_version = HARDWARE_HAL_API_VERSION,
         .id = AUDIO_HARDWARE_MODULE_ID,
         .name = "TinyHAL",
-        .author = "Mark Brown <broonie@opensource.wolfsonmicro.com>",
+        .author = "ruvindad <ruvindad@zone24x7.com>",
         .methods = &hal_module_methods,
     },
 };

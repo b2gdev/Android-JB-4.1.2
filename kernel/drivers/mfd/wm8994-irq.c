@@ -24,6 +24,8 @@
 
 #include <linux/delay.h>
 
+#define  INTR_DELAY 15 // {RD} delay for threaded interrupt 
+
 struct wm8994_irq_data {
 	int reg;
 	int mask;
@@ -228,6 +230,10 @@ static irqreturn_t wm8994_irq_thread(int irq, void *data)
 	
 	//printk("{RD} [%08u] - %s - %s - WM8994_INTERRUPT_STATUS_1 = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, status[0]);
 	//printk("{RD} [%08u] - %s - %s - WM8994_INTERRUPT_STATUS_2 = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, status[1]);
+	
+	// {RD} added delay to improve jack detection interrupt robustness
+	msleep(INTR_DELAY);
+	
 	//printk("%s - %s - WM8994_INTERRUPT_STATUS_2 = 0x%04x\n",  __FILE__, __FUNCTION__, status[1]);
 
 	//{RD}

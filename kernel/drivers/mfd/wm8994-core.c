@@ -25,6 +25,8 @@
 #include <linux/mfd/wm8994/pdata.h>
 #include <linux/mfd/wm8994/registers.h>
 
+#define REG_DELAY 10 // {RD} Regulator on/off delay
+
 static int wm8994_read(struct wm8994 *wm8994, unsigned short reg,
 		       int bytes, void *dest)
 {
@@ -276,6 +278,9 @@ static int wm8994_device_suspend(struct device *dev)
 		return ret;
 	}
 
+	//{RD} introduced delay to handle cases where resume fails, when trying to recover from error in the suspend sequence
+	msleep(REG_DELAY);
+	
 	return 0;
 }
 
@@ -289,6 +294,10 @@ static int wm8994_device_resume(struct device *dev)
 	#ifdef CONFIG_MFD_WM8994_DEBUG
 	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
 	#endif	
+	
+	
+	//{RD} introduced delay to handle cases where resume fails, when trying to recover from error in the suspend sequence
+	msleep(REG_DELAY);
 	
 	ret = regulator_bulk_enable(ARRAY_SIZE(wm8994_main_supplies),
 				    wm8994->supplies);
@@ -304,23 +313,33 @@ static int wm8994_device_resume(struct device *dev)
 	
 	ret = wm8994_write(wm8994, WM8994_INTERRUPT_STATUS_1_MASK,
 			   WM8994_NUM_IRQ_REGS * 2, buf);
-	if (ret < 0)
+	if (ret < 0){
 		dev_err(dev, "Failed to restore interrupt masks: %d\n", ret);
+		//goto err_res;
+	}
 
 	//{RD}
 	//printk("{RD} [%08u] - %s - %s - wm8994->irq_masks_cur[1] = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, wm8994->irq_masks_cur[1]);	
 	
 	ret = wm8994_write(wm8994, WM8994_LDO_1, WM8994_NUM_LDO_REGS * 2,
 			   &wm8994->ldo_regs);
-	if (ret < 0)
+	if (ret < 0){
 		dev_err(dev, "Failed to restore LDO registers: %d\n", ret);
+		//goto err_res;
+	}
 
 	ret = wm8994_write(wm8994, WM8994_GPIO_1, WM8994_NUM_GPIO_REGS * 2,
 			   &wm8994->gpio_regs);
-	if (ret < 0)
+	if (ret < 0){
 		dev_err(dev, "Failed to restore GPIO registers: %d\n", ret);
+		//goto err_res;
+	}
 
 	return 0;
+
+//err_res:	
+	//regulator_bulk_disable(ARRAY_SIZE(wm8994_main_supplies), wm8994->supplies);
+	//return ret;
 }
 #endif
 

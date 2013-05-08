@@ -108,11 +108,11 @@ struct wm8994_priv {
 	struct wm8994_pdata *pdata;
 	
 	struct switch_dev		sw_headset;
-	struct work_struct switch_work;
+	//struct work_struct switch_work;
 	struct work_struct force_jack_work;
-	int				connected;
+	//int				connected;
 	int check_jack;
-	
+	int reset_fll;
 };
 
 static const struct {
@@ -2996,62 +2996,6 @@ struct fll_div {
 	u16 fll_fratio;
 };
 
-static void
-headset_switch_work(struct work_struct *data)
-{
-	struct wm8994_priv	*cdev =
-		container_of(data, struct wm8994_priv, switch_work);
-	
-	int report = 0;
-	
-	/*struct snd_soc_codec *codec;
-	struct snd_soc_jack_pin *pin;
-	int enable;
-	int oldstatus;
-	int mask;
-	struct snd_soc_jack *jack;	
-	
-	printk("{RD} %s - %s\n",__FILE__, __FUNCTION__);
-	
-	jack = cdev->micdet[1].jack;
-	
-	if (!jack){
-		printk("ERROR %s - %s !JACK\n",__FILE__, __FUNCTION__);
-		return;
-	}	
-	
-	codec = jack->codec;
-	mask = cdev->micdet[1].det | cdev->micdet[1].shrt;
-	
-	mutex_lock(&codec->mutex);
-
-	oldstatus = jack->status;
-
-	jack->status &= ~mask;
-	jack->status |= cdev->connected & mask;
-	
-	if (!(mask && (jack->status == oldstatus))){
-		printk("%s - %s jack status changed: %d\n",__FILE__, __FUNCTION__,cdev->connected);
-		snd_jack_report(jack->jack, cdev->connected);
-	}*/
-		
-	if(cdev->connected & cdev->micdet[1].det){		
-		if(cdev->connected & cdev->micdet[1].shrt)
-			report = 2;	
-		else
-			report = 1;
-	}
-	
-	//printk("{RD} %s - %s: report:%d\n",__FILE__, __FUNCTION__,report);
-	
-	if ( report != cdev->sw_headset.state) {
-		//printk("{RD} %s - %s: newstate \n",__FILE__, __FUNCTION__);
-		switch_set_state(&cdev->sw_headset, report);
-	} 
-
-	//mutex_unlock(&codec->mutex);
-}
-
 void wm_snd_soc_jack_report(struct snd_soc_jack *jack, int status, int mask, struct wm8994_priv	*cdev)
 {
 	struct snd_soc_codec *codec;
@@ -3081,7 +3025,7 @@ void wm_snd_soc_jack_report(struct snd_soc_jack *jack, int status, int mask, str
 		//printk("{RD} %s - %s jack->status == oldstatus \n",__FILE__, __FUNCTION__);
 		goto out;
 	}else
-		printk("%s - %s jack status changed: %d\n",__FILE__, __FUNCTION__,status);
+		printk("wm8994 jack status changed: %d\n",status);
 
 	list_for_each_entry(pin, &jack->pins, list) {
 		enable = pin->mask & jack->status;
@@ -3102,7 +3046,7 @@ void wm_snd_soc_jack_report(struct snd_soc_jack *jack, int status, int mask, str
 
 	snd_jack_report(jack->jack, status);
 	
-	cdev->connected = status;
+	//cdev->connected = status;
 	
 out:
 	mutex_unlock(&codec->mutex);
@@ -3113,11 +3057,11 @@ static void wm8994_mic_manual_check(void *data)
 	struct wm8994_priv *priv = data;
 	struct snd_soc_codec *codec = priv->codec;
 	int reg;
-	int report;
+	int report, sw_report;
 	
-	#ifdef CONFIG_MFD_WM8994_DEBUG
-	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
-	#endif	
+	//#ifdef CONFIG_MFD_WM8994_DEBUG
+	//printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	//#endif	
 
 	reg = snd_soc_read(codec, WM8994_INTERRUPT_RAW_STATUS_2);
 	if (reg < 0) {
@@ -3129,66 +3073,39 @@ static void wm8994_mic_manual_check(void *data)
 	dev_dbg(codec->dev, "Microphone status: %x\n", reg);
 	
 	report = 0;
-	if (reg & WM8994_MIC2_DET_STS)
+	sw_report = 0;
+	
+	if (reg & WM8994_MIC2_DET_STS){
 		report |= priv->micdet[1].det;
-	if (reg & WM8994_MIC2_SHRT_STS)
+		sw_report = 1;
+	}
+	if (reg & WM8994_MIC2_SHRT_STS){
 		report |= priv->micdet[1].shrt;	
+		sw_report = 2;
+	}
 	
-	//printk("{RD} [%08u] - %s - %s - MIC2 report = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, report);		
-	wm_snd_soc_jack_report(priv->micdet[1].jack, report,
-			    priv->micdet[1].det | priv->micdet[1].shrt,priv);			
+	//schedule_work(&priv->switch_work);	
 	
-	if ( report != priv->sw_headset.state) {
-		priv->sw_headset.state = report;
-	} 
-	
+	if ( sw_report != priv->sw_headset.state)	
+		switch_set_state(&priv->sw_headset, sw_report);	
+		
+	//printk("{RD} [%08u] - %s - %s - MIC2 report = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, report);
+	//snd_soc_jack_report(priv->micdet[0].jack, report, priv->micdet[0].det | priv->micdet[0].shrt);		
+	wm_snd_soc_jack_report(priv->micdet[1].jack, report, priv->micdet[1].det | priv->micdet[1].shrt,priv);				
+
 	return;
 }
 
 static irqreturn_t wm8994_mic_irq(int irq, void *data)
 {
-	struct wm8994_priv *priv = data;
-	struct snd_soc_codec *codec = priv->codec;
-	int reg;
-	int report;
+	struct wm8994_priv *priv = data;	
 	
 	#ifdef CONFIG_MFD_WM8994_DEBUG
 	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
 	#endif	
 
-	reg = snd_soc_read(codec, WM8994_INTERRUPT_RAW_STATUS_2);
-	if (reg < 0) {
-		dev_err(codec->dev, "Failed to read microphone status: %d\n",
-			reg);
-		return IRQ_HANDLED;
-	}
-
-	dev_dbg(codec->dev, "Microphone status: %x\n", reg);
-	//printk("{RD} [%08u] - %s - %s - reg = 0x%04x - val = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, WM8994_INTERRUPT_RAW_STATUS_2, reg);
-	
-	//report = 0;
-	//if (reg & WM8994_MIC1_DET_STS)
-	//	report |= priv->micdet[0].det;
-	//if (reg & WM8994_MIC1_SHRT_STS)
-	//	report |= priv->micdet[0].shrt;
-	//snd_soc_jack_report(priv->micdet[0].jack, report,
-	//		    priv->micdet[0].det | priv->micdet[0].shrt);
-	//printk("{RD} [%08u] - %s - %s - MIC1 report = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, report);
-	
-	report = 0;
-	if (reg & WM8994_MIC2_DET_STS)
-		report |= priv->micdet[1].det;
-	if (reg & WM8994_MIC2_SHRT_STS)
-		report |= priv->micdet[1].shrt;
-
-	//printk("{RD} [%08u] - %s - %s - MIC2 report = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, report);		
-	wm_snd_soc_jack_report(priv->micdet[1].jack, report,
-			    priv->micdet[1].det | priv->micdet[1].shrt,priv);	
-	
-	//priv->connected = report;
-	
-	schedule_work(&priv->switch_work);
-	
+	wm8994_mic_manual_check(priv);
+									
 	return IRQ_HANDLED;
 }
 
@@ -3197,7 +3114,12 @@ forcejack_switch_work(struct work_struct *data)
 {
 	struct wm8994_priv	*cdev =
 		container_of(data, struct wm8994_priv, force_jack_work);
-		
+	
+	//#ifdef CONFIG_MFD_WM8994_DEBUG
+	//printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
+	//#endif
+
+	printk("wm8994 force mic detection\n");		
 	//wm8994_mic_irq(WM8994_IRQ_MIC2_DET, cdev);	
 	wm8994_mic_manual_check(cdev);
 }
@@ -3471,10 +3393,26 @@ static int opclk_divs[] = { 10, 20, 30, 40, 55, 60, 80, 120, 160 };
 static int wm8994_set_fll(struct snd_soc_dai *dai, int id, int src,
 			  unsigned int freq_in, unsigned int freq_out)
 {
+	//int reg;
+	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(dai->codec);
+	
 	#ifdef CONFIG_MFD_WM8994_DEBUG
 	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
 	#endif	
 	
+	if(wm8994->reset_fll){		
+		#ifdef CONFIG_MFD_WM8994_DEBUG
+		printk("[%08u] - %s - %s Reset FLL\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);
+		#endif		
+		wm8994->reset_fll = 0;
+		
+		//reg = snd_soc_read(dai->codec, WM8994_INTERRUPT_RAW_STATUS_2);
+		//printk("[%08u] - %s - %s INT2:0x%X\n", (unsigned int)jiffies, __FILE__, __FUNCTION__,reg);
+		
+		snd_soc_update_bits(dai->codec, WM8994_FLL1_CONTROL_1,
+			    WM8994_FLL1_ENA, 0);
+		msleep(20);	    
+	}
 	return _wm8994_set_fll(dai->codec, id, src, freq_in, freq_out);
 }
 
@@ -3982,7 +3920,7 @@ static int wm8994_hw_params(struct snd_pcm_substream *substream,
 
 	if(wm8994->check_jack){
 		wm8994->check_jack = 0;
-		printk("%s - %s force mic detection\n",__FILE__, __FUNCTION__);
+		//printk("wm8994 force mic detection\n");
 		schedule_work(&wm8994->force_jack_work);
 	}
 	
@@ -4113,6 +4051,15 @@ static int wm8994_suspend(struct snd_soc_codec *codec, pm_message_t state)
 	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
 	#endif	
 	
+	if(wm8994->reset_fll){		
+		#ifdef CONFIG_MFD_WM8994_DEBUG
+		printk("[%08u] - %s - %s suspend FLL\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);
+		#endif		
+		wm8994->reset_fll = 0;
+		snd_soc_update_bits(codec, WM8994_FLL1_CONTROL_1, WM8994_FLL1_ENA, 0);
+		msleep(5);	    
+	}
+	
 	// {RD} Backport 2.6.39 ca629928b9d5b28789c4b59729113e9d2b1bc7c0 : ASoC: WM8994: microphone detection over suspend
 	//snd_soc_update_bits(codec, WM8994_MICBIAS, WM8994_MICD_ENA, 0);
 
@@ -4137,7 +4084,7 @@ static int wm8994_resume(struct snd_soc_codec *codec)
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
 	u16 *reg_cache = codec->reg_cache;
 	int i;
-	unsigned int val, mask;
+	unsigned int val, mask, ret;
 
 	#ifdef CONFIG_MFD_WM8994_DEBUG
 	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
@@ -4203,10 +4150,21 @@ static int wm8994_resume(struct snd_soc_codec *codec)
 	// {RD} Force mic detect
 	//printk("%s - %s force mic detection\n",__FILE__, __FUNCTION__);
 	//wm8994_mic_irq(WM8994_IRQ_MIC2_DET, wm8994);
-
+	//wm8994_mic_manual_check(wm8994);								
+	
+	if ( wm8994->sw_headset.state != 0)
+		switch_set_state(&wm8994->sw_headset, 0);	
+	
+	if(wm8994->micdet[1].jack->status != 0){
+		wm8994->micdet[1].jack->status = 0;
+		snd_jack_report(wm8994->micdet[1].jack->jack, 0);		
+	}
+				
 	// {RD} Alternate force mic detect
-	printk("%s - %s referred force mic detection\n",__FILE__, __FUNCTION__);
-	wm8994->check_jack = 1;							
+	snd_soc_update_bits(codec, WM8994_FLL1_CONTROL_1,
+				    WM8994_FLL1_ENA | WM8994_FLL1_FRAC,
+				    WM8994_FLL1_ENA | WM8994_FLL1_FRAC);	
+	wm8994->reset_fll = 1;	
 	
 	return 0;
 }
@@ -4645,19 +4603,28 @@ static int wm8994_codec_probe(struct snd_soc_codec *codec)
 	ret = switch_dev_register(&wm8994->sw_headset);
 	if (ret < 0)
 		dev_err(codec->dev, "Failed to register headset det switch: %d\n", ret);
-	else{		
-		INIT_WORK(&wm8994->switch_work, headset_switch_work);		
-	}
+	//else{		
+		//INIT_WORK(&wm8994->switch_work, headset_switch_work);		
+	//}
 
 	INIT_WORK(&wm8994->force_jack_work, forcejack_switch_work);
 
-	wm8994->connected = 0;
-	wm8994->check_jack = 1;		
+	//wm8994->connected = 0;
+	wm8994->reset_fll = 0;
+	wm8994->check_jack = 1;	
+	//wm8994->check_jack = 0;		
 	
 /* {PS} BEGIN: */
 	wm8994_mic_init(codec);
 /* {PS} END: */
 
+	//switch_set_state(&wm8994->sw_headset, 0);
+	
+	/*if(wm8994->micdet[1].jack->status != 0){
+		wm8994->micdet[1].jack->status = 0;
+		snd_jack_report(wm8994->micdet[1].jack->jack, 0);		
+	}*/
+	
 	return 0;
 
 err_irq:

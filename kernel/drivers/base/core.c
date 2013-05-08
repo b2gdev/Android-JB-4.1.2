@@ -1720,11 +1720,10 @@ void device_shutdown(void)
 		} else if (dev->driver && dev->driver->shutdown) {
 			dev_dbg(dev, "shutdown\n");
 			/*{KW}: Delay is introduced to eliminate any timing issues with pvrsrvkm */
-			if(strcmp(dev_name(dev), "pvrsrvkm") == 0)
+			if(strcmp(dev_name(dev), "pvrsrvkm") != 0)
 			{
-				msleep(100);
-			}
-			dev->driver->shutdown(dev);
+				dev->driver->shutdown(dev);
+			}			
 		}
 
 		if (!nonlocked)
