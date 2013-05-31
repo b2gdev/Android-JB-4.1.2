@@ -58,9 +58,6 @@ struct {
     unsigned int uid;
     unsigned int gid;
 } property_perms[] = {
-/* {RD} START : Sierra  */
-    { "net.usb0.",        AID_RADIO,    0 },
-/* {RD} END  */    
     { "net.rmnet0.",      AID_RADIO,    0 },
     { "net.gprs.",        AID_RADIO,    0 },
     { "net.ppp",          AID_RADIO,    0 },
@@ -71,9 +68,6 @@ struct {
     { "gsm.",             AID_RADIO,    0 },
     { "persist.radio",    AID_RADIO,    0 },
     { "net.dns",          AID_RADIO,    0 },
-/* {RD} START : Sierra  */
-    { "net.wwan0.",       AID_RADIO,    0 },
-/* {RD} END  */    
     { "sys.usb.config",   AID_RADIO,    0 },
     { "net.",             AID_SYSTEM,   0 },
     { "dev.",             AID_SYSTEM,   0 },
@@ -92,7 +86,6 @@ struct {
     { "persist.sys.",     AID_SYSTEM,   0 },
     { "persist.service.", AID_SYSTEM,   0 },
     { "persist.security.", AID_SYSTEM,   0 },
-    { "media.",           AID_MEDIA,    0},
     { NULL, 0, 0 }
 };
 
@@ -106,9 +99,6 @@ struct {
     unsigned int gid;
 } control_perms[] = {
     { "dumpstate",AID_SHELL, AID_LOG },
-/* {RD} START : Sierra  */
-    { "sierra_dhcpcd", AID_RADIO, AID_RADIO },
-/* {RD} END  */    
     { "ril-daemon",AID_RADIO, AID_RADIO },
      {NULL, 0, 0 }
 };

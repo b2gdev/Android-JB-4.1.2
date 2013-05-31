@@ -44,13 +44,6 @@ on post-fs-data
 
 on boot
 
-	# {RD} Sierra binaries
-	chmod 0755 /system/bin/slqssdk
-    chmod 0755 /system/bin/init.dhcpcd
-    chmod 0755 /system/bin/init.ril-daemon
-    insmod /system/usr/modules/sierra.ko
-    insmod /system/usr/modules/sierra_net.ko
-
     # Default Read Ahead value for sdcards
     write /sys/block/mmcblk0/queue/read_ahead_kb 2048
 
@@ -101,11 +94,7 @@ on fs
     
 	# Using landscape lcd
     setprop lcd.landscape true
-	
-	# {SW} RIL Related
-    setprop ro.radio.noril no
-    setprop hw.nophone false
-	
+		
 	service pvr /system/bin/sgx/rc.pvr start
 		class core
 		oneshot
