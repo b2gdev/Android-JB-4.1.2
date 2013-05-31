@@ -35,7 +35,20 @@ PRODUCT_COPY_FILES += \
 	frameworks/native/data/etc/android.hardware.wifi.xml:system/etc/permissions/android.hardware.wifi.xml \
 	frameworks/native/data/etc/android.hardware.bluetooth.xml:system/etc/permissions/android.hardware.bluetooth.xml \
     system/bluetooth/data/main.nonsmartphone.conf:system/etc/bluetooth/main.conf
-	
+
+PRODUCT_COPY_FILES += \
+	device/ti/beagleboard/sierra_binaries/lib/libswims.so:system/lib/libswims.so \
+	device/ti/beagleboard/sierra_binaries/lib/libsierraat-ril.so:system/lib/libsierraat-ril.so \
+	device/ti/beagleboard/sierra_binaries/lib/hw/libswigpsat.so:system/lib/hw/libswigpsat.so \
+	device/ti/beagleboard/sierra_binaries/lib/libswisdkapi.so:system/lib/libswisdkapi.so
+
+PRODUCT_COPY_FILES += \
+	device/ti/beagleboard/sierra_binaries/bin/swisdk:system/bin/swisdk \
+	device/ti/beagleboard/sierra_binaries/bin/swifwdnld:system/bin/swifwdnld \
+	device/ti/beagleboard/sierra_binaries/bin/SierraDMLog:system/bin/SierraDMLog \
+	device/ti/beagleboard/sierra_binaries/bin/init.dhcpcd:system/bin/init.dhcpcd \
+	device/ti/beagleboard/sierra_binaries/bin/init.ril-daemon:system/bin/init.ril-daemon
+			
 PRODUCT_PROPERTY_OVERRIDES := \
 	hwui.render_dirty_regions=false \
 	ro.sf.lcd_density=120

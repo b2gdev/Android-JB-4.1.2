@@ -18,14 +18,16 @@ cp ../../../../kernel/drivers/input/keyboard/cp430_keypad/cp430_keypad.ko ./syst
 cp ../../../../kernel/drivers/mfd/cp430-core/cp430_core.ko ./system/usr/modules/
 cp ../../../../kernel/drivers/misc/cp430_charger/cp430_charger.ko ./system/usr/modules/
 cp ../../../../kernel/drivers/power/tcbin_power/cp430_power/cp430_power.ko ./system/usr/modules/
+cp ../../../../kernel/drivers/net/usb/sierra_net.ko ./system/usr/modules/
+cp ../../../../kernel/drivers/usb/serial/sierra.ko ./system/usr/modules/
 
 # other test apps
 cp ../../../../tcbin_misc/AndroSensor_1.9.4.4a.apk system/app/
 cp ../../../../tcbin_misc/MarineCompass.apk system/app/
 cp ../../../../tcbin_misc/Easy_Voice_Recorder.apk system/app/
-cp ../../../../tcbin_misc/Easy_Voice_Recorder.apk system/app/
 cp ../../../../tcbin_misc/BrailleBack.apk system/app/
 cp ../../../../tcbin_misc/TalkBack.apk system/app/
+cp ../../../../tcbin_misc/BIGLauncherFREE.apk system/app/
 
 # move TCBIN-Text-Viewer
 mv ./data/app/TCBIN-Text-Viewer.apk system/app/
