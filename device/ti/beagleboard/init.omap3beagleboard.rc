@@ -14,10 +14,10 @@ on early-init
     symlink /storage/sdcard1 /mnt/sdcard2
 
     # create directory for mounting usb drives
-    mkdir /storage/usb1 0666 system system
+    mkdir /storage/usb1 0000 system system
     symlink /storage/usb1 /usbdrive
     symlink /storage/usb1 /mnt/usb1
-    mkdir /storage/usb2 0666 system system
+    mkdir /storage/usb2 0000 system system
     symlink /storage/usb2 /usbdrive2
     symlink /storage/usb2 /mnt/usb2       
     
@@ -54,7 +54,8 @@ on boot
     write /sys/block/mmcblk0/queue/read_ahead_kb 2048
 
     # {RD} BEGIN: Setting up audio
-    chmod 666 /system/etc/sound/beagleboard.xml
+    chown media media /system/etc/sound/beagleboard.xml
+    chmod 660 /system/etc/sound/beagleboard.xml
     # {RD} END:
 	
     # wi-fi
@@ -81,7 +82,7 @@ on boot
     # {RD} END
 
     # {RD} BEGIN: Vibrator   
-    chmod 666 /dev/vibrator
+    chmod 660 /dev/vibrator
     chown system system /dev/vibrator
     # {RD} END 
    

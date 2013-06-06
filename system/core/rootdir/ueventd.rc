@@ -29,8 +29,9 @@
 /dev/tty0                 0660   root       system
 /dev/graphics/*           0660   root       graphics
 /dev/msm_hw3dm            0660   system     graphics
-# {RD} : Temporarily make all input nodes globally readable and writable
-/dev/input/*              0666   root       input
+/dev/input/*              0660   root       input
+# {RD} : make all input event nodes readable and writable for media group
+/dev/input/event*         0660   media       input
 /dev/eac                  0660   root       audio
 /dev/cam                  0660   root       camera
 /dev/pmem                 0660   system     graphics
@@ -78,10 +79,8 @@
 /dev/ts0710mux*           0640   radio      radio
 /dev/ppp                  0660   radio      vpn
 
-# {RD} BEGIN: Sierra RIL related
+# {RD} Sierra RIL related
 /dev/ttyUSB*              0660   radio      radio
-/dev/qcqmi*               0660   radio      radio
-# {RD} END:
 
 # sysfs properties
 /sys/devices/virtual/input/input*   enable      0660  root   input
