@@ -19,7 +19,7 @@
             user signs up the device with a Google sites account, the site's
             domain will be appended. -->
     <string name="homepage_base" translatable="false">
-        http://www.ti.com</string>
+        http://www.google.com</string>
 
     <!-- Bookmarks -->
     <string-array name="bookmarks" translatable="false">
@@ -51,12 +51,6 @@
         <item>http://www.weather.com/</item>
         <item>BBC</item>
         <item>http://www.bbc.co.uk/</item>
-        <item>Texas Instruments</item>
-        <item>http://www.ti.com/</item>
-        <item>TI E2E forum</item>
-        <item>http://e2e.ti.com/</item>
-        <item>Rowboat project</item>
-        <item>http://arowboat.org/</item>
     </string-array>
 
 </resources>
