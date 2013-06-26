@@ -40,6 +40,62 @@
 /* needed by omap3_core_dpll_m2_set_rate() */
 struct clk *sdrc_ick_p, *arm_fck_p;
 
+/* {SW} BEGIN: Fix the issue due to USB host clock drift (sprz319e erratum 2.1) */
+struct dpll_settings
+{
+	int rate, m, n, f;
+};
+
+static int omap3_dpll5_apply_erratum21(struct clk *clk, struct clk *dpll5_m2)
+{
+	struct clk *sys_clk;
+	int i, rv;
+	static const struct dpll_settings precomputed[] = 
+	{
+		{ 13000000, 443, 5+1, 8 },
+		{ 26000000, 443, 11+1, 8 }
+	};
+
+	sys_clk = clk_get(NULL, "sys_ck");
+
+	for (i = 0; i < (sizeof(precomputed)/sizeof(struct dpll_settings)); ++i)
+	{
+		const struct dpll_settings *d = &precomputed[i];
+		if (sys_clk->rate == d->rate)
+		{
+			//printk(KERN_ERR "{DEBUG} omap3_dpll5_apply_erratum21 CP1.1 (%d,%d)\n", d->m, d->n);
+			rv = omap3_noncore_dpll_program(clk, d->m , d->n, 0);
+			if (rv)
+				return 1;
+			rv = omap2_clksel_force_divisor(dpll5_m2 , d->f);
+			//printk(KERN_ERR "{DEBUG} omap3_dpll5_apply_erratum21 CP2 (%d)\n", d->f);
+         return 0;
+		}
+	}
+	return 1;
+}
+
+int omap3_dpll5_set_rate(struct clk *clk, unsigned long rate)
+{
+	struct clk *dpll5_m2;
+	int rv;
+	dpll5_m2 = clk_get(NULL, "dpll5_m2_ck");
+
+	if (cpu_is_omap3630() && rate == DPLL5_FREQ_FOR_USBHOST && omap3_dpll5_apply_erratum21(clk, dpll5_m2) == 0)
+	{
+		//printk(KERN_ERR "{DEBUG} omap3_dpll5_set_rate CP3\n");
+		return 0;
+	}
+	rv = omap3_noncore_dpll_set_rate(clk, rate);
+	if (rv)
+		goto out;
+	rv = clk_set_rate(dpll5_m2, rate);
+
+out:
+	return rv;
+}
+/* {SW} END: */
+
 int omap3_dpll4_set_rate(struct clk *clk, unsigned long rate)
 {
 	/*
@@ -59,22 +115,26 @@ int omap3_dpll4_set_rate(struct clk *clk, unsigned long rate)
 void __init omap3_clk_lock_dpll5(void)
 {
 	struct clk *dpll5_clk;
-	struct clk *dpll5_m2_clk;
+   /* {SW} BEGIN: Fix the issue due to USB host clock drift (sprz319e erratum 2.1) */
+	//struct clk *dpll5_m2_clk;
 
+	//printk(KERN_ERR "{DEBUG} omap3_clk_lock_dpll5 CP4\n");
+	
 	dpll5_clk = clk_get(NULL, "dpll5_ck");
 	clk_set_rate(dpll5_clk, DPLL5_FREQ_FOR_USBHOST);
-	clk_enable(dpll5_clk);
+	//clk_enable(dpll5_clk);
 
 	/* Enable autoidle to allow it to enter low power bypass */
 	omap3_dpll_allow_idle(dpll5_clk);
 
 	/* Program dpll5_m2_clk divider for no division */
-	dpll5_m2_clk = clk_get(NULL, "dpll5_m2_ck");
-	clk_enable(dpll5_m2_clk);
-	clk_set_rate(dpll5_m2_clk, DPLL5_FREQ_FOR_USBHOST);
+	//dpll5_m2_clk = clk_get(NULL, "dpll5_m2_ck");
+	//clk_enable(dpll5_m2_clk);
+	//clk_set_rate(dpll5_m2_clk, DPLL5_FREQ_FOR_USBHOST);
 
-	clk_disable(dpll5_m2_clk);
-	clk_disable(dpll5_clk);
+	//clk_disable(dpll5_m2_clk);
+	//clk_disable(dpll5_clk);
+	/* {SW} END: */
 	return;
 }
 
