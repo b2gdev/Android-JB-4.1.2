@@ -28,7 +28,7 @@
 #include "cp430_ioctl.h"
 #include "debug.h"
 #include "cp430.h"	        /* {KW} */
-
+#include <linux/earlysuspend.h> /* {RD} */
 
 MODULE_AUTHOR("Prasad Samaraweera");
 MODULE_LICENSE("Dual BSD/GPL");
@@ -1013,7 +1013,7 @@ static int cp430_spi_suspend(struct spi_device *spi_device, pm_message_t mesg)
 		}			
 	}
 	/*{KW}: Set suspend resume status. Set to suspend */
-	atomic_set(&is_sys_suspend, 1);
+	//atomic_set(&is_sys_suspend, 1);  // {RD} Moved to early suspend
 	
 	return 0;	
 }
@@ -1023,7 +1023,7 @@ static int cp430_spi_resume(struct spi_device *spi_device)
 	PDEBUG("> : %s\r\n",__FUNCTION__);
 
 	/*{KW}: Set suspend resume status. Set to not suspend */
-	atomic_set(&is_sys_suspend, 0);
+	//atomic_set(&is_sys_suspend, 0); // {RD} Moved to late resume
 	
 	return 0;	
 }
@@ -1040,6 +1040,35 @@ static struct spi_driver cp430_spi_driver = {
 	.shutdown	= cp430_spi_shutdown,
 	.suspend	= cp430_spi_suspend,
 	.resume		= cp430_spi_resume,
+};
+
+/* {RD} */
+/************************ Early suspend functions *********************/
+static void 
+cp430_core_early_suspend(struct early_suspend *h)
+{	
+	printk(KERN_INFO "core: %s\r\n",__FUNCTION__);	
+	
+	/*{RD}: Set suspend resume status. Set to suspend */
+	atomic_set(&is_sys_suspend, 1);
+	
+	return;
+}
+
+static void 
+cp430_core_late_resume(struct early_suspend *h)
+{
+	printk(KERN_INFO "core: %s\r\n",__FUNCTION__);
+	
+	/*{RD}: Set suspend resume status. Set to not suspend */
+	atomic_set(&is_sys_suspend, 0);
+	
+	return;
+}
+
+static struct early_suspend cp430_core_early_suspend_handler = {
+	.suspend = cp430_core_early_suspend,
+	.resume = cp430_core_late_resume,
 };
 
 void cp430_core_cleanup_module(void)
@@ -1129,6 +1158,9 @@ void cp430_core_cleanup_module(void)
 		kfree(core_device);
 	}
 
+	/*{RD}: early suspend/ resume */
+	unregister_early_suspend(&cp430_core_early_suspend_handler);
+	
 exit:
 	do{}while(0);
 }
@@ -1493,6 +1525,10 @@ int cp430_core_init_module(void)
 		PDEBUG("cp430_dev : time out\r\n");
 	}
 
+	/*{RD}: early suspend/ resume */
+	register_early_suspend(&cp430_core_early_suspend_handler);
+	
+	
 	return 0;
 
   fail:

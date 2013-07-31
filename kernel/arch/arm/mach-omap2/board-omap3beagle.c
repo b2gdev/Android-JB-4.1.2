@@ -131,7 +131,7 @@ static int tcbin_notifier_call(struct notifier_block *this,
 static struct notifier_block tcbin_reboot_notifier = {
 	.notifier_call = tcbin_notifier_call,
 };
-
+/* {RD} Hide ADB only and UMS only modes so that ADB and UMS Mode is automatically selected
 static char *usb_functions_adb[] = {
 	"adb",
 };
@@ -139,6 +139,7 @@ static char *usb_functions_adb[] = {
 static char *usb_functions_mass_storage[] = {
 	"usb_mass_storage",
 };
+*/
 static char *usb_functions_ums_adb[] = {
 	"usb_mass_storage",
 	"adb",
@@ -149,6 +150,7 @@ static char *usb_functions_all[] = {
 };
 
 static struct android_usb_product usb_products[] = {
+	/* {RD} Hide ADB only and UMS only modes so that ADB and UMS Mode is automatically selected
 	{
 		.product_id	= GOOGLE_PRODUCT_ID,
 		.num_functions	= ARRAY_SIZE(usb_functions_adb),
@@ -158,7 +160,7 @@ static struct android_usb_product usb_products[] = {
 		.product_id	= GOOGLE_PRODUCT_ID,
 		.num_functions	= ARRAY_SIZE(usb_functions_mass_storage),
 		.functions	= usb_functions_mass_storage,
-	},
+	},*/
 	{
 		.product_id	= GOOGLE_PRODUCT_ID,
 		.num_functions	= ARRAY_SIZE(usb_functions_ums_adb),
@@ -190,7 +192,7 @@ static struct android_usb_platform_data android_usb_pdata = {
 	.version	= 0x0100,
 	.product_name	= "Team_CBI_Notetaker",
 	.manufacturer_name	= "Zone24x7.Inc.",
-	.serial_number	= "20100720",
+	.serial_number	= "20130904",
 	.num_functions	= ARRAY_SIZE(usb_functions_all),
 };
 

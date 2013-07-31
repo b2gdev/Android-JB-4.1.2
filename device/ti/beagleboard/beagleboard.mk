@@ -37,5 +37,5 @@ $(call inherit-product, device/ti/beagleboard/device.mk)
 PRODUCT_NAME := beagleboard
 PRODUCT_DEVICE := beagleboard
 PRODUCT_BRAND := Android
-PRODUCT_MODEL := TEAM_CBI_NOTETAKER
+PRODUCT_MODEL := Braille to Go
 PRODUCT_MANUFACTURER := Zone24x7_Inc

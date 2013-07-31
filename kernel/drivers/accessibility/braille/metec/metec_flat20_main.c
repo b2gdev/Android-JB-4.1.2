@@ -730,7 +730,13 @@ metec_flat20_mod_init(void)
 	}
 	
 	clear_display(metec_flat20_dev, 0); /* {PK} Clear the display when driver is ready */
-
+	// {RD} Start Msg
+	/*unsigned char user_data[MAX_BRAILLE_LINE_SIZE];
+	unsigned char user_msg[3] = {};	//B2G		
+	memset(user_data, 0, sizeof(user_data));
+	memcpy(user_data,user_msg,sizeof(user_msg));	
+	write_to_braille(metec_flat20_dev, user_data,0);*/
+	
 	printk("metec_flat20: Driver Version: %s\n", DRIVER_VERSION);
 	
 	return 0; /* {PK} success */

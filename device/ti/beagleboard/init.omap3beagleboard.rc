@@ -208,3 +208,8 @@ service bluetoothd /system/bin/bluetoothd -n
    group bluetooth net_bt_admin
      
 # {RD} END   
+
+# {RD} DEMO: write to wake lock
+#service wakel /catch_wake_lock.sh
+#    class main
+#    oneshot

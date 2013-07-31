@@ -118,12 +118,7 @@ PRODUCT_PACKAGES += \
 # BlueZ test tools
 PRODUCT_PACKAGES += \
 	hciconfig \
-	hcitool
-	        
-# FileManager Application
-PRODUCT_PACKAGES += \
-        FileManager-1.1.6
-
+	hcitool	        
 
 $(call inherit-product, frameworks/native/build/tablet-dalvik-heap.mk)
 $(call inherit-product-if-exists, hardware/ti/wpan/wl12xx-bluetooth/wl12xx_bt_products.mk)
