@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 echo "#############################################################################################"
 echo "Building X-Loader ..."
 echo "#############################################################################################"
@@ -25,15 +24,29 @@ echo "##########################################################################
 echo "Building Kernels and File System ..."
 echo "#############################################################################################"
 make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- clean
-make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- omap3_tcbin_android_sdcard_defconfig
+
+# export Build encryption key
 export TCBIN_PASS=zonedev
+
+# Run the below line if the Android API was changed
+# make update-api TARGET_PRODUCT=beagleboard OMAPES=5.x -j8
+
+# Build SD card kernel
+make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- omap3_tcbin_android_sdcard_defconfig
+
+# Build file system
 make TARGET_PRODUCT=beagleboard OMAPES=5.x -j8
+
+# Build modules
 make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- modules
 cp ./kernel/arch/arm/boot/uImage ./image_folder/Boot_Images/uImage
 
+# Build NAND kernel
 make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- omap3_tcbin_android_normal_defconfig
 make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- uImage -j8
 cp ./kernel/arch/arm/boot/uImage ./image_folder/NandFS/norm_uImage
+
+# Build Recovery kernel
 ./backupfs_build.sh
 make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- omap3_tcbin_android_backup_defconfig
 make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- uImage -j8

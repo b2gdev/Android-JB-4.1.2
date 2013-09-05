@@ -32,10 +32,12 @@ cp ../../../../tcbin_misc/MarineCompass.apk system/app/
 cp ../../../../tcbin_misc/Easy_Voice_Recorder.apk system/app/
 cp ../../../../tcbin_misc/BrailleBack.apk system/app/
 cp ../../../../tcbin_misc/TalkBack.apk system/app/
+#cp ../../../../tcbin_misc/BrailleBack.apk system/app/
+cp ../../../../tcbin_misc/ESFileExplorer.apk system/app/
 cp ../../../../tcbin_misc/BIGLauncherFREE.apk system/app/
 
 # move TCBIN-Text-Viewer
-mv ./data/app/TCBIN-Text-Viewer.apk system/app/
+#mv ./data/app/TCBIN-Text-Viewer.apk system/app/
 
 mkdir android_rootfs
 cp -r root/* android_rootfs

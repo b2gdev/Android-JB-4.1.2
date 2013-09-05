@@ -1,0 +1,86 @@
+Camera
+- Camera patch not tested
+
+TV out
+- Overscan issue
+
+Audio
+- AMR-NB recording issues
+- Audio gain balancing (do after 3G integration)
+
+BT
+- Headset profile support (no support for audio-in from BT headset)
+- 3G calls via BT not supported
+
+WiFi
+-Internetsharing (tethering) via soft AP not tested
+
+NAND
+- hardware ecc
+- optimize NAND partition sizes
+
+GPIO
+- MODE not being set for GPIO126/127 and perhaps 128 & 129 too
+
+CP430
+- core SPI read length optimization
+- cp430_power failed to suspend -14
+- MSP430 firmware updater  
+- Low power states
+
+USB gadget/host
+- MTP?
+- otg-host Suspend/resume stability issues
+
+Settings
+- Missing data usage menu
+- battery usage data
+
+Final release
+- removeBusyBoxfrom only normal FS but keep in recovery FS; unroot it
+- remove/reduce count down in uBoot
+- how to manually enter recovery mode? (from bootable SD perhaps?)
+Camera
+
+TV out
+- Overscan issue
+
+Audio
+- AMR-NB recording issues
+- Audio gain balancing (do after 3G integration)
+
+BT
+- Headset profile support (no support for audio-in from BT headset)
+- 3G calls via BT not supported
+
+WiFi
+-Internetsharing (tethering) via soft AP not tested
+
+NAND
+- hardware ecc
+- optimize NAND partition sizes
+
+GPIO
+- MODE not being set for GPIO126/127 and perhaps 128 & 129 too
+
+CP430
+- core SPI read length optimization
+- cp430_power failed to suspend -14
+- MSP430 firmware updater  
+- Low power states
+
+USB gadget/host
+- MTP?
+- otg-host Suspend/resume stability issues
+
+Settings
+- Missing data usage menu
+- battery usage data
+
+Final release
+- removeBusyBoxfrom only normal FS but keep in recovery FS; unroot it
+- remove/reduce count down in uBoot
+- how to manually enter recovery mode? (from bootable SD perhaps?)
+
+USB-OTG CHARGING
+- Android showing that device is connected even when usb is unplugged from host PC
