@@ -53,12 +53,11 @@
 #include <plat/gpmc.h>
 #include <plat/nand.h>
 #include <plat/usb.h>
+
 // {RD} BEGIN:
 #include <plat/mmc.h>
 #include <linux/ti_wilink_st.h>
-/* WL1271: To control T2 gpios on OMAP3 EVM */
 #include "linux/i2c/twl.h"
-/* WL1271: To set BT_EN of TI's WL1271 Bluetooth chip */
 #define TIOSETWL1271POWER 0x6000
 // {RD} END:
 
@@ -116,12 +115,7 @@ static int tcbin_notifier_call(struct notifier_block *this,
 		ret = twl_i2c_write_u8(TWL4030_MODULE_RTC,
 			(10+mode), 12);
 		if (ret != 0)
-			printk(KERN_ERR "twl i2c write error: %d\n",ret);
-	
-		//ret = twl_i2c_read_u8(TWL4030_MODULE_RTC,
-		//		&val, 12);
-		//if (ret != 0)
-		//	printk(KERN_ERR "twl i2c write error: %d\n",ret);																		
+			printk(KERN_ERR "twl i2c write error: %d\n",ret);																	
 	}	
 
 				
@@ -131,15 +125,7 @@ static int tcbin_notifier_call(struct notifier_block *this,
 static struct notifier_block tcbin_reboot_notifier = {
 	.notifier_call = tcbin_notifier_call,
 };
-/* {RD} Hide ADB only and UMS only modes so that ADB and UMS Mode is automatically selected
-static char *usb_functions_adb[] = {
-	"adb",
-};
-
-static char *usb_functions_mass_storage[] = {
-	"usb_mass_storage",
-};
-*/
+/* {RD} Hide ADB only and UMS only modes so that ADB and UMS Mode is automatically selected */
 static char *usb_functions_ums_adb[] = {
 	"usb_mass_storage",
 	"adb",
@@ -150,17 +136,7 @@ static char *usb_functions_all[] = {
 };
 
 static struct android_usb_product usb_products[] = {
-	/* {RD} Hide ADB only and UMS only modes so that ADB and UMS Mode is automatically selected
-	{
-		.product_id	= GOOGLE_PRODUCT_ID,
-		.num_functions	= ARRAY_SIZE(usb_functions_adb),
-		.functions	= usb_functions_adb,
-	},
-	{
-		.product_id	= GOOGLE_PRODUCT_ID,
-		.num_functions	= ARRAY_SIZE(usb_functions_mass_storage),
-		.functions	= usb_functions_mass_storage,
-	},*/
+	/* {RD} Hide ADB only and UMS only modes so that ADB and UMS Mode is automatically selected */	
 	{
 		.product_id	= GOOGLE_PRODUCT_ID,
 		.num_functions	= ARRAY_SIZE(usb_functions_ums_adb),
@@ -285,72 +261,7 @@ static void __init omap3_beagle_pm_init(void)
 static void __init omap3_beagle_init_rev(void)
 {
 /* {PS} BEGIN: TODO - update with correct board revision identification mechanism */
-#if 0
-	int ret;
-	u16 beagle_rev = 0;
-
-	omap_mux_init_gpio(171, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(172, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(173, OMAP_PIN_INPUT_PULLUP);
-
-	ret = gpio_request(171, "rev_id_0");
-	if (ret < 0)
-		goto fail0;
-
-	ret = gpio_request(172, "rev_id_1");
-	if (ret < 0)
-		goto fail1;
-
-	ret = gpio_request(173, "rev_id_2");
-	if (ret < 0)
-		goto fail2;
-
-	gpio_direction_input(171);
-	gpio_direction_input(172);
-	gpio_direction_input(173);
-
-	beagle_rev = gpio_get_value(171) | (gpio_get_value(172) << 1)
-			| (gpio_get_value(173) << 2);
-
-	switch (beagle_rev) {
-	case 7:
-		printk(KERN_INFO "OMAP3 Beagle Rev: Ax/Bx\n");
-		omap3_beagle_version = OMAP3BEAGLE_BOARD_AXBX;
-		break;
-	case 6:
-		printk(KERN_INFO "OMAP3 Beagle Rev: C1/C2/C3\n");
-		omap3_beagle_version = OMAP3BEAGLE_BOARD_C1_3;
-		break;
-	case 5:
-		printk(KERN_INFO "OMAP3 Beagle Rev: C4\n");
-		omap3_beagle_version = OMAP3BEAGLE_BOARD_C4;
-		break;
-	case 2:
-		printk(KERN_INFO "OMAP3 Beagle Rev: xM C\n");
-		omap3_beagle_version = OMAP3BEAGLE_BOARD_XMC;
-		break;
-	case 0:
-		printk(KERN_INFO "OMAP3 Beagle Rev: xM\n");
-		omap3_beagle_version = OMAP3BEAGLE_BOARD_XM;
-		break;
-	default:
-		printk(KERN_INFO "OMAP3 Beagle Rev: unknown %hd\n", beagle_rev);
-		omap3_beagle_version = OMAP3BEAGLE_BOARD_UNKN;
-	}
-
-	return;
-
-fail2:
-	gpio_free(172);
-fail1:
-	gpio_free(171);
-fail0:
-	printk(KERN_ERR "Unable to get revision detection GPIO pins\n");
-	omap3_beagle_version = OMAP3BEAGLE_BOARD_UNKN;
-#endif
-/* {PS} END: */
-
-/* {PS} BEGIN: TCBIN is based on Rev C4 board */
+/* {PS} BEGIN: b2g is based on Rev C4 board */
 	printk(KERN_INFO "OMAP3 TCBIN Rev: B\n");
 	omap3_beagle_version = OMAP3BEAGLE_BOARD_C4;
 /* {PS} END: */
@@ -412,7 +323,6 @@ static struct mtd_partition omap3beagle_nand_partitions[] = {
 /* DSS */
 
 /* {PS} BEGIN: */
-//#if 0
 static int beagle_enable_dvi(struct omap_dss_device *dssdev)
 {
 	if (gpio_is_valid(dssdev->reset_gpio))
@@ -436,37 +346,28 @@ static struct omap_dss_device beagle_dvi_device = {
 	.platform_enable = beagle_enable_dvi,
 	.platform_disable = beagle_disable_dvi,
 };
-//#endif
 /* {PS} END: */
 
 /* {PS} BEGIN: */
 static int omap3_beagle_enable_tv(struct omap_dss_device *dssdev)
 {
-	printk("%s\n", __FUNCTION__);
-	// omap_pm_set_min_bus_tput(&dssdev->dev, OCP_INITIATOR_AGENT, 400000);
-	
+	printk("%s\n", __FUNCTION__);	
 	return 0;
 }
 
 static void omap3_beagle_disable_tv(struct omap_dss_device *dssdev)
 {
 	printk("%s\n", __FUNCTION__);
-	// omap_pm_set_min_bus_tput(&dssdev->dev, OCP_INITIATOR_AGENT, 0);
 }
 /* {PS} END: */
 
 /* {PS} BEGIN: */
-//#if 0
 static struct omap_dss_device beagle_tv_device = {
 	.name = "tv",
 	.driver_name = "venc",
 	.type = OMAP_DISPLAY_TYPE_VENC,
 	/* {PS} BEGIN: */
 	.phy.venc.type = OMAP_DSS_VENC_TYPE_COMPOSITE,
-	#if 0
-	.phy.venc.type = OMAP_DSS_VENC_TYPE_SVIDEO,
-	#endif
-	
 	.platform_enable	= omap3_beagle_enable_tv,
 	.platform_disable	= omap3_beagle_disable_tv,	
 	/* {PS} END: */
@@ -490,7 +391,6 @@ static struct platform_device beagle_dss_device = {
 		.platform_data = &beagle_dss_data,
 	},
 };
-//#endif
 /* {PS} END: */
 
 static struct regulator_consumer_supply beagle_vdac_supply =
@@ -502,18 +402,6 @@ static struct regulator_consumer_supply beagle_vdvi_supply =
 static void __init beagle_display_init(void)
 {
 /* {PS} BEGIN: DVI reset is not used */
-#if 0	
-	int r;
-
-	r = gpio_request(beagle_dvi_device.reset_gpio, "DVI reset");
-	if (r < 0) {
-		printk(KERN_ERR "Unable to get DVI reset GPIO\n");
-		return;
-	}
-
-	gpio_direction_output(beagle_dvi_device.reset_gpio, 0);
-#endif
-/* {PS} END: */
 }
 
 #include "sdram-micron-mt46h32m32lf-6.h"
@@ -604,10 +492,6 @@ static struct regulator_consumer_supply beagle_vmmc2_supply = {
 static struct regulator_consumer_supply beagle_vsim_supply = {
 	/* {PS} BEGIN: not used for MMC */
 	.supply			= "vsim",
-	#if 0
-	.supply			= "vmmc_aux",
-	#endif
-	/* {PS} END: */
 };
 
 static struct regulator_consumer_supply beagle_vaux3_supply = {
@@ -616,9 +500,6 @@ static struct regulator_consumer_supply beagle_vaux3_supply = {
 
 static struct regulator_consumer_supply beagle_vaux4_supply = {
 	.supply         = "vcc_vaux4_2v5",
-	#if 0
-	.supply         = "cam_2v8",
-	#endif
 };
 
 static struct gpio_led gpio_leds[];
@@ -654,14 +535,11 @@ static void wl1271bt_clk_setup(void)
 /* {PS} END: */
 
 /* {RD} BEGIN: */
-
 static int bt_init_power(void)
 {
 	int ret = 0;
 	u8 reg_value = 0;
 
-	//printk(KERN_DEBUG "{RD} %s\n", __func__);
-	/* Mistral's Daughter card BT_EN is connected to T2-GPIO.13 */
 	/* Enable GPIO */
 	ret = twl_i2c_read_u8(TWL4030_MODULE_GPIO,
 				&reg_value, REG_GPIO_CTRL);
@@ -705,7 +583,7 @@ static int bt_init_power(void)
 				reg_value, REG_GPIODATAOUT2);
 	if (ret != 0)
 		goto err;
-	//printk(KERN_INFO "{RD} WL1271: BT_EN GPIO initialized\n");
+	
 	return 0;
 err:
 	printk(KERN_ERR "WL1271: BT_EN GPIO initialization FAILED\n");
@@ -714,30 +592,19 @@ err:
 
 int plat_kim_suspend(struct platform_device *pdev, pm_message_t state)
 {
-	/* TODO: wait for HCI-LL sleep */
-	//printk(KERN_INFO "{RD} %s\n", __func__);
+	/* TODO: wait for HCI-LL sleep */	
 	return 0;
 }
 
 int plat_kim_resume(struct platform_device *pdev)
 {
-	//printk(KERN_INFO "{RD} %s\n", __func__);
 	return 0;
 }
 
 int plat_kim_chip_disable(struct kim_data_s *kim_data)
 {
-	//gpio_direction_output(kim_data->nshutdown, 0);
-	
-	/* Disable pullup on the enable pin to allow BT shut down during suspend */
-	//pad_mux_value = readl(AM33XX_CTRL_REGADDR(selected_pad));
-	//pad_mux_value |= AM33XX_PULL_DISA;
-	//writel(pad_mux_value, AM33XX_CTRL_REGADDR(selected_pad));
-
 	int err = 0;
 	u8 reg_value = 0;
-
-	//printk(KERN_INFO "{RD} %s\n", __func__);
 	
 	reg_value &= ~(0x20);
 
@@ -755,26 +622,8 @@ int plat_kim_chip_disable(struct kim_data_s *kim_data)
 
 int plat_kim_chip_enable(struct kim_data_s *kim_data)
 {
-	/* Configure BT_EN pin so that suspend/resume works correctly on rev 1.1 */
-	//selected_pad = AM33XX_CONTROL_PADCONF_MCASP0_AHCLKX_OFFSET;
-	/* Configure BT_EN pin so that suspend/resume works correctly on rev 1.0 */
-	/*selected_pad = AM33XX_CONTROL_PADCONF_GPMC_CSN2_OFFSET;*/
-
-	//gpio_direction_output(kim_data->nshutdown, 0);
-	//msleep(1);
-	//gpio_direction_output(kim_data->nshutdown, 1);
-
-	/* Enable pullup on the enable pin for keeping BT active during suspend */
-	//pad_mux_value = readl(AM33XX_CTRL_REGADDR(selected_pad));
-	//pad_mux_value &= (~AM33XX_PULL_DISA);
-	//writel(pad_mux_value, AM33XX_CTRL_REGADDR(selected_pad));
-
 	int err = 0;
 	u8 reg_value = 0;
-
-	//printk(KERN_INFO "{RD} %s\n", __func__);
-	//printk(KERN_INFO "Set BT_EN of WL1271\n");
-	/* Power settings argument should either be 1 or 0 */
 
 	if(is_bt_on){
 		printk(KERN_INFO "BT: BT is aldreay ON! disabling BT first\n");
@@ -796,7 +645,6 @@ int plat_kim_chip_enable(struct kim_data_s *kim_data)
 }
 
 struct ti_st_plat_data wilink_pdata = {
-	//.nshutdown_gpio = GPIO_TO_PIN(3, 21),
 	.dev_name = "/dev/ttyO1",
 	.flow_cntrl = 1,
 	.baud_rate = 3000000,
@@ -820,7 +668,6 @@ static struct platform_device btwilink_device = {
 static inline void __init wl12xx_bluetooth_enable(void)
 {
 	printk(KERN_INFO "wl12xx_bluetooth_enable\n");
-	//printk("{RD} to call BT_EN GPIO initialized\n");
 	//Call BT init "BT_EN GPIO initialized"
 	bt_init_power();
 	
@@ -832,19 +679,17 @@ static inline void __init wl12xx_bluetooth_enable(void)
 static int wl12xx_set_power(struct device *dev, int slot, int on, int vdd)
 {
         if (on) {
-		printk("%s WLAN ENABLE ON\n", __FUNCTION__);
-                //gpio_direction_output(am335xevm_wlan_data.wlan_enable_gpio, 1);
-		gpio_request(150, "WL_EN");         /* {PS} : WL_EN				*/
-		gpio_direction_output(150, 0);		/* {PS} : WL_EN				- LOW	- Disable Wi-Fi */
-		gpio_set_value(150, 1);		/* {PS} : WL_EN	*/
-                mdelay(70);
+			printk("%s WLAN ENABLE ON\n", __FUNCTION__);
+			gpio_request(150, "WL_EN");         /* {PS} : WL_EN				*/
+			gpio_direction_output(150, 0);		/* {PS} : WL_EN				- LOW	- Disable Wi-Fi */
+			gpio_set_value(150, 1);		/* {PS} : WL_EN	*/
+            mdelay(70);
 		
         } else {
-                //gpio_direction_output(am335xevm_wlan_data.wlan_enable_gpio, 0);
-		printk("%s WLAN ENABLE OFF\n", __FUNCTION__);
-		gpio_request(150, "WL_EN");         /* {PS} : WL_EN				*/
-		gpio_direction_output(150, 0);		/* {PS} : WL_EN				- LOW	- Disable Wi-Fi */
-		gpio_set_value(150, 0);		/* {PS} : WL_EN	*/
+			printk("%s WLAN ENABLE OFF\n", __FUNCTION__);
+			gpio_request(150, "WL_EN");         /* {PS} : WL_EN				*/
+			gpio_direction_output(150, 0);		/* {PS} : WL_EN				- LOW	- Disable Wi-Fi */
+			gpio_set_value(150, 0);		/* {PS} : WL_EN	*/
         }
 
         return 0;
@@ -887,20 +732,18 @@ static int beagle_twl_gpio_setup(struct device *dev,
 	beagle_vmmc1_supply.dev = mmc[0].dev;
 	beagle_vmmc2_supply.dev = mmc[1].dev;
 	
-	/* {PS} BEGIN: TODO - Enable USB Host power supply (VCC_5V1_USB) */
+	/* {PS} BEGIN: Enable USB Host power supply (VCC_5V1_USB) */
 	gpio_request(gpio + 2, "USBHOST_PWR_EN");	/* TWL4030 GPIO.2 */
 	gpio_direction_output(gpio + 2, 1);			/* {PS} : gpio_direction_output(gpio + 2, 0); */
 	/* {PS} END: */
 
-// {RD} BEGIN:
-
+	/* {RD} BEGIN: */
 	wl12xx_bluetooth_enable();
 	
 #ifdef CONFIG_WL12XX_PLATFORM_DATA
 	/* WL12xx WLAN Init */
 	if (wl12xx_set_platform_data(&tcbin_wlan_data))
-		pr_err("error setting wl12xx data\n");
-	/* platform_device_register(&tcbin_wlan_regulator); */ /* {PS} */
+		pr_err("error setting wl12xx data\n");	
 #endif
 	
 #ifdef CONFIG_SND_SOC_WL1271BT
@@ -914,19 +757,20 @@ static int beagle_twl_gpio_setup(struct device *dev,
 		pdata2 = dev->platform_data;
 		pdata2->slots[0].set_power = wl12xx_set_power;
 	}
-// {RD} END:
+	/* {RD} END: */
 	
-	// {RD}
+	/* {RD} BEGIN: */
 	ret = twl_i2c_read_u8(TWL4030_MODULE_RTC, &val, 12);
-		if (ret != 0)
-			printk(KERN_ERR "twl i2c write error: %d\n",ret);	
-		else{
-			if(val >= 10){			
-				ret = twl_i2c_write_u8(TWL4030_MODULE_RTC,0, 12);
-				if (ret != 0)
-					printk(KERN_ERR "twl i2c write error: %d\n",ret);
-			}
+	if (ret != 0)
+		printk(KERN_ERR "twl i2c write error: %d\n",ret);	
+	else{
+		if(val >= 10){			
+			ret = twl_i2c_write_u8(TWL4030_MODULE_RTC,0, 12);
+			if (ret != 0)
+				printk(KERN_ERR "twl i2c write error: %d\n",ret);
+		}
 	}	
+	/* {RD} END: */
 	
 	return 0;
 }
@@ -946,11 +790,6 @@ static struct twl4030_gpio_platform_data beagle_gpio_data = {
 				  BIT(15)| 						/* {PS} : NC pin */
 				  BIT(16)|						/* {PS} : DSS_CC_PWREN uses internal PD */ 
 				  BIT(17),						/* {PS} : DSS_CC_RST uses internal PD */
-	#if 0
-	.pullups	= BIT(1),
-	.pulldowns	= BIT(2) | BIT(6) | BIT(7) | BIT(8) | BIT(13)
-				| BIT(15) | BIT(16) | BIT(17),
-	#endif
 	/* {PS} END: */
 	.setup		= beagle_twl_gpio_setup,
 };
@@ -1183,27 +1022,6 @@ static struct twl4030_power_data __initdata omap3beagle_script_data = {
    /* {SW} END: */
 };
 
-
-
-/* {PS} BEGIN: */
-#if 0
-static struct twl4030_codec_audio_data beagle_audio_data = {
-	.audio_mclk = 26000000,
-	.digimic_delay = 1,
-	.ramp_delay_value = 1,
-	.offset_cncl_path = 1,
-	.check_defaults = false,
-	.reset_registers = false,
-	.reset_registers = false,
-};
-
-static struct twl4030_codec_data beagle_codec_data = {
-	.audio_mclk = 26000000,
-	.audio = &beagle_audio_data,
-};
-#endif
-/* {PS} END: */
-
 static struct twl4030_platform_data beagle_twldata = {
 	.irq_base	= TWL4030_IRQ_BASE,
 	.irq_end	= TWL4030_IRQ_END,
@@ -1231,32 +1049,22 @@ static struct i2c_board_info __initdata beagle_i2c1_boardinfo[] = {
 	},
 };
 
-/* {PS} BEGIN: removed */
-#if 0
-static struct i2c_board_info __initdata beagle_i2c_eeprom[] = {
-       {
-               I2C_BOARD_INFO("eeprom", 0x50),
-       },
-};
-#endif
-/* {PS} END: */
-
 /* {PS} BEGIN: wm8994 regulator info.  */
 static struct regulator_consumer_supply wm8994_ldo1_supply = {
-	.supply			= "AVDD1",	/* {PS} TODO */
+	.supply			= "AVDD1",	/* {PS} */
 };
 
 static struct regulator_consumer_supply wm8994_ldo2_supply = {
-	.supply			= "DCVDD",	/* {PS} TODO */
+	.supply			= "DCVDD",	/* {PS} */
 };
 
 static struct regulator_init_data wm8994_ldo1 = {
 	.constraints = {
 		.min_uV			= 3000000,	/* {PS} - LDO1 is used to supply AVDD1, which is 3V */
 		.max_uV			= 3000000,
-		.valid_modes_mask	= REGULATOR_MODE_NORMAL		/* {PS} TODO */
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL		/* {PS} */
 					| REGULATOR_MODE_STANDBY,
-		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE	/* {PS} TODO */
+		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE	/* {PS} */
 					| REGULATOR_CHANGE_MODE			// {RD} disable REGULATOR_CHANGE_STATUS
 					| REGULATOR_CHANGE_STATUS,
 	},
@@ -1268,9 +1076,9 @@ static struct regulator_init_data wm8994_ldo2 = {
 	.constraints = {
 		.min_uV			= 1000000,	/* {PS} - LDO2 is used to supply DCVDD, which is 1V */
 		.max_uV			= 1000000,
-		.valid_modes_mask	= REGULATOR_MODE_NORMAL		/* {PS} TODO */
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL		/* {PS} */
 					| REGULATOR_MODE_STANDBY,
-		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE	/* {PS} TODO */
+		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE	/* {PS} */
 					| REGULATOR_CHANGE_MODE			// {RD} disable REGULATOR_CHANGE_STATUS
 					| REGULATOR_CHANGE_STATUS,
 	},
@@ -1279,43 +1087,43 @@ static struct regulator_init_data wm8994_ldo2 = {
 };
 
 static struct wm8994_pdata wm8994_pdata = {
-	.gpio_base = 0, /* {PS} TODO */
+	.gpio_base = 0, /* {PS} */
 	.gpio_defaults = {0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0},
 	.ldo = {
         	{
-			.enable = 0,		/* {PS} AUD_PWR_EN TODO - use GPIO_142 */
-			.supply = "AVDD1",	/* {PS} TODO */
+			.enable = 0,		/* {PS} AUD_PWR_EN use GPIO_142 */
+			.supply = "AVDD1",	/* {PS} */
 			.init_data = &wm8994_ldo1,
 		},
 		{
 			.enable = 142,		/* {PS} GPIO 142 is common for both LDO1 and LDO2, control is given to LDO1 */
-			.supply = "DCVDD",	/* {PS} TODO */
+			.supply = "DCVDD",	/* {PS} */
 			.init_data = &wm8994_ldo2,
 		}	  
 	},
 	.irq_base = OMAP_TEMP_IRQ_BASE,//OMAP_GPIO_IRQ(113),	/* {PS} : AUD_INT */
 
-        .num_drc_cfgs = 0,		/* {PS} TODO */
-        .drc_cfgs = NULL,		/* {PS} TODO */
+        .num_drc_cfgs = 0,		/* {PS} */
+        .drc_cfgs = NULL,		/* {PS} */
 
-        .num_retune_mobile_cfgs = 0,	/* {PS} TODO */
-        .retune_mobile_cfgs = NULL,	/* {PS} TODO */
+        .num_retune_mobile_cfgs = 0,	/* {PS} */
+        .retune_mobile_cfgs = NULL,	/* {PS} */
 
         /* LINEOUT can be differential or single ended */
-        .lineout1_diff = 1,		/* {PS} TODO */
-        .lineout2_diff = 1,		/* {PS} TODO */
+        .lineout1_diff = 1,		/* {PS} */
+        .lineout2_diff = 1,		/* {PS} */
 
         /* Common mode feedback */
-        .lineout1fb = 1,			/* {PS} TODO */
-        .lineout2fb = 1,			/* {PS} TODO */
+        .lineout1fb = 1,			/* {PS} */
+        .lineout2fb = 1,			/* {PS} */
 
         /* Microphone biases: 0=0.9*AVDD1 1=0.65*AVVD1 */
-        .micbias1_lvl = 0,		/* {PS} TODO */
-        .micbias2_lvl = 0,		/* {PS} TODO */
+        .micbias1_lvl = 0,		/* {PS} */
+        .micbias2_lvl = 0,		/* {PS} */
 
         /* Jack detect threashold levels, see datasheet for values */
-        .jd_scthr = 1,			/* {PS} TODO */  //{RD} 2 -> 1
-        .jd_thr = 0,			/* {PS} TODO */  //{RD} 2 -> 0
+        .jd_scthr = 1,			/* {RD} */
+        .jd_thr = 0,			/* {RD} */
 };
 /* {PS} END: wm8994 regulator info.  */
 
@@ -1389,13 +1197,9 @@ static int __init omap3_beagle_i2c_init(void)
 	omap_register_i2c_bus(1, 2600, beagle_i2c1_boardinfo,	/* {PS} */
 			ARRAY_SIZE(beagle_i2c1_boardinfo));
 
-	/* {PS} BEGIN: */
-	
-	//printk("{RD} omap3_beagle_i2c_init: irq_base %d\n",wm8994_pdata.irq_base);
-	
+	/* {PS} BEGIN: */		
 	omap_register_i2c_bus(2, 100,  beagle_i2c2_boardinfo,  /* {DW} i2c running at 100kHz */
-			ARRAY_SIZE(beagle_i2c2_boardinfo));
-				
+			ARRAY_SIZE(beagle_i2c2_boardinfo));				
 	/* {PS} END: */
 
 	/* Bus 3 is attached to the DVI port where devices like the pico DLP
@@ -1433,12 +1237,6 @@ static struct platform_device cp430_keypad = {
 
 
 static struct platform_device *omap3_beagle_devices[] __initdata = {
-/* {PS} BEGIN: disable led and gpio-keys */
-#if 0
-	&leds_gpio,
-	&keys_gpio,
-#endif
-/* {PS} END: */
 	&beagle_dss_device,
 	&usb_mass_storage_device,
 /* {PS} BEGIN: */
@@ -1447,7 +1245,6 @@ static struct platform_device *omap3_beagle_devices[] __initdata = {
 	&wl1271bt_codec_device,
 #endif
 /* {PS} END: */
-
 /* {PS} BEGIN: 	*/
 	&cp430_keypad,
 /* {PS} END: 	*/
@@ -1486,7 +1283,6 @@ static void __init omap3beagle_flash_init(void)
 }
 
 /* {PS} BEGIN: */
-// #if 0
 static const struct ehci_hcd_omap_platform_data ehci_pdata __initconst = {
 
 	.port_mode[0] = EHCI_HCD_OMAP_MODE_PHY,
@@ -1498,7 +1294,6 @@ static const struct ehci_hcd_omap_platform_data ehci_pdata __initconst = {
 	.reset_gpio_port[1]  = 147,
 	.reset_gpio_port[2]  = -EINVAL
 };
-// #endif
 /* {PS} END: */
 
 #ifdef CONFIG_OMAP_MUX
@@ -1575,7 +1370,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_direction_input(113);			/* {RD} : AUD_INT			*/	/* Input */
 //	gpio_direction_input(149);			/* {PS} : WL_INT			*/	/* Input */
 	gpio_direction_input(154);			/* {PS} : 3GM_GPIO_1		*/	/* Input */
-	gpio_direction_input(155);			/* {PS} : BT_WKUP			*/	/* Input - TODO : output? */	
+	gpio_direction_input(155);			/* {PS} : BT_WKUP			*/	/* Input */	
 //	gpio_direction_input(164);			/* {PS} : MMC1_WP			*/	/* Input */
 	
 	gpio_direction_output(98, 0);		/* {PS} : CAM_nRST			- LOW	- Reset Camera */
@@ -1676,21 +1471,8 @@ static void __init omap3_beagle_init(void)
 	spi_register_board_info(beagle_mcspi_board_info,ARRAY_SIZE(beagle_mcspi_board_info)); /* {AE} */
 	/* {PS} END: */
 
-	/* {PS} BEGIN: DVI reset is not used */
-	#if 0
-	omap_mux_init_gpio(170, OMAP_PIN_INPUT);
-	gpio_request(170, "DVI_nPD");
-	/* REVISIT leave DVI powered down until it's needed ... */
-	gpio_direction_output(170, true);
-	#endif
-	/* {PS} END: */
-
 	usb_musb_init(&musb_board_data);
-/* {PS} BEGIN: */	
-// #if 0	
 	usb_ehci_init(&ehci_pdata);
-// #endif	
-/* {PS} END: */
 	omap3beagle_flash_init();
 
 	/* Ensure SDRC pins are mux'd for self-refresh */
@@ -1704,7 +1486,7 @@ static void __init omap3_beagle_init(void)
 #endif
 	omap3_beagle_pm_init();
 
-	//{RD}
+	/* {RD} */
 	register_reboot_notifier(&tcbin_reboot_notifier);					
 }
 

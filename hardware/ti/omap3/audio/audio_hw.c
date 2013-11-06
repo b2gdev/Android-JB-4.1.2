@@ -87,7 +87,6 @@ static int set_route_by_array(struct mixer *mixer, struct route_setting *route,
 			ALOGE("Failed to set '%s' to '%s'\n",
 				 route[i].ctl_name, route[i].strval);
 			} else {
-			//ALOGV("Set '%s' to '%s'\n", route[i].ctl_name, route[i].strval);
 			}			
         } else {
             /* This ensures multiple (i.e. stereo) values are set jointly */
@@ -96,8 +95,6 @@ static int set_route_by_array(struct mixer *mixer, struct route_setting *route,
 				if (ret != 0) {
 					ALOGE("Failed to set '%s'.%d to %d\n",
 					 route[i].ctl_name, j, route[i].intval);
-				} else {
-					//ALOGV("Set '%s'.%d to %d\n", route[i].ctl_name, j, route[i].intval);
 				}
 			}
         }
@@ -135,7 +132,6 @@ struct tiny_audio_device {
 	int is_pcm_in_active;
 	int is_pcm_out_active;
 	int is_pcm_out_init;
-	//int prev_routing;
 };
 
 struct tiny_stream_out {
@@ -166,14 +162,12 @@ struct tiny_stream_in {
     size_t frames_in;
     unsigned int requested_rate;
     int standby;
-    //int source;
     effect_handle_t preprocessors[MAX_PREPROCESSORS];
     int num_preprocessors;
     int16_t *proc_buf;
     size_t proc_buf_size;
     size_t proc_frames_in;
     int read_status;    
-    //struct echo_reference_itfe *echo_reference;
     int stereo_to_mono;
 };
 
@@ -185,24 +179,6 @@ struct pcm_config pcm_config_c= {
     .period_count = 4,
     .format = PCM_FORMAT_S16_LE,
 };
-    
-// pcm read returned with -1
-//struct pcm_config pcm_config_c= {
-//    .channels = 2,
-//    .rate = 44100,
-//    .period_count = 4,
-//    .period_size = 320,    
-//    .format = PCM_FORMAT_S16_LE,
-//};
-
-// pcm read returned with -1  
-//struct pcm_config pcm_config_c= {
-//    .channels = 2,
-//    .rate = 8000,
-//    .period_size = 160,
-//    .period_count = 2,
-//    .format = PCM_FORMAT_S16_LE,
-//};
 
 /* Must be called with route_lock */
 void select_input_devices(struct tiny_audio_device *adev)
@@ -365,37 +341,8 @@ static int out_dump(const struct audio_stream *stream, int fd)
 
 static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
 {
-    /*struct tiny_stream_out *out = (struct tiny_stream_out *)stream;
-    struct tiny_audio_device *adev = out->adev;
-    struct str_parms *parms;
-    char *str;
-    char value[32];
-    int ret, val = 0;
-    bool force_input_standby = false;*/
-
     ALOGV("%s: kvpairs:%s\n",__FUNCTION__,kvpairs);
-    
-    /*parms = str_parms_create_str(kvpairs);
-
-    ret = str_parms_get_str(parms, AUDIO_PARAMETER_STREAM_ROUTING,
-			    value, sizeof(value));
-    if (ret >= 0) {
-        val = atoi(value);
-		ALOGV("%s: stream routing val:%d\n",__FUNCTION__,val);
-		if(adev->prev_routing == val){	
-			pthread_mutex_lock(&out->lock);			
-			select_devices(adev);
-			usleep(5000);					
-			pthread_mutex_unlock(&out->lock);
-		} else {
-			adev->prev_routing = val;
-			//ALOGW("output routing with no devices\n");
-		}
-    }
-
-    str_parms_destroy(parms);*/
-
-    return 0; //return ret;
+    return 0;
 }
 
 static char * out_get_parameters(const struct audio_stream *stream, const char *keys)
@@ -422,8 +369,6 @@ static ssize_t out_write(struct audio_stream_out *stream, const void* buffer,
     struct tiny_stream_out *out = (struct tiny_stream_out *)stream;
     int ret;
     struct tiny_audio_device *adev = out->adev;
-
-	//ALOGV("out_write(%p)\n", stream);
 	
 	pthread_mutex_lock(&adev->route_lock);
 	pthread_mutex_lock(&out->lock);
@@ -501,8 +446,6 @@ static int in_set_sample_rate(struct audio_stream *stream, uint32_t rate)
 static uint32_t in_get_channels(const struct audio_stream *stream)
 {
     struct tiny_stream_in *in = (struct tiny_stream_in *)stream;
-
-   // ALOGV("%s: channels:%d\n",__FUNCTION__,in->config.channels);
     
 	if (in->stereo_to_mono == 1) {
         return AUDIO_CHANNEL_IN_MONO;
@@ -534,13 +477,6 @@ static int in_standby(struct audio_stream *stream)
 				
 		ALOGV("in_standby(%p) closing PCM\n", stream);
 		ret = pcm_close(in->pcm);
-		
-		//if (in->echo_reference != NULL) {
-		//	stop reading from echo reference
-		//	in->echo_reference->read(in->echo_reference, NULL);
-		//	put_echo_reference(adev, in->echo_reference);
-		//	in->echo_reference = NULL;
-		//}
 					
 		if (ret != 0) {
 			ALOGE("in_standby(%p) failed: %d\n", stream, ret);
@@ -564,40 +500,8 @@ static int in_dump(const struct audio_stream *stream, int fd)
 }
 
 static int in_set_parameters(struct audio_stream *stream, const char *kvpairs)
-{   
-    /*struct tiny_stream_in *in = (struct tiny_stream_in *)stream;
-    struct tiny_audio_device *adev = in->adev;
-    struct str_parms *parms;
-    char *str;
-    char value[32];
-    int ret, val = 0;*/
-
-	ALOGV("%s: kvpairs:%s\n",__FUNCTION__,kvpairs);
-    
-    /*parms = str_parms_create_str(kvpairs);
-
-    ret = str_parms_get_str(parms, AUDIO_PARAMETER_STREAM_INPUT_SOURCE, value, sizeof(value));
-
-    if (ret >= 0) {
-        val = atoi(value);
-        ALOGV("%s: input source val:%d\n",__FUNCTION__,val);
-        // no audio source uses val == 0
-        if ((in->source != val) && (val != 0)) {
-            in->source = val;
-        }
-    }
-
-    ret = str_parms_get_str(parms, AUDIO_PARAMETER_STREAM_ROUTING, value, sizeof(value));
-    if (ret >= 0) {
-        val = atoi(value);
-        ALOGV("%s: stream routing val:%d :ignoring\n",__FUNCTION__,val);
-        //if ((adev->devices != val) && (val != 0)) {
-        //    adev->devices = val;
-        //}
-    }
-
-    str_parms_destroy(parms);*/
-    
+{
+	ALOGV("%s: kvpairs:%s\n",__FUNCTION__,kvpairs);   
     return 0;
 }
 
@@ -714,18 +618,8 @@ static ssize_t read_frames(struct tiny_stream_in *in, void *buffer, ssize_t fram
     struct tiny_audio_device *adev = in->adev;
     size_t frames_rq = bytes / audio_stream_frame_size(&stream->common);    
     
-    //ALOGV("in_read(%p)\n", stream);
-    //ALOGV("bytes: %d\n", bytes);
-    //ALOGV("frames_rq: %d\n", frames_rq);
-    
     pthread_mutex_lock(&adev->route_lock);
     pthread_mutex_lock(&in->lock);
-    
-    //if (in->need_echo_reference && in->echo_reference == NULL)
-    //    in->echo_reference = get_echo_reference(adev,
-    //                                    AUDIO_FORMAT_PCM_16_BIT,
-    //                                    in->config.channels,
-    //                                    in->requested_rate);
 
 	adev->active_input = in;
 	                                        
@@ -756,26 +650,15 @@ static ssize_t read_frames(struct tiny_stream_in *in, void *buffer, ssize_t fram
     
     if (in->resampler != NULL) {        
         if(in->stereo_to_mono) {
-			unsigned char rdbuff[bytes<<1];
 			
-			//ALOGV("stereo_to_mono");			
-			//ALOGV("read bytes : %d",bytes);								
-			//ALOGV("actual read bytes<<1: %d",bytes<<1);			
-			//ALOGV("frames_rq %d",frames_rq);			
-			
+			unsigned char rdbuff[bytes<<1];				
 			ret = read_frames(in, rdbuff, frames_rq);						
 			int tmpsize = ret * audio_stream_frame_size(&in->stream.common);			
-			//ALOGV("read buff size : %d",tmpsize);
-
 			unsigned char *outbuff = (unsigned char *)buffer;
 			memset(outbuff,0,bytes);
 
 			int itr=0;
 			int itr2=0;
-			
-			//for(; itr2 < tmpsize;itr2++){
-			//	ALOGV("%d 0x%04x",itr2, rdbuff[itr2]);								
-			//}
 			
 			for(itr2=0; (itr2 < tmpsize) && (itr < bytes);){		
 				itr2 += 2;
@@ -784,13 +667,8 @@ static ssize_t read_frames(struct tiny_stream_in *in, void *buffer, ssize_t fram
 			} 			
 			
 		}else{
-			//ALOGV("!stereo_to_mono");
-			//ALOGV("read bytes : %d",bytes);
-			//ALOGV("frames_rq %d",frames_rq);
-			
 			ret = read_frames(in, buffer, frames_rq);
 			int tmpsize = ret * audio_stream_frame_size(&in->stream.common);
-			//ALOGV("read buff size : %d",tmpsize);			
 		}
 	}
     else{
@@ -928,8 +806,7 @@ static void adev_close_output_stream(struct audio_hw_device *dev,
 {    
     struct tiny_stream_out *out = (struct tiny_stream_out *)stream;
     ALOGV("%s: stream %p\n",__FUNCTION__, stream);
-    //ALOGV("Closing output stream %p\n", stream);
-    
+
     pthread_mutex_lock(&out->adev->route_lock);
     pthread_mutex_lock(&out->lock);
     
@@ -949,29 +826,8 @@ static void adev_close_output_stream(struct audio_hw_device *dev,
 
 static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 {
-    /*struct tiny_audio_device *adev = (struct tiny_audio_device *)dev;
-    struct str_parms *parms;
-    char *str;
-    char value[32];*/
     int ret = 0;
-	
 	ALOGV("%s: kvpairs:%s\n",__FUNCTION__,kvpairs);
-
-	/*parms = str_parms_create_str(kvpairs);
-	ret = str_parms_get_str(parms, AUDIO_PARAMETER_KEY_BT_NREC, value, sizeof(value));
-    if (ret >= 0) {
-		ALOGV("%s: AUDIO_PARAMETER_KEY_BT_NREC\n",__FUNCTION__);
-        if (strcmp(value, AUDIO_PARAMETER_VALUE_ON) == 0){
-            //adev->bluetooth_nrec = true;
-            ALOGV("%s: BT ON\n",__FUNCTION__);
-		}
-        else{
-            //adev->bluetooth_nrec = false;
-            ALOGV("%s: BT OFF\n",__FUNCTION__);
-		}
-    }
-    
-	str_parms_destroy(parms);*/
     return ret;
 }
 
@@ -1031,9 +887,6 @@ static void force_all_standby(struct tiny_audio_device *adev)
 
 static void select_mode(struct tiny_audio_device *adev, int new_mode)
 {
-	//ALOGV("%s\n",__FUNCTION__);
-	//{RD} ToDo input output channel opening/closing with change of mode
-    
     if ((new_mode == AUDIO_MODE_IN_CALL)||(new_mode == AUDIO_MODE_RINGTONE)) {
 		
 		ALOGV("Entering IN_CALL/RingTone state");
@@ -1102,25 +955,10 @@ static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state)
 
 static size_t get_input_buffer_size(uint32_t sample_rate, int format, int channel_count)
 {
-    //size_t size;    
-    /* take resampling into account and return the closest majoring
-    multiple of 16 frames, as audioflinger expects audio buffers to
-    be a multiple of 16 frames */
-    //size = (320 * sample_rate) / 44100;
-    //size = ((size + 15) / 16) * 16;
-    //return size * channel_count * sizeof(short);
-    
     size_t size;
     size = (pcm_config_c.period_size * sample_rate) / pcm_config_c.rate;
     size = ((size + 15) / 16) * 16;
     size = size * channel_count * sizeof(short);    
-    
-    //size_t size;
-    //if(sample_rate == 8000)
-	//	size = pcm_config_c.period_size/4;
-    //else
-	//	size = pcm_config_c.period_size;
-    //size = size * channel_count * sizeof(short);
     
     ALOGV("%s: channel_count:%d\n",__FUNCTION__,channel_count);
     ALOGV("%s: sample_rate:%d\n",__FUNCTION__,sample_rate);
@@ -1131,8 +969,6 @@ static size_t get_input_buffer_size(uint32_t sample_rate, int format, int channe
 
 static size_t in_get_buffer_size(const struct audio_stream *stream)
 {
-	// {RD}
-	//return 320;
 	struct tiny_stream_in *in = (struct tiny_stream_in *)stream;
 
 	if(in->stereo_to_mono)
@@ -1148,7 +984,6 @@ static size_t in_get_buffer_size(const struct audio_stream *stream)
 static size_t adev_get_input_buffer_size(const struct audio_hw_device *dev,
                                          const struct audio_config *config)
 {
-    //return 320;
     return get_input_buffer_size(config->sample_rate, config->format, config->channel_mask);
 }
 
@@ -1199,9 +1034,7 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     ALOGV("%s in->config.rate: %d\n",__FUNCTION__,in->config.rate);
     ALOGV("%s in->config.period_count: %d\n",__FUNCTION__,in->config.period_count);
     ALOGV("%s in->config.period_size: %d\n",__FUNCTION__,in->config.period_size);
-               
-    // {RD}
-    // *stream_in = &in->stream;
+
     in->requested_rate = config->sample_rate;
     
 	if((in->requested_rate != in->config.rate)&&(channel_count != 2))
@@ -1220,20 +1053,12 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
         in->buf_provider.get_next_buffer = get_next_buffer;
         in->buf_provider.release_buffer = release_buffer;
 
-	/*if(in->stereo_to_mono)
-        ret = create_resampler(in->config.rate,                               
-                               in->requested_rate,
-                               1,
-                               RESAMPLER_QUALITY_DEFAULT,
-                               &in->buf_provider,
-                               &in->resampler);
-	   else*/
-		   ret = create_resampler(in->config.rate,                               
-                               in->requested_rate,
-                               2,
-                               RESAMPLER_QUALITY_DEFAULT,
-                               &in->buf_provider,
-                               &in->resampler);
+	   ret = create_resampler(in->config.rate,                               
+						   in->requested_rate,
+						   2,
+						   RESAMPLER_QUALITY_DEFAULT,
+						   &in->buf_provider,
+						   &in->resampler);
                                
         if (ret != 0) {
             ret = -EINVAL;
@@ -1307,10 +1132,6 @@ static uint32_t adev_get_supported_devices(const struct audio_hw_device *dev)
     int i;
 
     ALOGV("%s\n",__FUNCTION__);
-	
-    //for (i = 0; i < adev->num_dev_cfgs; i++)
-	//supported |= adev->dev_cfgs[i].mask;
-    //return supported;
     
     return (/* OUT */
             AUDIO_DEVICE_OUT_EARPIECE |
@@ -1385,8 +1206,7 @@ static void adev_config_start(void *data, const XML_Char *elem,
 
 	for (i = 0; i < sizeof(dev_names) / sizeof(dev_names[0]); i++) {
 	    if (strcmp(dev_names[i].name, name) == 0) {
-		//ALOGI("Allocating device %s\n", name);
-		dev_cfg = realloc(s->adev->dev_cfgs,
+			dev_cfg = realloc(s->adev->dev_cfgs,
 				  (s->adev->num_dev_cfgs + 1)
 				  * sizeof(*dev_cfg));
 		if (!dev_cfg) {
@@ -1432,8 +1252,6 @@ static void adev_config_start(void *data, const XML_Char *elem,
 	    return;
 	}
 
-	//ALOGV("Parsing control %s => %s\n", name, val);
-
 	r = realloc(s->path, sizeof(*r) * (s->path_len + 1));
 	if (!r) {
 	    ALOGE("Out of memory handling %s => %s\n", name, val);
@@ -1463,29 +1281,19 @@ static void adev_config_end(void *data, const XML_Char *name)
 	    ALOGW("Empty path\n");
 
 	if (!s->dev) {
-	    //ALOGV("Applying %d element default route\n", s->path_len);
-
 	    set_route_by_array(s->adev->mixer, s->path, s->path_len);
-
 	    for (i = 0; i < s->path_len; i++) {
 		free(s->path[i].ctl_name);
 		free(s->path[i].strval);
 	    }
-
 	    free(s->path);
-
 	    /* Refactor! */
 	} else if (s->on) {
-	    //ALOGV("%d element on sequence\n", s->path_len);
 	    s->dev->on = s->path;
 	    s->dev->on_len = s->path_len;
-
 	} else {
-	    //ALOGV("%d element off sequence\n", s->path_len);
-
 	    /* Apply it, we'll reenable anything that's wanted later */
 	    set_route_by_array(s->adev->mixer, s->path, s->path_len);
-
 	    s->dev->off = s->path;
 	    s->dev->off_len = s->path_len;
 	}
@@ -1646,16 +1454,9 @@ void *event_listner(void *arg){
 	  }            
       
       numEventsRead = rd / sizeof(struct input_event);
-                  
-      // {RD} dont reset
-      //flag_mic_short = 0;
-      //flag_mic_detect = 0;
       flag_valid = 0;
       
       for(i = 0 ; i < numEventsRead; i++){
-		  //ALOGI("ev[%d].code :%u\n", i, ev[i].code);
-		  //ALOGI("ev[%d].type :%u\n", i, ev[i].type);
-		  //ALOGI("ev[%d].value :%d\n", i, ev[i].value);
 		  if(ev[i].type == 5){
 			  if(ev[i].code == 2){
 				  flag_valid = 1;

@@ -282,12 +282,6 @@ int format_volume(const char* volume) {
 		sprintf(cmd, "%s %s -t", UBI_UPDATE, v->device2);
 		LOGI("format_vol: system(%s)\n", cmd);
 		
-		//result = system(NULL);
-			//LOGE("cmd:NULL return/failed with %d errno:%d\n", result, errno);			
-		//result = system("ls -l");
-		//if (result != 0)
-			//LOGE("cmd:ls -l failed with %d errno:%d\n", result, errno);
-		
 		result = system(cmd);
 		if (result == 0)
 			return 0;

@@ -1,5 +1,3 @@
-
-// #include <linux/config.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
@@ -371,12 +369,10 @@ void process_rx_fifo(unsigned long unused)
 		switch(rx_state) {
 			case RX_STATE_HEADER1 : {
 				if (0x43 == c) {
-					// PDEBUG("c = %02x, rx_state = RX_STATE_HEADER1, next rx_state = RX_STATE_HEADER2\n", c);
 					rx_state = RX_STATE_HEADER2;
 				}
 				else {
 					// out of sync
-					// PDEBUG("c = %02x, rx_state = RX_STATE_HEADER1, next rx_state = RX_STATE_HEADER1\n", c);
 					rx_state = RX_STATE_HEADER1;
 				}		
 				
@@ -563,18 +559,6 @@ void process_rx_fifo(unsigned long unused)
 						rx_state = RX_STATE_HEADER1;
 					}
 				}
-// 				else if (0x43 == c) {
-// 					// looks like start of a new packet, even though the END of previous packet is missing
-// 					PDEBUG("Error ! packet END is missing\r\n");
-// 
-// 					if (devices[active_rx_device].data != NULL) {
-// 						devices[active_rx_device].data->receive_event_handler(kfifo_len(devices[active_rx_device].rx_fifo));
-// 					}
-// 					else {
-// 						PERROR("Error ! trying to call receive_event_handler in unregistered device\r\n");
-// 					}						
-// 					rx_state = RX_STATE_HEADER2;
-// 				}
 				else {
 					// out of sync
 					rx_state = RX_STATE_HEADER1;	
@@ -879,52 +863,6 @@ int cp430_core_release(struct inode *inode, struct file *filp)
 	
 	return 0;
 }
-
-//ssize_t cp430_core_read(struct file *filp, char __user *buf, size_t count,
-//                loff_t *f_pos)
-//{
-//	struct cp430_core_device *dev = filp->private_data; 
-//	ssize_t retval = 0;
-//
-//	
-//	PDEBUG("> : %s\r\n",__FUNCTION__);
-//	
-//	if (down_interruptible(&dev->sem))
-//		return -ERESTARTSYS;
-//
-//	/* .. */
-//	
-//	/* .. */
-//	
-//	*f_pos += count;
-//	retval = count;
-//
-//	up(&dev->sem);
-//	return retval;
-//}
-
-//ssize_t cp430_core_write(struct file *filp, const char __user *buf, size_t count,
-//                loff_t *f_pos)
-//{
-//	struct cp430_core_device *dev = filp->private_data;
-//	ssize_t retval = -ENOMEM;
-//
-//
-//	PDEBUG("> : %s\r\n",__FUNCTION__);
-//	
-//	if (down_interruptible(&dev->sem))
-//		return -ERESTARTSYS;
-//
-//	/* .. */
-//	
-//	/* .. */
-//	
-//	*f_pos += count;
-//	retval = count;
-//
-//	up(&dev->sem);
-//	return retval;
-//}
 
 long cp430_core_ioctl(struct file *filp,
                  unsigned int cmd, unsigned long arg)

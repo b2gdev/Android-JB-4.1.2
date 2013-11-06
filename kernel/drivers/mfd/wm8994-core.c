@@ -35,10 +35,6 @@ static int wm8994_read(struct wm8994 *wm8994, unsigned short reg,
 
 	BUG_ON(bytes % 2);
 	BUG_ON(bytes <= 0);
-	
-	#ifdef CONFIG_MFD_WM8994_DEBUG
-	//printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
-	#endif
 
 	ret = wm8994->read_dev(wm8994, reg, bytes, dest);
 	if (ret < 0)
@@ -70,7 +66,6 @@ int wm8994_reg_read(struct wm8994 *wm8994, unsigned short reg)
 	ret = wm8994_read(wm8994, reg, 2, &val);
 	
 	#ifdef CONFIG_MFD_WM8994_DEBUG
-	//printk("[%08u] - %s - %s - reg = 0x%04x - val = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, reg, val);	/* {PS} */
 	printk(" %s - %s - reg = 0x%04x - val = 0x%04x\n", __FILE__, __FUNCTION__, reg, val);	/* {PS} */
 	#endif	
 
@@ -118,17 +113,11 @@ static int wm8994_write(struct wm8994 *wm8994, unsigned short reg,
 
 	BUG_ON(bytes % 2);
 	BUG_ON(bytes <= 0);
-	
-	#ifdef CONFIG_MFD_WM8994_DEBUG
-	//printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
-	#endif
 
 	for (i = 0; i < bytes / 2; i++) {
 		dev_vdbg(wm8994->dev, "Write %04x to R%d(0x%x)\n",
 			 buf[i], reg + i, reg + i);
-		//printk("[%08u] - %s - %s buf[%d]:%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__,i,buf[i]);	/* {PS} */
 		buf[i] = cpu_to_be16(buf[i]);
-		//printk("[%08u] - %s - %s buf[%d]:%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__,i,buf[i]);
 	}
 
 	return wm8994->write_dev(wm8994, reg, bytes, src);
@@ -307,39 +296,27 @@ static int wm8994_device_resume(struct device *dev)
 	}
 
 	//{RD}
-	//printk("{RD} [%08u] - %s - %s - wm8994->irq_masks_cur[1] = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, wm8994->irq_masks_cur[1]);
 	memcpy(buf,wm8994->irq_masks_cur,WM8994_NUM_IRQ_REGS*2);
-	//printk("{RD} [%08u] - %s - %s - buf[1] = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, buf[1]);
 	
 	ret = wm8994_write(wm8994, WM8994_INTERRUPT_STATUS_1_MASK,
 			   WM8994_NUM_IRQ_REGS * 2, buf);
 	if (ret < 0){
 		dev_err(dev, "Failed to restore interrupt masks: %d\n", ret);
-		//goto err_res;
 	}
-
-	//{RD}
-	//printk("{RD} [%08u] - %s - %s - wm8994->irq_masks_cur[1] = 0x%04x\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, wm8994->irq_masks_cur[1]);	
 	
 	ret = wm8994_write(wm8994, WM8994_LDO_1, WM8994_NUM_LDO_REGS * 2,
 			   &wm8994->ldo_regs);
 	if (ret < 0){
 		dev_err(dev, "Failed to restore LDO registers: %d\n", ret);
-		//goto err_res;
 	}
 
 	ret = wm8994_write(wm8994, WM8994_GPIO_1, WM8994_NUM_GPIO_REGS * 2,
 			   &wm8994->gpio_regs);
 	if (ret < 0){
 		dev_err(dev, "Failed to restore GPIO registers: %d\n", ret);
-		//goto err_res;
 	}
 
 	return 0;
-
-//err_res:	
-	//regulator_bulk_disable(ARRAY_SIZE(wm8994_main_supplies), wm8994->supplies);
-	//return ret;
 }
 #endif
 
@@ -531,10 +508,6 @@ static int wm8994_i2c_read_device(struct wm8994 *wm8994, unsigned short reg,
 	struct i2c_client *i2c = wm8994->control_data;
 	int ret;
 	u16 r = cpu_to_be16(reg);
-
-	#ifdef CONFIG_MFD_WM8994_DEBUG
-	//printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
-	#endif	
 	
 	ret = i2c_master_send(i2c, (unsigned char *)&r, 2);
 	if (ret < 0)
@@ -560,10 +533,6 @@ static int wm8994_i2c_write_device(struct wm8994 *wm8994, unsigned short reg,
 	struct i2c_client *i2c = wm8994->control_data;
 	unsigned char msg[bytes + 2];
 	int ret;
-
-	#ifdef CONFIG_MFD_WM8994_DEBUG
-	//printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {PS} */
-	#endif	
 	
 	reg = cpu_to_be16(reg);
 	memcpy(&msg[0], &reg, 2);

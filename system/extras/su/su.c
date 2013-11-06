@@ -31,66 +31,33 @@
 
 #include <private/android_filesystem_config.h>
 
-/*
- * SU can be given a specific command to exec. UID _must_ be
- * specified for this (ie argc => 3).
- *
- * Usage:
- * su 1000
- * su 1000 ls -l
- */
+static int permissionDenied()
+{
+        printf("su: permission denied\n");
+        return 1;
+}
+
+static int executionFailure(char *context)
+{
+        fprintf(stderr, "su: %s. Error:%s\n", context, strerror(errno));
+        return -errno;
+
+}
+
 int main(int argc, char **argv)
 {
-    struct passwd *pw;
-    int uid, gid, myuid;
-
-    /* Until we have something better, only root and the shell can use su. */
-    myuid = getuid();
-    if (myuid != AID_ROOT && myuid != AID_SHELL) {
-        fprintf(stderr,"su: uid %d not allowed to su\n", myuid);
-        return 1;
-    }
-
-    if(argc < 2) {
-        uid = gid = 0;
-    } else {
-        pw = getpwnam(argv[1]);
-
-        if(pw == 0) {
-            uid = gid = atoi(argv[1]);
-        } else {
-            uid = pw->pw_uid;
-            gid = pw->pw_gid;
-        }
-    }
-
-    if(setgid(gid) || setuid(uid)) {
-        fprintf(stderr,"su: permission denied\n");
-        return 1;
-    }
-
-    /* User specified command for exec. */
-    if (argc == 3 ) {
-        if (execlp(argv[2], argv[2], NULL) < 0) {
-            fprintf(stderr, "su: exec failed for %s Error:%s\n", argv[2],
-                    strerror(errno));
-            return -errno;
-        }
-    } else if (argc > 3) {
-        /* Copy the rest of the args from main. */
-        char *exec_args[argc - 1];
-        memset(exec_args, 0, sizeof(exec_args));
-        memcpy(exec_args, &argv[2], sizeof(exec_args));
-        if (execvp(argv[2], exec_args) < 0) {
-            fprintf(stderr, "su: exec failed for %s Error:%s\n", argv[2],
-                    strerror(errno));
-            return -errno;
-        }
-    }
-
-    /* Default exec shell. */
-    execlp("/system/bin/sh", "sh", NULL);
-
-    fprintf(stderr, "su: exec failed\n");
-    return 1;
+	
+	if(setgid(0) || setuid(0))
+		return permissionDenied();
+     
+    char *exec_args[argc + 1];
+	exec_args[argc] = NULL;
+	exec_args[0] = "sh";
+	int i;
+	for (i = 1; i < argc; i++)
+	{
+		exec_args[i] = argv[i];
+	}
+	execv("/system/usr/bin/sh", exec_args);
+	return executionFailure("sh");                           
 }

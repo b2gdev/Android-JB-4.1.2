@@ -47,12 +47,7 @@ static int omap3beagle_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
 	unsigned int pll_out;
 	int ret;			
-
-	//printk("%s - %s\n",__FILE__, __FUNCTION__);
-	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
-		printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__); /* {PS} */
-	#endif	
-
+	
 	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
 		printk("[%08u] - %s - %s Rate:%d\n", (unsigned int)jiffies, __FILE__, __FUNCTION__, params_rate(params)); /* {PS} */
 	#endif
@@ -181,9 +176,6 @@ static struct platform_device *omap3beagle_snd_device;
 static int __init omap3beagle_soc_init(void)
 {
 	int ret;
-	//static struct snd_soc_jack tcbin_headset;
-	
-	//printk("{RD} %s - %s\n",__FILE__, __FUNCTION__);
 	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
 		printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__); /* {PS} */
 	#endif	
@@ -211,7 +203,6 @@ static int __init omap3beagle_soc_init(void)
 
 static void __exit omap3beagle_soc_exit(void)
 {
-	//printk("{RD} %s - %s\n",__FILE__, __FUNCTION__);
 	#ifdef SND_OMAP_SOC_OMAP3_BEAGLE_DEBUG
 		printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__); /* {PS} */
 	#endif	

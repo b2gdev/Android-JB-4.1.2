@@ -1,0 +1,18 @@
+#!/system/usr/bin/sh
+if [ $# -lt 1 ]; then
+        $0 /data/update.zip
+        exit
+fi
+echo "Install OTA from $1"
+if ! [[ -e $1 ]]
+then
+	echo "$1 does not exist"
+	exit
+fi
+chmod 777 $1
+mkdir /cache/recovery/
+chmod 777 /cache/recovery
+touch /cache/recovery/command
+chmod 777 /cache/recovery/command
+echo "--update_package=$1" > /cache/recovery/command
+reboot recovery
