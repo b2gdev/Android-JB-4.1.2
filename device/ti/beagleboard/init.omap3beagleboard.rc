@@ -210,6 +210,6 @@ service bluetoothd /system/bin/bluetoothd -n
 # {RD} END   
 
 # {RD} DEMO: write to wake lock
-#service wakel /catch_wake_lock.sh
-#    class main
-#    oneshot
+service wakel /system/usr/bin/catch_wake_lock.sh
+    class main
+    oneshot
