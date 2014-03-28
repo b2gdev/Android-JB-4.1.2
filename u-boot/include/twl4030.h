@@ -479,6 +479,8 @@
 #define TWL4030_PM_RECEIVER_VDAC_VSEL_18		0x03
 #define TWL4030_PM_RECEIVER_VMMC1_VSEL_30		0x02
 
+#define TWL4030_PM_RECEIVER_VMMC2_VSEL_30		0x0B
+
 /*
  * Device Selection in PM Receiver Module
  */
