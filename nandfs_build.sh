@@ -33,7 +33,7 @@ cp ../../../../tcbin_misc/BIGLauncherFREE.apk system/app/
 rm -rf data/nativebenchmark/
 rm -rf data/nativetest/
 rm data/app/*
-cp ../../../../tcbin_misc/BrailleBack-debug-0.93-beta2.apk data/app/BrailleBack.apk
+#cp ../../../../tcbin_misc/BrailleBack-debug-0.93-beta2.apk data/app/BrailleBack.apk
 
 cd ../../../../
 
