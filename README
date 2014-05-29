@@ -25,6 +25,11 @@ The following command installs the required packages for setting up the android 
   minicom tftpd uboot-mkimage expect
   $ sudo ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
 
+For 64-bit Ubuntu 14.04
+In addition to 12.04 dependancies and the following,
+apt-get install libswitch-perl
+http://www.ubuntuupdates.org/package/core/raring/main/base/uboot-mkimage
+
 
 1.2) Toolchain setup
 =====================
