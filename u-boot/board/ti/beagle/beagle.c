@@ -138,7 +138,7 @@ int misc_init_r(void)
 		setenv("mpurate", "600");
 		break;
 	case REVISION_C4:
-		printf("TCBIN Rev B\n"); /* {PS} : printf("Beagle Rev C4\n"); */
+		printf("TCBIN Rev C\n"); /* {PS} : printf("Beagle Rev C4\n"); */
 		/* {PS} : MUX_BEAGLE_C(); */
 		/* Set VAUX2 to 1.8V for EHCI PHY */
 		twl4030_pmrecv_vsel_cfg(TWL4030_PM_RECEIVER_VAUX2_DEDICATED,

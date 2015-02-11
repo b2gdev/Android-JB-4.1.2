@@ -590,7 +590,7 @@ int misc_init_r(void)
 		if (identify_xm_ddr() == NUMONYX_MCP)
 			printf("Beagle Rev C4 from Special Computing\n");
 		else if(identify_xm_ddr() == MICRON_MCP)
-			printf("TCBIN Rev B\n"); /* {PS} printf("Beagle Rev C5\n");	*/
+			printf("TCBIN Rev C\n"); /* {PS} printf("Beagle Rev C5\n");	*/
 		else
 			printf("Beagle Rev C4\n");
 		break;
