@@ -25,9 +25,6 @@ echo "Building Kernels and File System ..."
 echo "#############################################################################################"
 make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- clean
 
-# export Build encryption key
-export TCBIN_PASS=zonedev
-
 # Run the below line if the Android API was changed
 # make update-api TARGET_PRODUCT=beagleboard OMAPES=5.x -j8
 

@@ -46,6 +46,7 @@
 #define MT29F1G_ID		0xa1  /* x8, 1GiB */
 #define MT29F2G_ID      	0xba  /* x16, 2GiB */
 #define MT29F4G_ID		0xbc  /* x16, 4GiB */
+#define MT29F8G_ID		0xb3  /* x16, 8GiB */
 
 #define ADDR_COLUMN		1          
 #define ADDR_PAGE		2             
@@ -208,7 +209,7 @@ int nand_chip()
 	NAND_DISABLE_CE();
 
 	if (((mfr == MT29F1G_MFR || mfr == MT29F1G_MFR2 || mfr == MT29F1G_MFR3) &&
-		(id == MT29F1G_ID || id == MT29F2G_ID || id == MT29F4G_ID)) ||
+		(id == MT29F1G_ID || id == MT29F2G_ID || id == MT29F4G_ID || id == MT29F8G_ID)) ||
 	     (mfr == K9F1G08R0A_MFR && (id == K9F1G08R0A_ID))) {
 		return 0;
 	} else {

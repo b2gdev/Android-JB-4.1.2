@@ -19,4 +19,4 @@ update$ zip -9r ../unsigned.zip * -x system/.gitignore
 # Run the following to create the signed update
 $ java -jar signapk.jar -w release.x509.pem release.pk8 unsigned.zip update.zip
 
-# Enter release key password when promted
+# Enter release key password when if promted

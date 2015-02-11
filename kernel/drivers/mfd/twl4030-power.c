@@ -709,8 +709,8 @@ void twl4030_power_off(void)
     */
     
     /*{KW}: inform MSP430 about power status, set to low */
-    printk("Power status gpio down\r\n");
-    gpio_set_value(11, 0);
+    printk("OMAP_STATUS_1 gpio down\r\n");
+    gpio_set_value(64, 0);
     
    err = twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, STARTON_PWON,
                           TWL4030_PM_MASTER_CFG_P1_TRANSITION);

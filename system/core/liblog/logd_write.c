@@ -140,7 +140,6 @@ int __android_log_write(int prio, const char *tag, const char *msg)
 
     /* XXX: This needs to go! */
     if (!strcmp(tag, "HTC_RIL") ||
-		!strcmp(tag, "dhcpcd") ||
         !strncmp(tag, "RIL", 3) || /* Any log tag with "RIL" as the prefix */
         !strcmp(tag, "AT") ||
         !strcmp(tag, "GSM") ||
@@ -169,9 +168,6 @@ int __android_log_buf_write(int bufID, int prio, const char *tag, const char *ms
 
     /* XXX: This needs to go! */
     if (!strcmp(tag, "HTC_RIL") ||
-/* {RD} START : Sierra  */
-        !strcmp(tag, "dhcpcd") ||
-/* {RD} END  */    
         !strncmp(tag, "RIL", 3) || /* Any log tag with "RIL" as the prefix */
         !strcmp(tag, "AT") ||
         !strcmp(tag, "GSM") ||

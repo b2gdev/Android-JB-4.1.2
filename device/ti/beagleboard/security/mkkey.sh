@@ -1,5 +1,5 @@
 #!/bin/sh
-AUTH='/C=SL/O=Android/OU=Android/CN=Android/emailAddress=infohq@zone24x7.com'
+AUTH='/C=SL/O=Zone24x7/OU=Zone24x7/CN=Zone24x7/emailAddress=infohq@zone24x7.com'
 if [ "$1" == "" ]; then
         echo "Create a test certificate key."
         echo "Usage: $0 NAME"

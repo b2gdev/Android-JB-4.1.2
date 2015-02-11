@@ -413,4 +413,5 @@ config USB_SIERRA_NET
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called sierra_net.
+
 endmenu

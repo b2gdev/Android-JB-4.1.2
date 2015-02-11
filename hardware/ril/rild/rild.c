@@ -244,9 +244,6 @@ OpenLib:
 
     dlHandle = dlopen(rilLibPath, RTLD_NOW);
 
-	fprintf(stderr, "** {RD} *** dlopen path %s\n", rilLibPath);
-	ALOGE("**{RD} *** dlopen path %s\n", rilLibPath);
-	
     if (dlHandle == NULL) {
         fprintf(stderr, "dlopen failed: %s\n", dlerror());
         exit(-1);

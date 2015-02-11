@@ -449,14 +449,11 @@ const omap3_sysinfo sysinfo = {
 	MUX_VAL(CP(GPMC_D15),		(IEN  | PTD | DIS | M0)) /*GPMC_D15*/\
 	MUX_VAL(CP(GPMC_NCS0),		(IDIS | PTU | EN  | M0)) /*GPMC_nCS0*/\
 	MUX_VAL(CP(GPMC_NCS1),		(IDIS | PTU | EN  | M0)) /*GPMC_nCS1*/\
-	MUX_VAL(CP(GPMC_NCS2),		(IDIS | PTU | EN  | M0)) /*GPMC_nCS2*/\
-	MUX_VAL(CP(GPMC_NCS3),		(IDIS | PTU | EN  | M0)) /*GPMC_nCS3*/\
 	MUX_VAL(CP(GPMC_NCS4),		(IDIS | PTU | EN  | M0)) /*GPMC_nCS4*/\
 	MUX_VAL(CP(GPMC_NCS5),		(IDIS | PTD | DIS | M0)) /*GPMC_nCS5*/\
 	MUX_VAL(CP(GPMC_NCS6),		(IEN  | PTD | DIS | M1)) /*SYS_nDMA_REQ2*/\
 	MUX_VAL(CP(GPMC_NCS7),		(IEN  | PTU | EN  | M1)) /*SYS_nDMA_REQ3*/\
 	MUX_VAL(CP(GPMC_NBE1),		(IEN  | PTD | DIS | M0)) /*GPMC_nBE1*/\
-	MUX_VAL(CP(GPMC_WAIT2),		(IEN  | PTU | EN  | M0)) /*GPMC_WAIT2*/\
 	MUX_VAL(CP(GPMC_WAIT3),		(IEN  | PTU | EN  | M0)) /*GPMC_WAIT3*/\
 	MUX_VAL(CP(GPMC_CLK),		(IDIS | PTD | DIS | M0)) /*GPMC_CLK*/\
 	MUX_VAL(CP(GPMC_NADV_ALE),	(IDIS | PTD | DIS | M0)) /*GPMC_nADV_ALE*/\
@@ -707,9 +704,11 @@ const omap3_sysinfo sysinfo = {
 	\
 	MUX_VAL(CP(MCSPI1_CS0),		(IDIS | PTU | EN  | M0)) /*MCSPI1_CS0*/	/* {PS} : CP_INT_RST 	- Configured as MCSPI1_CS0 */\
 	\
-	/* {PS} TEST */\
-	MUX_VAL(CP(JTAG_EMU0),	    (IDIS | PTU | DIS | M4)) /*GPIO_11*/	/* {PS} : CP_PWR_STAT 	 - Output pin */\
-	/* {PS} */\
+	/* {RD}  */\
+	MUX_VAL(CP(GPMC_WAIT2),		(IDIS | PTU | DIS | M4)) /*GPIO_64*/	/* {RD} : OMAP_STATUS_1 - Output pin */\
+	MUX_VAL(CP(GPMC_NCS2),		(IDIS | PTU | DIS | M4)) /*GPIO_53*/    /* {RD} : emmc reset pin  */\
+	MUX_VAL(CP(GPMC_NCS3),		(IDIS | PTU | DIS | M4)) /*GPIO_54*/    /* {RD} : Enable U107  */\
+	/* {RD} */\
 	MUX_VAL(CP(ETK_CLK_ES2),	(IEN  | PTD | EN  | M4)) /*GPIO_12*/	/* {PS} : CP_INT 		- Input pin */\
 	MUX_VAL(CP(ETK_CTL_ES2),	(IEN  | PTU | DIS | M4)) /*GPIO_13*/	/* {PS} : 3GM_UART_DCD_INT	- Input pin */\
 	MUX_VAL(CP(ETK_D0_ES2),		(IEN  | PTD | EN  | M4)) /*GPIO_14*/	/* {PS} : ACC_INT 		- Input pin */\
