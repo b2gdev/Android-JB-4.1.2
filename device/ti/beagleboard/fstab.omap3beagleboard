@@ -5,5 +5,5 @@
 
 
 ubi0:system          /system             ubifs      ro                                                    wait
-ubi1:userdata        /data               ubifs      nosuid,nodev    wait
+/dev/block/platform/mmci-omap-hs.1/mmcblk0p1 /data ext2 nosuid,nodev    wait
 ubi2:cache        /cache               ubifs      nosuid,nodev    wait
