@@ -1342,6 +1342,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_request(16,  "3GM_PWR_EN");			/* {PS} : 3GM_PWR_nEN		*/
 	gpio_request(21,  "USB_PWR_EN");			/* {PS} : USB_PWR_EN		*/
 	gpio_request(23,  "3GM_OE");				/* {PS} : 3GM_OE			*/
+	gpio_request(64,  "OMAP_STATUS_1");			/* {RD} : OMAP_STATUS_1		*/
 	gpio_request(113, "AUD_INT");				/* {RD} : AUD_INT			*/
 	gpio_request(126, "TV_PWR_EN");				/* {PS} : TV_PWR_EN			*/
 	gpio_request(127, "TV_OUT_EN");				/* {PS} : TV_OUT_EN			*/
@@ -1373,6 +1374,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_direction_input(155);			/* {PS} : BT_WKUP			*/	/* Input */	
 //	gpio_direction_input(164);			/* {PS} : MMC1_WP			*/	/* Input */
 	
+	gpio_direction_output(64, 1);		/* {RD} : OMAP_STATUS_1		- HIGH	- Notify MSP430 that the OMAP is up*/
 	gpio_direction_output(98, 0);		/* {PS} : CAM_nRST			- LOW	- Reset Camera */
 	gpio_direction_output(167, 1);		/* {PS} : CAM_PWDN			- HIGH 	- Power down Camera */
 	gpio_direction_output(157, 0);		/* {PS} : CAM_LED_nRST		- LOW 	- Reset Camera LED driver */
@@ -1408,6 +1410,8 @@ static void __init omap3_tcbin_gpio_init(void)
 //	gpio_set_value(21, 0);		/* {PS} : USB_PWR_EN		- LOW	- Turn off USB Hub power supply */
 	
 	gpio_set_value(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */
+	
+	gpio_set_value(64, 1);		/* {RD} : OMAP_STATUS_1		- HIGH	- Notify MSP430 that the OMAP is up*/
 	
 //	gpio_set_value(126, 1);		/* {PS} : TV_PWR_EN			- HIGH	- Turn on TV power supply */
 	gpio_set_value(126, 0);		/* {PS} : TV_PWR_EN			- LOW	- Turn off TV power supply */
