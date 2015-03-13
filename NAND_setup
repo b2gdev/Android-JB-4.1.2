@@ -45,9 +45,9 @@ setenv cpcache 'nandecc sw ; fatload mmc 0:3 0x82000000 ubi_cache.img ; nand era
 # FOR 1GB NAND
 setenv recoverycmd 'nandecc sw ; nand read 0x82000000 0xA80000 0x1000000 ; bootm 0x82000000'
 setenv cpuimage 'nandecc sw ; fatload mmc 0:3 0x82000000 norm_uImage ; nand erase 0x280000 0x800000 ; nand write 0x82000000 0x280000 0x800000'
-setenv cpbkuimage 'nandecc sw ; fatload mmc 0:3 0x82000000 bk_uImage ; nand erase 0xA80000 0x1000000 ; nand write 0x82000000 0xA80000 0x1000000'
-setenv cpsys 'nandecc sw ; fatload mmc 0:3 0x82000000 ubi_system.img ; nand erase 0x1B80000 0x30000000 ; nand write 0x82000000 0x1B80000 0xA000000'
-setenv cpcache 'nandecc sw ; fatload mmc 0:3 0x82000000 ubi_cache.img ; nand erase 0x31B80000; nand write 0x82000000 0x31B80000 0x200000'
+setenv cpbkuimage 'nandecc sw ; fatload mmc 0:3 0x82000000 bk_uImage ; nand erase 0xA80000 0x1000000 ; nand write 0x82000000 0xA80000 0x900000'
+setenv cpcache 'nandecc sw ; fatload mmc 0:3 0x82000000 ubi_cache.img ; nand erase 0x1B80000 0xC000000 ; nand write 0x82000000 0x1B80000 0x200000'
+setenv cpsys 'nandecc sw ; fatload mmc 0:3 0x82000000 ubi_system.img ; nand erase 0xDF80000; nand write 0x82000000 0xDF80000 0xA000000'
 
 saveenv
 

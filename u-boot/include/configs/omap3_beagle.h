@@ -154,7 +154,7 @@
 #define MTDPARTS_DEFAULT		"mtdparts=nand:512k(x-loader),"\
 					"1920k(u-boot),128k(u-boot-env),"\
 					"8m(kernel),16m(recovery),1m(misc),"\
-					"768m(system),-(cache)"
+					"196m(cache),-(system)"
 
 #define CONFIG_CMD_I2C		/* I2C serial bus support	*/
 #define CONFIG_CMD_MMC		/* MMC support			*/

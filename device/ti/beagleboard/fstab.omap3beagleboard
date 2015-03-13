@@ -6,4 +6,4 @@
 
 ubi0:system          /system             ubifs      ro                                                    wait
 /dev/block/platform/mmci-omap-hs.1/by-num/p1 /data ext2 nosuid,nodev    wait
-ubi2:cache        /cache               ubifs      nosuid,nodev    wait
+ubi1:cache        /cache               ubifs      nosuid,nodev    wait
