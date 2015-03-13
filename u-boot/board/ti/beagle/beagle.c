@@ -211,6 +211,7 @@ int misc_init_r(void)
 	omap_request_gpio(16);				/* {PS} : 3GM_PWR_nEN		*/
 	omap_request_gpio(21);				/* {PS} : USB_PWR_EN		*/
 	omap_request_gpio(23);				/* {PS} : 3GM_OE			*/
+	omap_request_gpio(54);				/* {RD} : Enable U107		*/
 	omap_request_gpio(64);				/* {RD} : OMAP_STATUS_1		*/
 	omap_request_gpio(126);				/* {PS} : TV_PWR_EN			*/
 	omap_request_gpio(127);				/* {PS} : TV_OUT_EN			*/
@@ -235,6 +236,7 @@ int misc_init_r(void)
 	omap_set_gpio_direction(98, 0);		/* {PS} : CAM_nRST			*/
 	omap_set_gpio_direction(167, 0);	/* {PS} : CAM_PWDN			*/
 	omap_set_gpio_direction(157, 0);	/* {PS} : CAM_LED_nRST		*/
+	omap_set_gpio_direction(54, 0);		/* {RD} : Enable U107		*/
 	omap_set_gpio_direction(64, 0);		/* {RD} : OMAP_STATUS_1		*/	
 	omap_set_gpio_direction(12, 1);		/* {PS} : CP_INT			*/	/* Input */
 	omap_set_gpio_direction(13, 1);		/* {PS} : 3GM_UART_DCD_INT	*/	/* Input */
@@ -266,6 +268,7 @@ int misc_init_r(void)
 	omap_set_gpio_dataout(98, 0);		/* {PS} : CAM_nRST			- LOW	- Reset Camera */
 	omap_set_gpio_dataout(167, 1);		/* {PS} : CAM_PWDN			- HIGH 	- Power down Camera */
 	omap_set_gpio_dataout(157, 0);		/* {PS} : CAM_LED_nRST		- LOW 	- Reset Camera LED driver */
+	omap_set_gpio_dataout(54, 0);		/* {RD} : Enable U107		- LOW	*/
 	omap_set_gpio_dataout(64, 0);		/* {RD} : OMAP_STATUS_1		- LOW	- PWR STATUS Gpio pin low */
 	omap_set_gpio_dataout(16, 0);		/* {PS} : 3GM_PWR_nEN		- LOW	- Turn on 3G modem power supply */
 	omap_set_gpio_dataout(21, 0);		/* {PS} : USB_PWR_EN		- LOW	- Turn off USB Hub power supply */
