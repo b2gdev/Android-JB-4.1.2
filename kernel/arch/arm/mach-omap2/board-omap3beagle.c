@@ -262,7 +262,7 @@ static void __init omap3_beagle_init_rev(void)
 {
 /* {PS} BEGIN: TODO - update with correct board revision identification mechanism */
 /* {PS} BEGIN: b2g is based on Rev C4 board */
-	printk(KERN_INFO "OMAP3 TCBIN Rev: B\n");
+	printk(KERN_INFO "OMAP3 TCBIN Rev: C\n");
 	omap3_beagle_version = OMAP3BEAGLE_BOARD_C4;
 /* {PS} END: */
 	
@@ -291,32 +291,27 @@ static struct mtd_partition omap3beagle_nand_partitions[] = {
 	{
 		.name		= "Kernel",
 		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x280000 */
-		.size		= 32 * NAND_BLOCK_SIZE,
+		.size		= 64 * NAND_BLOCK_SIZE,
 	},
 	{
 		.name		= "recovery",
-		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x680000 */
-		.size		= 72 * NAND_BLOCK_SIZE,
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0xA80000 */
+		.size		= 128 * NAND_BLOCK_SIZE,
 	},
 	{
 		.name		= "misc",
-		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0xF80000 */
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x1A80000 */
 		.size		= 8 * NAND_BLOCK_SIZE,
 	},
 	{
 		.name		= "system",
-		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x1080000 */
-		.size		= 1280 * NAND_BLOCK_SIZE,
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x1B80000 */
+		.size		= 6144 * NAND_BLOCK_SIZE,
 	},
 	{
 		.name		= "cache",
-		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0xB080000 */
-		.size		= 768 * NAND_BLOCK_SIZE,
-	},
-	{
-		.name		= "userdata",
-		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x11080000 */
-		.size		= MTDPART_SIZ_FULL,
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x31B80000 */
+		.size		= MTDPART_SIZ_FULL
 	},
 };
 

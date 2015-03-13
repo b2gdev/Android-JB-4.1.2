@@ -45,10 +45,6 @@ cd tcbin_misc/mtd-utils
 ./ubi-utils/ubinize -o ubi_system.img -O 2048 -m 2048 -p 128KiB -s 2048 ubinize_system.cfg
 mv ubi_system.img ../../image_folder/NandFS/
 
-./mkfs.ubifs/mkfs.ubifs -r ../../out/target/product/beagleboard/data/ -m 2048 -e 126976 -c 3991 -o ubifs.img
-./ubi-utils/ubinize -o ubi_data.img -O 2048 -m 2048 -p 128KiB -s 2048 ubinize_data.cfg
-mv ubi_data.img ../../image_folder/NandFS/
-
 ./mkfs.ubifs/mkfs.ubifs -r ../../out/target/product/beagleboard/cache/ -m 2048 -e 126976 -c 3991 -o ubifs.img
 ./ubi-utils/ubinize -o ubi_cache.img -O 2048 -m 2048 -p 128KiB -s 2048 ubinize_cache.cfg
 mv ubi_cache.img ../../image_folder/NandFS/
