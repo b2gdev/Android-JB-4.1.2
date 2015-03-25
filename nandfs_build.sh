@@ -9,6 +9,7 @@ mkdir -p system/etc/
 
 cp -rfd ../../../../tcbin_misc/busybox/* system/usr/bin/
 cp ../../../../tcbin_misc/installotapackage system/usr/bin/
+cp ../../../../tcbin_misc/format_emmc system/usr/bin/
 chmod -R +x system/usr/bin/
 chmod 777 system/usr/bin/busybox
 cp ../../../../tcbin_misc/gps.conf system/etc/
