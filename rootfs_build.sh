@@ -13,6 +13,7 @@ mkdir -p system/usr/modules/
 mkdir -p system/etc/
 
 cp -rfd ../../../../tcbin_misc/busybox/* system/usr/bin/
+cp ../../../../tcbin_misc/installotapackage system/usr/bin/
 cp ../../../../tcbin_misc/format_emmc system/usr/bin/
 chmod -R +x system/usr/bin/
 chmod 777 system/usr/bin/busybox
@@ -33,12 +34,13 @@ cp ../../../../tcbin_misc/MarineCompass.apk system/app/
 cp ../../../../tcbin_misc/Easy_Voice_Recorder.apk system/app/
 cp ../../../../tcbin_misc/BrailleBack.apk system/app/
 cp ../../../../tcbin_misc/TalkBack.apk system/app/
-#cp ../../../../tcbin_misc/BrailleBack.apk system/app/
 cp ../../../../tcbin_misc/ESFileExplorer.apk system/app/
 cp ../../../../tcbin_misc/BIGLauncherFREE.apk system/app/
 
-# move TCBIN-Text-Viewer
-#mv ./data/app/TCBIN-Text-Viewer.apk system/app/
+rm -rf data/nativebenchmark/
+rm -rf data/nativetest/
+rm data/app/*
+#cp ../../../../tcbin_misc/BrailleBack-debug-0.93-beta2.apk data/app/BrailleBack.apk
 
 mkdir android_rootfs
 cp -r root/* android_rootfs

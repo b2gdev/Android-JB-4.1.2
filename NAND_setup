@@ -23,8 +23,8 @@ setenv bootcmd 'nandecc sw ; nand read 0x82000000 0x280000 0x3C0000 ; bootm 0x82
 setenv bootargs 'init=/init console=ttyO2,115200n8 noinitrd ip=off androidboot.console=ttyO2 rootwait mem=512M omap_vout.vid1_static_vrfb_alloc=y rw ubi.mtd=system,2048 ubi.mtd=userdata,2048 ubi.mtd=cache,2048 rootwait vram=8M omapfb.vram=0:8M omapdss.def_disp="tv" omapfb.mode=tv:ntsc no_console_suspend=1'
 # BOOT FROM NAND 256MB RAM + 512MB NAND
 #setenv bootargs 'init=/init console=ttyO2,115200n8 noinitrd ip=off androidboot.console=ttyO2 rootwait mem=256M omap_vout.vid1_static_vrfb_alloc=y rw ubi.mtd=system,2048 ubi.mtd=userdata,2048 ubi.mtd=cache,2048 rootwait vram=8M omapfb.vram=0:8M omapdss.def_disp="tv" omapfb.mode=tv:ntsc no_console_suspend=1'
-# BOOT FROM SD CARD 256MB RAM
-#setenv bootargs 'console=ttyO2,115200n8 androidboot.console=ttyO2 mem=256M root=/dev/mmcblk0p2 rw rootfstype=ext3 rootdelay=1 init=/init ip=off omap_vout.vid1_static_vrfb_alloc=y vram=8M omapfb.vram=0:8M omapdss.def_disp="tv" omapfb.mode=tv:ntsc'
+# BOOT FROM SD CARD 512MB RAM
+#setenv bootargs 'console=ttyO2,115200n8 androidboot.console=ttyO2 mem=512M root=/dev/mmcblk0p2 rw rootfstype=ext3 rootdelay=1 init=/init ip=off omap_vout.vid1_static_vrfb_alloc=y vram=8M omapfb.vram=0:8M omapdss.def_disp="tv" omapfb.mode=tv:ntsc'
 # BOOT FROM NAND 512MB RAM + 1GB NAND
 setenv bootargs 'init=/init console=ttyO2,115200n8 noinitrd ip=off androidboot.console=ttyO2 rootwait mem=512M omap_vout.vid1_static_vrfb_alloc=y rw ubi.mtd=system,2048 ubi.mtd=cache,2048 rootwait vram=8M omapfb.vram=0:8M omapdss.def_disp="tv" omapfb.mode=tv:ntsc no_console_suspend=1'
 
