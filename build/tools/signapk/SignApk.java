@@ -100,20 +100,8 @@ class SignApk {
      */
     private static String readPassword(File keyFile) {
         // TODO: use Console.readPassword() when it's available.
-        // {RD}
-        String value = System.getenv("TCBIN_PASS");
-        if(value != null){
-			return value;	
-		}else{
-			System.out.print("Enter password for " + keyFile + " (password will not be hidden): ");
-			System.out.flush();
-			BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
-			try {
-				return stdin.readLine();
-			} catch (IOException ex) {
-				return null;
-			}
-		}
+        //{RD}
+        return "";
     }
 
     /**
