@@ -4,4 +4,4 @@ for z in /dev/block/platform/mmci-omap-hs.1/mmc*; do
 	echo -e "o\nn\np\n1\n256\n\nw" | fdisk -u $z
 	break
 done
-mkfs.ext2 -m0 -b4096 /dev/block/platform/mmci-omap-hs.1/by-num/p1
+echo -e "y" | mkfs.ext4 /dev/block/platform/mmci-omap-hs.1/by-num/p1
