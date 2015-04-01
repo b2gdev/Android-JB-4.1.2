@@ -168,7 +168,7 @@ static struct android_usb_platform_data android_usb_pdata = {
 	.version	= 0x0100,
 	.product_name	= "Team_CBI_Notetaker",
 	.manufacturer_name	= "Zone24x7.Inc.",
-	.serial_number	= "20130904",
+	.serial_number	= "0042",
 	.num_functions	= ARRAY_SIZE(usb_functions_all),
 };
 
@@ -807,7 +807,7 @@ static struct regulator_init_data beagle_vmmc1 = {
 /* {PS} BEGIN: VMMC2 for MMC2 */
 static struct regulator_init_data beagle_vmmc2 = {
 	.constraints = {
-		.min_uV			= 1850000,
+		.min_uV			= 3150000,
 		.max_uV			= 3150000,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
 					| REGULATOR_MODE_STANDBY,
