@@ -449,7 +449,6 @@ const omap3_sysinfo sysinfo = {
 	MUX_VAL(CP(GPMC_D15),		(IEN  | PTD | DIS | M0)) /*GPMC_D15*/\
 	MUX_VAL(CP(GPMC_NCS0),		(IDIS | PTU | EN  | M0)) /*GPMC_nCS0*/\
 	MUX_VAL(CP(GPMC_NCS1),		(IDIS | PTU | EN  | M0)) /*GPMC_nCS1*/\
-	MUX_VAL(CP(GPMC_NCS2),		(IDIS | PTU | EN  | M0)) /*GPMC_nCS2*/\
 	MUX_VAL(CP(GPMC_NCS4),		(IDIS | PTU | EN  | M0)) /*GPMC_nCS4*/\
 	MUX_VAL(CP(GPMC_NCS5),		(IDIS | PTD | DIS | M0)) /*GPMC_nCS5*/\
 	MUX_VAL(CP(GPMC_NCS6),		(IEN  | PTD | DIS | M1)) /*SYS_nDMA_REQ2*/\
@@ -707,6 +706,7 @@ const omap3_sysinfo sysinfo = {
 	\
 	/* {RD}  */\
 	MUX_VAL(CP(GPMC_WAIT2),		(IDIS | PTU | DIS | M4)) /*GPIO_64*/	/* {RD} : OMAP_STATUS_1 - Output pin */\
+	MUX_VAL(CP(GPMC_NCS2),		(IDIS | PTU | DIS | M4)) /*GPIO_53*/    /* {RD} : emmc reset pin  */\
 	MUX_VAL(CP(GPMC_NCS3),		(IDIS | PTU | DIS | M4)) /*GPIO_54*/    /* {RD} : Enable U107  */\
 	/* {RD} */\
 	MUX_VAL(CP(ETK_CLK_ES2),	(IEN  | PTD | EN  | M4)) /*GPIO_12*/	/* {PS} : CP_INT 		- Input pin */\
