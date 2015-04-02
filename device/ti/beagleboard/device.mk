@@ -17,10 +17,12 @@
 
 PRODUCT_COPY_FILES := \
 	device/ti/beagleboard/init.omap3beagleboard.rc:root/init.omap3beagleboard.rc \
+	device/ti/beagleboard/init.b2g.rc:root/init.b2g.rc \
 	device/ti/beagleboard/beagleboard.xml:system/etc/sound/beagleboard.xml \
 	device/ti/beagleboard/vold.fstab:system/etc/vold.fstab \
 	device/ti/beagleboard/fstab.omap3beagleboard:root/fstab.omap3beagleboard \
 	device/ti/beagleboard/media_codecs.xml:system/etc/media_codecs.xml \
+	device/ti/beagleboard/b2g-init:system/bin/b2g-init \
 	device/ti/beagleboard/audio_policy.conf:system/etc/audio_policy.conf
 
 PRODUCT_COPY_FILES += \
@@ -29,13 +31,13 @@ PRODUCT_COPY_FILES += \
 
 PRODUCT_COPY_FILES += \
 	frameworks/native/data/etc/android.hardware.sensor.accelerometer.xml:system/etc/permissions/android.hardware.sensor.accelerometer.xml \
-    frameworks/native/data/etc/android.hardware.sensor.compass.xml:system/etc/permissions/android.hardware.sensor.compass.xml
+    	frameworks/native/data/etc/android.hardware.sensor.compass.xml:system/etc/permissions/android.hardware.sensor.compass.xml
 
 PRODUCT_COPY_FILES += \
 	frameworks/native/data/etc/android.hardware.wifi.xml:system/etc/permissions/android.hardware.wifi.xml \
 	frameworks/native/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml \
 	frameworks/native/data/etc/android.hardware.bluetooth.xml:system/etc/permissions/android.hardware.bluetooth.xml \
-    system/bluetooth/data/main.nonsmartphone.conf:system/etc/bluetooth/main.conf
+    	system/bluetooth/data/main.nonsmartphone.conf:system/etc/bluetooth/main.conf
 	
 PRODUCT_PROPERTY_OVERRIDES := \
 	hwui.render_dirty_regions=false \
