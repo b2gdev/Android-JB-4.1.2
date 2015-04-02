@@ -684,10 +684,10 @@ const omap3_sysinfo sysinfo = {
 	MUX_VAL(CP(CSI2_DY0),		(IEN  | PTD | DIS | M4)) /*GPIO_113*/	/* {PS} : AUD_INT 		- Input pin */\
 	MUX_VAL(CP(CSI2_DX1),		(IEN  | PTU | DIS | M4)) /*GPIO_114*/	/* {PS} : CHRG_STAT 	- Input pin */\
 	MUX_VAL(CP(CSI2_DY1),		(IEN  | PTU | DIS | M4)) /*GPIO_115*/	/* {PS} : FM_INT 		- Input pin */\
-	MUX_VAL(CP(MMC1_DAT4),		(IDIS | PTD | DIS | M4)) /*GPIO_126*/	/* {PS} : TV_PWR_EN		- Output pin */\
-	MUX_VAL(CP(MMC1_DAT5),		(IDIS | PTU | EN  | M4)) /*GPIO_127*/	/* {PS} : TV_OUT_EN		- Output pin */\
-	MUX_VAL(CP(MMC1_DAT6),		(IDIS | PTD | DIS | M4)) /*GPIO_128*/	/* {PS} : 3GM_W_DSBL	- Output pin */\
-	MUX_VAL(CP(MMC1_DAT7),		(IDIS | PTD | DIS | M4)) /*GPIO_129*/	/* {PS} : 3GM_MDL_RST	- Output pin */\
+	MUX_VAL(CP(GPIO126),		(IDIS | PTD | DIS | M4)) /*GPIO_126*/	/* {RD} : TV_PWR_EN		- Output pin */\
+	MUX_VAL(CP(GPIO127),		(IDIS | PTU | EN  | M4)) /*GPIO_127*/	/* {RD} : TV_OUT_EN		- Output pin */\
+	MUX_VAL(CP(GPIO128),		(IDIS | PTD | DIS | M4)) /*GPIO_128*/	/* {RD} : 3GM_W_nDSBL	- Output pin */\
+	MUX_VAL(CP(GPIO129),		(IDIS | PTD | DIS | M4)) /*GPIO_129*/	/* {RD} : 3GM_RST		- Output pin */\
 	MUX_VAL(CP(MCBSP3_DX),		(IDIS | PTU | DIS | M4)) /*GPIO_140*/	/* {PS} : GPS_nEN		- Output pin */\
 	MUX_VAL(CP(MCBSP3_DR),		(IDIS | PTD | DIS | M4)) /*GPIO_141*/	/* {PS} : PWR03_EN		- Output pin */\
 	MUX_VAL(CP(UART1_RTS),		(IEN  | PTD | DIS | M4)) /*GPIO_149*/ 	/* {PS} : WL_INT 		- Input pin */\
@@ -716,6 +716,7 @@ const omap3_sysinfo sysinfo = {
 	MUX_VAL(CP(ETK_D2_ES2),		(IDIS | PTD | DIS | M4)) /*GPIO_16*/	/* {PS} : 3GM_PWR_nEN 	- Output pin */\
 	MUX_VAL(CP(ETK_D7_ES2),		(IDIS | PTD | DIS | M4)) /*GPIO_21*/	/* {PS} : USB_PWR_EN	- Output pin */\	
 	MUX_VAL(CP(ETK_D9_ES2),		(IDIS | PTD | DIS | M4)) /*GPIO_23*/	/* {PS} : 3GM_OE		- Output pin */\
+	MUX_VAL(CP(JTAG_EMU0),		(IDIS | PTD | DIS | M4)) /*GPIO_11*/	/* {RD} : 3GM_SEC_PWR_EN- Output pin */\
 	MUX_VAL(CP(HDQ_SIO),		(IEN  | PTD | DIS | M7)) /*GPIO_170*/	/* {PS} : NC pin */\
 /* TV OUT */\
 	/* {PS} : TV_OUT1, TV_OUT2, TV_VFB1, TV_VFB2, TV_VREF are dedicated pins for TV output */\
