@@ -33,11 +33,14 @@
 -->
 
 <StorageList xmlns:android="http://schemas.android.com/apk/res/android">
+	<storage android:storageDescription="@string/storage_internal"
+             android:emulated="true"
+             android:mtpReserve="100"
+             android:primary="false"/>
     <storage android:mountPoint="/storage/sdcard"
              android:storageDescription="@string/storage_sd_card"
              android:primary="true"
-             android:emulated="true"
-             android:mtpReserve="100"
+             android:removable="true"
              android:allowMassStorage="true"/>
     <storage android:mountPoint="/storage/usb1"
              android:storageDescription="@string/storage_usb"
