@@ -20,15 +20,15 @@ setProperty persist.service.adb.enable 1
 setField secure adb_enabled 1
 
 # enable keyboard monitoring
-set -- `ls /sys/devices/platform/cp430_keypad/input*`
-[ "${#}" -eq 1 ] && {
-   name="${1##*/}"
-   event="${name#input}"
-   [ -n "${event}" ] && {
-     device="/dev/input/event${event}"
-     chmod 444 "${device}"
-   }
-}
+#set -- `ls /sys/devices/platform/cp430_keypad/input*`
+#[ "${#}" -eq 1 ] && {
+#   name="${1##*/}"
+#   event="${name#input}"
+#   [ -n "${event}" ] && {
+#     device="/dev/input/event${event}"
+#     chmod 444 "${device}"
+#   }
+#}
 
 # enable key event injection
 chmod 666 /dev/uinput
