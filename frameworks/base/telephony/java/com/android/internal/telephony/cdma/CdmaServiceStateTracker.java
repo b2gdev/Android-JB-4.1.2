@@ -1,4 +1,10 @@
 /*
+ * This source code is "Not a Contribution" under Apache license
+ *
+ * Based on work by The Android Open Source Project
+ * Modified by Sierra Wireless, Inc.
+ *
+ * Copyright (C) 2012 Sierra Wireless, Inc.
  * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -87,6 +93,9 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
     private static final int NITZ_UPDATE_DIFF_DEFAULT = 2000;
     private int mNitzUpdateDiff = SystemProperties.getInt("ro.nitz_update_diff",
             NITZ_UPDATE_DIFF_DEFAULT);
+
+    private boolean mSubscribeOnRuimReady = SystemProperties.getBoolean(
+            "ro.cdma.subscribe_on_ruim_ready", false);
 
     private boolean mCdmaRoaming = false;
     private int mRoamingIndicator;
@@ -294,7 +303,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
                 mNeedToRegForRuimLoaded = false;
             }
 
-            if (phone.getLteOnCdmaMode() == Phone.LTE_ON_CDMA_TRUE) {
+            if (!mSubscribeOnRuimReady && phone.getLteOnCdmaMode() == Phone.LTE_ON_CDMA_TRUE) {
                 // Subscription will be read from SIM I/O
                 if (DBG) log("Receive EVENT_RUIM_READY");
                 pollState();
@@ -1183,7 +1192,10 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         case 7: // RADIO_TECHNOLOGY_EVDO_0
         case 8: // RADIO_TECHNOLOGY_EVDO_A
         case 12: // RADIO_TECHNOLOGY_EVDO_B
-        case 13: // RADIO_TECHNOLOGY_EHRPD
+/* SWISTART */
+        /* case 13: // RADIO_TECHNOLOGY_EHRPD */
+        case 14: // RADIO_TECHNOLOGY_EHRPD
+/* SWISTOP */
             retVal = ServiceState.STATE_IN_SERVICE;
             break;
         default:

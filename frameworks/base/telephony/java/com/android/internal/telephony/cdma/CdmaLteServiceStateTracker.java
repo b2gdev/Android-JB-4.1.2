@@ -1,4 +1,10 @@
 /*
+ * This source code is "Not a Contribution" under Apache license
+
+ * Based on work by The Android Open Source Project
+ * Modified by Sierra Wireless, Inc.
+
+ * Copyright (C) 2012 Sierra Wireless, Inc.
  * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -356,7 +362,10 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
                     eriText = phone.getContext()
                             .getText(com.android.internal.R.string.roamingTextSearching).toString();
                 }
-                ss.setOperatorAlphaLong(eriText);
+                //SWISTART
+                if(!eriText.equals("")) 
+                    ss.setOperatorAlphaLong(eriText);
+                //SWISTOP
             }
 
             if (phone.getIccCard().getState() == IccCard.State.READY) {
@@ -365,7 +374,10 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
                 boolean showSpn =
                     ((CdmaLteUiccRecords)phone.mIccRecords).getCsimSpnDisplayCondition();
                 int iconIndex = ss.getCdmaEriIconIndex();
-
+                //SWISTART
+                if(iconIndex == EriInfo.ROAMING_INDICATOR_ON)
+                    ss.setRoaming(true);
+                //SWISTOP
                 if (showSpn && (iconIndex == EriInfo.ROAMING_INDICATOR_OFF) &&
                     isInHomeSidNid(ss.getSystemId(), ss.getNetworkId())) {
                     ss.setOperatorAlphaLong(phone.mIccRecords.getServiceProviderName());
@@ -525,6 +537,19 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
         // SID/NID are not in the list. So device is not in home network
         return false;
     }
+
+// SWISTART
+// SWI_TBD: Copied from ICS 4.0.1  -- there may be a better way to do this.
+    /**
+     * Returns OTASP_NOT_NEEDED as its not needed for LTE
+     */
+    @Override
+    int getOtasp() {
+        int provisioningState = OTASP_NOT_NEEDED;
+        if (DBG) log("getOtasp: state=" + provisioningState);
+        return provisioningState;
+    }
+// SWISTART
 
     @Override
     protected void log(String s) {

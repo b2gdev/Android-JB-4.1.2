@@ -1,4 +1,10 @@
 /*
+ * This source code is "Not a Contribution" under Apache license
+ *
+ * Based on work by The Android Open Source Project
+ * Modified by Sierra Wireless, Inc.
+ *
+ * Copyright (C) 2012 Sierra Wireless, Inc.
  * Copyright (C) 2006 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -94,10 +100,12 @@ public class ServiceState implements Parcelable {
     public static final int RIL_RADIO_TECHNOLOGY_HSPA = 11;
     /** @hide */
     public static final int RIL_RADIO_TECHNOLOGY_EVDO_B = 12;
+/* SWISTART */
     /** @hide */
-    public static final int RIL_RADIO_TECHNOLOGY_EHRPD = 13;
+    public static final int RIL_RADIO_TECHNOLOGY_LTE = 13;
     /** @hide */
-    public static final int RIL_RADIO_TECHNOLOGY_LTE = 14;
+    public static final int RIL_RADIO_TECHNOLOGY_EHRPD = 14;
+/* SWISTOP */
     /** @hide */
     public static final int RIL_RADIO_TECHNOLOGY_HSPAP = 15;
     /**

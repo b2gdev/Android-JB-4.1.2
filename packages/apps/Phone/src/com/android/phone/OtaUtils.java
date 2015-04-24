@@ -1,4 +1,10 @@
 /*
+ * This source code is "Not a Contribution" under Apache license
+ *
+ * Based on work by The Android Open Source Project
+ * Modified by Sierra Wireless, Inc.
+ *
+ * Copyright (C) 2012 Sierra Wireless, Inc.
  * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +26,9 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.TelephonyCapabilities;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.phone.OtaUtils.CdmaOtaInCallScreenUiState.State;
+/* SWISTART */
+import com.android.internal.telephony.RILConstants;
+/* SWISTOP */
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -61,7 +70,9 @@ import android.widget.ToggleButton;
  */
 public class OtaUtils {
     private static final String LOG_TAG = "OtaUtils";
-    private static final boolean DBG = false;
+/* SWISTART */
+    private static final boolean DBG = true;
+/* SWISTOP */
 
     public static final int OTA_SHOW_ACTIVATION_SCREEN_OFF = 0;
     public static final int OTA_SHOW_ACTIVATION_SCREEN_ON = 1;
@@ -339,10 +350,20 @@ public class OtaUtils {
         } else {
             if (phoneNeedsActivation) {
                 app.cdmaOtaProvisionData.isOtaCallIntentProcessed = false;
-                Intent newIntent = new Intent(ACTION_PERFORM_VOICELESS_CDMA_PROVISIONING);
-                newIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                newIntent.putExtra(EXTRA_VOICELESS_PROVISIONING_OFFER_DONTSHOW, true);
-                context.startActivity(newIntent);
+/* SWISTART */
+                //Intent newIntent = new Intent(ACTION_PERFORM_VOICELESS_CDMA_PROVISIONING);
+                //newIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                //newIntent.putExtra(EXTRA_VOICELESS_PROVISIONING_OFFER_DONTSHOW, true);
+                //context.startActivity(newIntent);
+    
+                /* send OEM hook string with subcommand 5, 
+                 * it triggers a CDMA activation procedure by RIL 
+                 */
+                String s[] = new String[1];
+                
+                s[0] = RILConstants.OEM_HOOK_STRING_CDMA_ACTIVATION;
+                phone.invokeOemRilRequestStrings(s, null);
+/* SWISTOP */
                 if (DBG) log("maybeDoOtaCall: non-interactive; activation intent sent.");
             } else {
                 if (DBG) log("maybeDoOtaCall: non-interactive, no need for OTASP.");
@@ -658,8 +679,21 @@ public class OtaUtils {
                     CdmaOtaScreenState.OtaScreenState.OTA_STATUS_UNDEFINED) {
                     updateOtaspProgress();
                 }
-
+/* SWISTART */
+                /* shows activation success */
+                otaShowSuccessFailure();
+/* SWISTOP */
                 break;
+
+/* SWISTART */
+            /* shows activation failure and provides "Try again" button */
+            case Phone.CDMA_OTA_PROVISION_STATUS_OTAPA_ABORTED:
+                otaShowInProgressScreen();
+                mApplication.cdmaOtaProvisionData.isOtaCallCommitted = false;
+                if (DBG) log("onOtaProvisionStatusChanged(): OTAPA ABORTED");
+                otaShowSuccessFailure();
+                break;
+/* SWISTOP */
 
             case Phone.CDMA_OTA_PROVISION_STATUS_SPL_UNLOCKED:
             case Phone.CDMA_OTA_PROVISION_STATUS_A_KEY_EXCHANGED:
@@ -670,7 +704,9 @@ public class OtaUtils {
             case Phone.CDMA_OTA_PROVISION_STATUS_PRL_DOWNLOADED:
             case Phone.CDMA_OTA_PROVISION_STATUS_OTAPA_STARTED:
             case Phone.CDMA_OTA_PROVISION_STATUS_OTAPA_STOPPED:
-            case Phone.CDMA_OTA_PROVISION_STATUS_OTAPA_ABORTED:
+/* SWISTART */
+            //case Phone.CDMA_OTA_PROVISION_STATUS_OTAPA_ABORTED:
+/* SWISTOP */
                 // Only update progress when OTA call is in normal state
                 if (getCdmaOtaInCallScreenUiState() == CdmaOtaInCallScreenUiState.State.NORMAL) {
                     if (DBG) log("onOtaProvisionStatusChanged(): change to ProgressScreen");
@@ -725,6 +761,10 @@ public class OtaUtils {
      */
     private void otaPerformActivation() {
         if (DBG) log("otaPerformActivation()...");
+/* SWISTART */
+        PhoneApp app = PhoneApp.getInstance();
+        Phone phone = app.phone;
+/* SWISTOP */
         if (!mInteractive) {
             // We shouldn't ever get here in non-interactive mode!
             Log.w(LOG_TAG, "otaPerformActivation: not interactive!");
@@ -732,16 +772,27 @@ public class OtaUtils {
         }
 
         if (!mApplication.cdmaOtaProvisionData.inOtaSpcState) {
+/* SWISTART */
             // Place an outgoing call to the special OTASP number:
-            Intent newIntent = new Intent(Intent.ACTION_CALL);
-            newIntent.setData(Uri.fromParts(Constants.SCHEME_TEL, OTASP_NUMBER, null));
+            //Intent newIntent = new Intent(Intent.ACTION_CALL);
+            //newIntent.setData(Uri.fromParts(Constants.SCHEME_TEL, OTASP_NUMBER, null));
 
             // Initiate the outgoing call:
-            mApplication.callController.placeCall(newIntent);
+            //mApplication.callController.placeCall(newIntent);
+/* SWISTOP */
 
             // ...and get the OTASP-specific UI into the right state.
             otaShowListeningScreen();
             mInCallScreen.requestUpdateScreen();
+/* SWISTART */
+            /* send OEM hook string with subcommand 5, 
+             * it triggers a CDMA activation procedure by RIL 
+             */
+            String s[] = new String[1];
+            
+            s[0] = RILConstants.OEM_HOOK_STRING_CDMA_ACTIVATION;
+            phone.invokeOemRilRequestStrings(s, null);
+/* SWISTOP */
         }
         return;
     }

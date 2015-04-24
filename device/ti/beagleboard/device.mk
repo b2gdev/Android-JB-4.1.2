@@ -26,6 +26,21 @@ PRODUCT_COPY_FILES := \
 	device/ti/beagleboard/audio_policy.conf:system/etc/audio_policy.conf
 
 PRODUCT_COPY_FILES += \
+#	device/ti/beagleboard/sierra_binaries/system/system/bin/ash:system/bin/ash \
+	device/ti/beagleboard/sierra_binaries/system/bin/init.dhcpcd:system/bin/init.dhcpcd \
+	device/ti/beagleboard/sierra_binaries/system/bin/init.ril-daemon:system/bin/init.ril-daemon \
+#	device/ti/beagleboard/sierra_binaries/system/bin/SierraDMLog:system/bin/SierraDMLog \
+#	device/ti/beagleboard/sierra_binaries/system/bin/SierraFwDl77xx:system/bin/SierraFwDl77xx \
+#	device/ti/beagleboard/sierra_binaries/system/bin/SierraSARTool:system/bin/SierraSARTool \
+#	device/ti/beagleboard/sierra_binaries/system/bin/SierraImgMgr:system/bin/SierraImgMgr \
+#	device/ti/beagleboard/sierra_binaries/system/bin/slqssdk:system/bin/slqssdk \
+#	device/ti/beagleboard/sierra_binaries/system/lib/libswiqmiapi.so:system/lib/libswiqmiapi.so \
+#	device/ti/beagleboard/sierra_binaries/system/lib/libswigpsqmi.so:system/lib/libswigpsqmi.so \
+#	device/ti/beagleboard/sierra_binaries/system/lib/libsierra-ril.so:system/lib/libsierra-ril.so \
+#	device/ti/beagleboard/sierra_binaries/system/lib/libswims.so:system/lib/libswims.so \
+	device/ti/beagleboard/sierra_binaries/system/app/com.sierra.logs.apk:system/app/com.sierra.logs.apk
+
+PRODUCT_COPY_FILES += \
 	frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml \
 	frameworks/native/data/etc/android.hardware.usb.host.xml:system/etc/permissions/android.hardware.usb.host.xml
 
@@ -38,7 +53,7 @@ PRODUCT_COPY_FILES += \
 	frameworks/native/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml \
 	frameworks/native/data/etc/android.hardware.bluetooth.xml:system/etc/permissions/android.hardware.bluetooth.xml \
     	system/bluetooth/data/main.nonsmartphone.conf:system/etc/bluetooth/main.conf
-	
+
 PRODUCT_PROPERTY_OVERRIDES := \
 	hwui.render_dirty_regions=false \
 	ro.sf.lcd_density=120
@@ -56,6 +71,9 @@ DEVICE_PACKAGE_OVERLAYS := \
     device/ti/beagleboard/overlay
 
 PRODUCT_TAGS += dalvik.gc.type-precise
+
+PRODUCT_PACKAGES += \
+	ash
 
 PRODUCT_PACKAGES += \
 	librs_jni \

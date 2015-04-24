@@ -495,3 +495,10 @@ GRANDFATHERED_USER_MODULES += \
 	wpa_supplicant \
 	yuv420sp2rgb \
 	zipalign
+
+# SWISTART 
+# Add Sierra RIL related modules
+# It is not an error if the file does not exist.
+include hardware/sierra/user_tags.mk
+# SWISTOP
+

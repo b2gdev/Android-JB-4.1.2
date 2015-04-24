@@ -193,6 +193,7 @@ on post-fs-data
     mkdir /data/property 0700 root root
     mkdir /data/ssh 0750 root shell
     mkdir /data/ssh/empty 0700 root root
+    mkdir /data/radio 0770 radio radio
 
     # create dalvik-cache, so as to enforce our permissions
     mkdir /data/dalvik-cache 0771 system system
@@ -309,6 +310,15 @@ on boot
     setprop net.tcp.buffersize.edge    4093,26280,35040,4096,16384,35040
     setprop net.tcp.buffersize.gprs    4092,8760,11680,4096,8760,11680
 
+    #SWISTART
+    chmod 0755 /system/bin/slqssdk
+    chmod 0755 /system/bin/init.dhcpcd
+    chmod 0755 /system/bin/init.ril-daemon
+
+    # device driver
+    insmod /system/usr/modules/GobiNet.ko
+    #SWISTOP
+
 # Set this property so surfaceflinger is not started by system_init
     setprop system_init.startsurfaceflinger 0
 
@@ -390,12 +400,23 @@ service netd /system/bin/netd
 service debuggerd /system/bin/debuggerd
     class main
 
-service ril-daemon /system/bin/rild
+#SWISTART
+# define service of sierra_dhcpcd
+service sierra_dhcpcd /system/bin/init.dhcpcd
     class main
+    user root
+    group radio cache inet misc
+    disabled
+    oneshot
+
+service ril-daemon /system/bin/init.ril-daemon
+    class main
+    socket swigps stream 660 system radio
+#SWISTOP
     socket rild stream 660 root radio
     socket rild-debug stream 660 radio system
     user root
-    group radio cache inet misc audio sdcard_r sdcard_rw log
+    group radio cache inet misc audio sdcard_r sdcard_rw qcom_oncrpc qcom_diag log
 
 service surfaceflinger /system/bin/surfaceflinger
     class main
