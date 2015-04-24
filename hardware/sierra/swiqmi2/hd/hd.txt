@@ -1,0 +1,303 @@
+/* 
+ * Filename: hd.txt
+ *
+ * Name:  HD Package User Information
+ * 
+ * Purpose: The HD package implements a simple framing protocol. Named
+ *          because of its resemblance to the HDLC framing mechanism, 
+ *          this package accepts pointers to data for transmission from 
+ *          an arbitrary upper layer, appends and prepends a FLAG character
+ *          (0x7E) and escapes occurrences of either the flag or an escape
+ *          character which may appear within the data packet. The escape
+ *          algorithm is:
+ *  
+ *          if an escape or flag character is encountered, replace it in 
+ *          the data stream with:
+ *
+ *          <ESCAPE>, (<data> ^ 0x20)
+ *          
+ *          Thus, each occurence of one of these characters is replaced by
+ *          two characters, making the output buffer larger than the input
+ * 
+ *          The opposite operation is performed in the receive direction:
+ *          Incoming packets of data are deframed by removing their leading
+ *          and trailing FLAG characters. And any 2-byte escape sequences
+ *          are replaced by the original single-byte value. 
+ *          
+ * Entry Points:
+ *          There are two entry points, one used by an upper layer 
+ *          (e.g. HIP) which passes packets to the HD package for 
+ *          transmission to a lower layer, and one for receiving packets 
+ *          from a lower-layer interface and passing them on to an 
+ *          upper layer. At the moment the package is hard-coded to 
+ *          pass incoming packets to "hpdispatch", however this could be
+ *          made more general purpose in future if needed.
+ *          
+ *          There is one additional entry point which initializes the HD
+ *          package during startup. 
+ *          
+ *          Send a packet:
+ *             hdTxPacket()   - See hduser.c for details
+ *          
+ *          Receive a packet
+ *             hdRxPacket()   - See hduser.c for details
+ *          
+ *          Package initialization function
+ *             hdinit()       - See hduser.c for details
+ *          
+ *
+ * Testing:
+ *          To test this package, compile and link the images including
+ *          hdtest.c from the command line. Execute the target and review
+ *          the output. A copy of the GOOD output from a test execution is
+ *          included after the comment section of this file
+ *          
+ * Limitations:
+ *          Successive packets will only be recieved correctly if there
+ *          is more than one flag between them. In other words, if one
+ *          packet ends and the trailing flag of that packet is used to
+ *          signal the start of the next, then the next packet will be 
+ *          lost. At least 1 more flag is required for this scenario to
+ *          function correctly
+ *          
+ *          
+ * NOTE:    This package currently is hard-coded to send received frames
+ *          to the HIP layer and to send transmitted frames to the HIP
+ *          endpoints. In future, if this framing mechanism must support
+ *          multiple ports or different protocols (other than HIP), the
+ *          code will need to be modified
+ *          
+ */          
+
+/* Good Test Output follows */
+******************** Start of Tx tests *******************
+---------------------------------------------------
+Sending packet 1: Outbound_OK, Unframed Size: 1
+Starting Outbound_OK validation, Outpacket size: 4, Canned size 4
+0 errors found in sent frame
+Tx test callback for index 0. Error: 0
+---------------------------------------------------
+Sending packet 2: Outbound_OK, Unframed Size: 8
+Starting Outbound_OK validation, Outpacket size: 18, Canned size 18
+0 errors found in sent frame
+Tx test callback for index 1. Error: 0
+---------------------------------------------------
+Sending packet 3: Outbound_OK, Unframed Size: 256
+Starting Outbound_OK validation, Outpacket size: 260, Canned size 260
+0 errors found in sent frame
+Tx test callback for index 2. Error: 0
+---------------------------------------------------
+Sending packet 4: Outbound_OK, Unframed Size: 1024
+Starting Outbound_OK validation, Outpacket size: 1034, Canned size 1034
+0 errors found in sent frame
+Tx test callback for index 3. Error: 0
+---------------------------------------------------
+Sending packet 5: Outbound_Errors, Unframed Size: 256
+Starting Outbound_Errors validation, Outpacket size: 260, Canned size 260
+Content mismatch at offset 35
+Content mismatch at offset 247
+2 errors found in sent frame
+Tx test callback for index 4. Error: 0
+---------------------------------------------------
+Sending packet 6: Outbound_OK, Unframed Size: 872
+Starting Outbound_OK validation, Outpacket size: 882, Canned size 1036
+Outbound_OK framed packet size: 882, should be 1036 
+1 errors found in sent frame
+Tx test callback for index 5. Error: 0
+
+******************** End of Tx Tests **********************
+
+
+******************** Start of Rx Tests ********************
+---------------------------------------------------
+Receiving packet 1: Inbound_OK, Framed Size: 4
+Starting Inbound_OK validation. Packet size: 1
+ 7e 
+0 errors found in sent frame
+---------------------------------------------------
+Receiving packet 2: Inbound_OK, Framed Size: 18
+Starting Inbound_OK validation. Packet size: 8
+ 7d  7e  7d  7d  7e  7e  7d  7e 
+0 errors found in sent frame
+---------------------------------------------------
+Receiving packet 3: Inbound_OK, Framed Size: 260
+Starting Inbound_OK validation. Packet size: 256
+ ff  fe  fd  fc  fb  fa  f9  f8  f7  f6  f5  f4  f3  f2  f1  f0 
+ ef  ee  ed  ec  eb  ea  e9  e8  e7  e6  e5  e4  e3  e2  e1  e0 
+ df  de  dd  dc  db  da  d9  d8  d7  d6  d5  d4  d3  d2  d1  d0 
+ cf  ce  cd  cc  cb  ca  c9  c8  c7  c6  c5  c4  c3  c2  c1  c0 
+ bf  be  bd  bc  bb  ba  b9  b8  b7  b6  b5  b4  b3  b2  b1  b0 
+ af  ae  ad  ac  ab  aa  a9  a8  a7  a6  a5  a4  a3  a2  a1  a0 
+ 9f  9e  9d  9c  9b  9a  99  98  97  96  95  94  93  92  91  90 
+ 8f  8e  8d  8c  8b  8a  89  88  87  86  85  84  83  82  81  80 
+ 7f  7e  7d  7c  7b  7a  79  78  77  76  75  74  73  72  71  70 
+ 6f  6e  6d  6c  6b  6a  69  68  67  66  65  64  63  62  61  60 
+ 5f  5e  5d  5c  5b  5a  59  58  57  56  55  54  53  52  51  50 
+ 4f  4e  4d  4c  4b  4a  49  48  47  46  45  44  43  42  41  40 
+ 3f  3e  3d  3c  3b  3a  39  38  37  36  35  34  33  32  31  30 
+ 2f  2e  2d  2c  2b  2a  29  28  27  26  25  24  23  22  21  20 
+ 1f  1e  1d  1c  1b  1a  19  18  17  16  15  14  13  12  11  10 
+ 0f  0e  0d  0c  0b  0a  09  08  07  06  05  04  03  02  01  00 
+0 errors found in sent frame
+---------------------------------------------------
+Receiving packet 4: Inbound_OK, Framed Size: 1034
+Starting Inbound_OK validation. Packet size: 1024
+ ff  fe  fd  fc  fb  fa  f9  f8  f7  f6  f5  f4  f3  f2  f1  f0 
+ ef  ee  ed  ec  eb  ea  e9  e8  e7  e6  e5  e4  e3  e2  e1  e0 
+ df  de  dd  dc  db  da  d9  d8  d7  d6  d5  d4  d3  d2  d1  d0 
+ cf  ce  cd  cc  cb  ca  c9  c8  c7  c6  c5  c4  c3  c2  c1  c0 
+ bf  be  bd  bc  bb  ba  b9  b8  b7  b6  b5  b4  b3  b2  b1  b0 
+ af  ae  ad  ac  ab  aa  a9  a8  a7  a6  a5  a4  a3  a2  a1  a0 
+ 9f  9e  9d  9c  9b  9a  99  98  97  96  95  94  93  92  91  90 
+ 8f  8e  8d  8c  8b  8a  89  88  87  86  85  84  83  82  81  80 
+ 7f  7e  7d  7c  7b  7a  79  78  77  76  75  74  73  72  71  70 
+ 6f  6e  6d  6c  6b  6a  69  68  67  66  65  64  63  62  61  60 
+ 5f  5e  5d  5c  5b  5a  59  58  57  56  55  54  53  52  51  50 
+ 4f  4e  4d  4c  4b  4a  49  48  47  46  45  44  43  42  41  40 
+ 3f  3e  3d  3c  3b  3a  39  38  37  36  35  34  33  32  31  30 
+ 2f  2e  2d  2c  2b  2a  29  28  27  26  25  24  23  22  21  20 
+ 1f  1e  1d  1c  1b  1a  19  18  17  16  15  14  13  12  11  10 
+ 0f  0e  0d  0c  0b  0a  09  08  07  06  05  04  03  02  01  00 
+ ff  fe  fd  fc  fb  fa  f9  f8  f7  f6  f5  f4  f3  f2  f1  f0 
+ ef  ee  ed  ec  eb  ea  e9  e8  e7  e6  e5  e4  e3  e2  e1  e0 
+ df  de  dd  dc  db  da  d9  d8  d7  d6  d5  d4  d3  d2  d1  d0 
+ cf  ce  cd  cc  cb  ca  c9  c8  c7  c6  c5  c4  c3  c2  c1  c0 
+ bf  be  bd  bc  bb  ba  b9  b8  b7  b6  b5  b4  b3  b2  b1  b0 
+ af  ae  ad  ac  ab  aa  a9  a8  a7  a6  a5  a4  a3  a2  a1  a0 
+ 9f  9e  9d  9c  9b  9a  99  98  97  96  95  94  93  92  91  90 
+ 8f  8e  8d  8c  8b  8a  89  88  87  86  85  84  83  82  81  80 
+ 7f  7e  7d  7c  7b  7a  79  78  77  76  75  74  73  72  71  70 
+ 6f  6e  6d  6c  6b  6a  69  68  67  66  65  64  63  62  61  60 
+ 5f  5e  5d  5c  5b  5a  59  58  57  56  55  54  53  52  51  50 
+ 4f  4e  4d  4c  4b  4a  49  48  47  46  45  44  43  42  41  40 
+ 3f  3e  3d  3c  3b  3a  39  38  37  36  35  34  33  32  31  30 
+ 2f  2e  2d  2c  2b  2a  29  28  27  26  25  24  23  22  21  20 
+ 1f  1e  1d  1c  1b  1a  19  18  17  16  15  14  13  12  11  10 
+ 0f  0e  0d  0c  0b  0a  09  08  07  06  05  04  03  02  01  00 
+ ff  fe  fd  fc  fb  fa  f9  f8  f7  f6  f5  f4  f3  f2  f1  f0 
+ ef  ee  ed  ec  eb  ea  e9  e8  e7  e6  e5  e4  e3  e2  e1  e0 
+ df  de  dd  dc  db  da  d9  d8  d7  d6  d5  d4  d3  d2  d1  d0 
+ cf  ce  cd  cc  cb  ca  c9  c8  c7  c6  c5  c4  c3  c2  c1  c0 
+ bf  be  bd  bc  bb  ba  b9  b8  b7  b6  b5  b4  b3  b2  b1  b0 
+ af  ae  ad  ac  ab  aa  a9  a8  a7  a6  a5  a4  a3  a2  a1  a0 
+ 9f  9e  9d  9c  9b  9a  99  98  97  96  95  94  93  92  91  90 
+ 8f  8e  8d  8c  8b  8a  89  88  87  86  85  84  83  82  81  80 
+ 7f  7e  7d  7c  7b  7a  79  78  77  76  75  74  73  72  71  70 
+ 6f  6e  6d  6c  6b  6a  69  68  67  66  65  64  63  62  61  60 
+ 5f  5e  5d  5c  5b  5a  59  58  57  56  55  54  53  52  51  50 
+ 4f  4e  4d  4c  4b  4a  49  48  47  46  45  44  43  42  41  40 
+ 3f  3e  3d  3c  3b  3a  39  38  37  36  35  34  33  32  31  30 
+ 2f  2e  2d  2c  2b  2a  29  28  27  26  25  24  23  22  21  20 
+ 1f  1e  1d  1c  1b  1a  19  18  17  16  15  14  13  12  11  10 
+ 0f  0e  0d  0c  0b  0a  09  08  07  06  05  04  03  02  01  00 
+ ff  fe  fd  fc  fb  fa  f9  f8  f7  f6  f5  f4  f3  f2  f1  f0 
+ ef  ee  ed  ec  eb  ea  e9  e8  e7  e6  e5  e4  e3  e2  e1  e0 
+ df  de  dd  dc  db  da  d9  d8  d7  d6  d5  d4  d3  d2  d1  d0 
+ cf  ce  cd  cc  cb  ca  c9  c8  c7  c6  c5  c4  c3  c2  c1  c0 
+ bf  be  bd  bc  bb  ba  b9  b8  b7  b6  b5  b4  b3  b2  b1  b0 
+ af  ae  ad  ac  ab  aa  a9  a8  a7  a6  a5  a4  a3  a2  a1  a0 
+ 9f  9e  9d  9c  9b  9a  99  98  97  96  95  94  93  92  91  90 
+ 8f  8e  8d  8c  8b  8a  89  88  87  86  85  84  83  82  81  80 
+ 7f  7e  7d  7c  7b  7a  79  78  77  76  75  74  73  72  71  70 
+ 6f  6e  6d  6c  6b  6a  69  68  67  66  65  64  63  62  61  60 
+ 5f  5e  5d  5c  5b  5a  59  58  57  56  55  54  53  52  51  50 
+ 4f  4e  4d  4c  4b  4a  49  48  47  46  45  44  43  42  41  40 
+ 3f  3e  3d  3c  3b  3a  39  38  37  36  35  34  33  32  31  30 
+ 2f  2e  2d  2c  2b  2a  29  28  27  26  25  24  23  22  21  20 
+ 1f  1e  1d  1c  1b  1a  19  18  17  16  15  14  13  12  11  10 
+ 0f  0e  0d  0c  0b  0a  09  08  07  06  05  04  03  02  01  00 
+0 errors found in sent frame
+---------------------------------------------------
+Receiving packet 5: Inbound_Errors, Framed Size: 260
+Starting Inbound_Errors validation. Packet size: 256
+ ff  fe  fd  fc  fb  fa  f9  f8  f7  f6  f5  f4  f3  f2  f1  f0 
+ ef  ee  ed  ec  eb  ea  e9  e8  e7  e6  e5  e4  e3  e2  e1  e0 
+ df  de  dd  dc  db  da  d9  d8  d7  d6  d5  d4  d3  d2  d1  d0 
+ cf  ce  cd  cc  cb  ca  c9  c8  c7  c6  c5  c4  c3  c2  c1  c0 
+ bf  be  bd  bc  bb  ba  b9  b8  b7  b6  b5  b4  b3  b2  b1  b0 
+ af  ae  ad  ac  ab  aa  a9  a8  a7  a6  a5  a4  a3  a2  a1  a0 
+ 9f  9e  9d  9c  9b  9a  99  98  97  96  95  94  93  92  91  90 
+ 8f  8e  8d  8c  8b  8a  89  88  87  86  85  84  83  82  81  80 
+ 7f  7e  7d  7c  7b  7a  79  78  77  76  75  74  73  72  71  70 
+ 6f  6e  6d  6c  6b  6a  69  68  67  66  65  64  63  62  61  60 
+ 5f  5e  5d  5c  5b  5a  59  58  57  56  55  54  53  52  51  50 
+ 4f  4e  4d  4c  4b  4a  49  48  47  46  45  44  43  42  41  40 
+ 3f  3e  3d  3c  3b  3a  39  38  37  36  35  34  33  32  31  30 
+ 2f  2e  2d  2c  2b  2a  29  28  27  26  25  24  23  22  21  20 
+ 1f  1e  1d  1c  1b  1a  19  18  17  16  15  14  13  12  11  10 
+ 0f  0e  0d  0c  0b  0a  09  08  07  06  05  04  03  02  01  00 
+Content mismatch at offset 34
+Content mismatch at offset 244
+2 errors found in sent frame
+---------------------------------------------------
+Receiving packet 6: Inbound Fragments, Framed Size: 1036
+Starting Inbound Fragments validation. Packet size: 872
+ bf  be  bd  bc  bb  ba  b9  b8  b7  b6  b5  b4  b3  b2  b1  b0 
+ af  ae  ad  ac  ab  aa  a9  a8  a7  a6  a5  a4  a3  a2  a1  a0 
+ 9f  9e  9d  9c  9b  9a  99  98  97  96  95  94  93  92  91  90 
+ 8f  8e  8d  8c  8b  8a  89  88  87  86  85  84  83  82  81  80 
+ 7f  7e  7d  7c  7b  7a  79  78  77  76  75  74  73  72  71  70 
+ 6f  6e  6d  6c  6b  6a  69  68  67  66  65  64  63  62  61  60 
+ 5f  5e  5d  5c  5b  5a  59  58  57  56  55  54  53  52  51  50 
+ 4f  4e  4d  4c  4b  4a  49  48  47  46  45  44  43  42  41  40 
+ 3f  3e  3d  3c  3b  3a  39  38  37  36  35  34  33  32  31  30 
+ 2f  2e  2d  2c  2b  2a  29  28  27  26  25  24  23  22  21  20 
+ 1f  1e  1d  1c  1b  1a  19  18  17  16  15  14  13  12  11  10 
+ 0f  0e  0d  0c  0b  0a  09  08  07  06  05  04  03  02  01  00 
+ ff  fe  fd  fc  fb  fa  f9  f8  f7  f6  f5  f4  f3  f2  f1  f0 
+ ef  ee  ed  ec  eb  ea  e9  e8  e7  e6  e5  e4  e3  e2  e1  e0 
+ df  de  dd  dc  db  da  d9  d8  d7  d6  d5  d4  d3  d2  d1  d0 
+ cf  ce  cd  cc  cb  ca  c9  c8  c7  c6  c5  c4  c3  c2  c1  c0 
+ bf  be  bd  bc  bb  ba  b9  b8  b7  b6  b5  b4  b3  b2  b1  b0 
+ af  ae  ad  ac  ab  aa  a9  a8  a7  a6  a5  a4  a3  a2  a1  a0 
+ 9f  9e  9d  9c  9b  9a  99  98  97  96  95  94  93  92  91  90 
+ 8f  8e  8d  8c  8b  8a  89  88  87  86  85  84  83  82  81  80 
+ 7f  7e  7d  7c  7b  7a  79  78  77  76  75  74  73  72  71  70 
+ 6f  6e  6d  6c  6b  6a  69  68  67  66  65  64  63  62  61  60 
+ 5f  5e  5d  5c  5b  5a  59  58  57  56  55  54  53  52  51  50 
+ 4f  4e  4d  4c  4b  4a  49  48  47  46  45  44  43  42  41  40 
+ 3f  3e  3d  3c  3b  3a  39  38  37  36  35  34  33  32  31  30 
+ 2f  2e  2d  2c  2b  2a  29  28  27  26  25  24  23  22  21  20 
+ 1f  1e  1d  1c  1b  1a  19  18  17  16  15  14  13  12  11  10 
+ 0f  0e  0d  0c  0b  0a  09  08  07  06  05  04  03  02  01  00 
+ ff  fe  fd  fc  fb  fa  f9  f8  f7  f6  f5  f4  f3  f2  f1  f0 
+ ef  ee  ed  ec  eb  ea  e9  e8  e7  e6  e5  e4  e3  e2  e1  e0 
+ df  de  dd  dc  db  da  d9  d8  d7  d6  d5  d4  d3  d2  d1  d0 
+ cf  ce  cd  cc  cb  ca  c9  c8  c7  c6  c5  c4  c3  c2  c1  c0 
+ bf  be  bd  bc  bb  ba  b9  b8  b7  b6  b5  b4  b3  b2  b1  b0 
+ af  ae  ad  ac  ab  aa  a9  a8  a7  a6  a5  a4  a3  a2  a1  a0 
+ 9f  9e  9d  9c  9b  9a  99  98  97  96  95  94  93  92  91  90 
+ 8f  8e  8d  8c  8b  8a  89  88  87  86  85  84  83  82  81  80 
+ 7f  7e  7d  7c  7b  7a  79  78  77  76  75  74  73  72  71  70 
+ 6f  6e  6d  6c  6b  6a  69  68  67  66  65  64  63  62  61  60 
+ 5f  5e  5d  5c  5b  5a  59  58  57  56  55  54  53  52  51  50 
+ 4f  4e  4d  4c  4b  4a  49  48  47  46  45  44  43  42  41  40 
+ 3f  3e  3d  3c  3b  3a  39  38  37  36  35  34  33  32  31  30 
+ 2f  2e  2d  2c  2b  2a  29  28  27  26  25  24  23  22  21  20 
+ 1f  1e  1d  1c  1b  1a  19  18  17  16  15  14  13  12  11  10 
+ 0f  0e  0d  0c  0b  0a  09  08  07  06  05  04  03  02  01  00 
+ ff  fe  fd  fc  fb  fa  f9  f8  f7  f6  f5  f4  f3  f2  f1  f0 
+ ef  ee  ed  ec  eb  ea  e9  e8  e7  e6  e5  e4  e3  e2  e1  e0 
+ df  de  dd  dc  db  da  d9  d8  d7  d6  d5  d4  d3  d2  d1  d0 
+ cf  ce  cd  cc  cb  ca  c9  c8  c7  c6  c5  c4  c3  c2  c1  c0 
+ bf  be  bd  bc  bb  ba  b9  b8  b7  b6  b5  b4  b3  b2  b1  b0 
+ af  ae  ad  ac  ab  aa  a9  a8  a7  a6  a5  a4  a3  a2  a1  a0 
+ 9f  9e  9d  9c  9b  9a  99  98  97  96  95  94  93  92  91  90 
+ 8f  8e  8d  8c  8b  8a  89  88  87  86  85  84  83  82  81  80 
+ 7f  7e  7d  7c  7b  7a  79  78  77  76  75  74  73  72  71  70 
+ 6f  6e  6d  6c  6b  6a  69  68  67  66  65  64  63  62  61  60 
+ 5f  5e  5d  5c  5b  5a  59  58 
+0 errors found in sent frame
+Starting Inbound Fragments validation. Packet size: 80
+ 57  56  55  54  53  52  51  50  4f  4e  4d  4c  4b  4a  49  48 
+ 47  46  45  44  43  42  41  40  3f  3e  3d  3c  3b  3a  39  38 
+ 37  36  35  34  33  32  31  30  2f  2e  2d  2c  2b  2a  29  28 
+ 27  26  25  24  23  22  21  20  1f  1e  1d  1c  1b  1a  19  18 
+ 17  16  15  14  13  12  11  10  0f  0e  0d  0c  0b  0a  09  08 
+Inbound Fragments deframed packet size: 80, should be 872 
+Caller's error flag is 0
+validation aborted
+1 errors found in sent frame
+
+
+******************** End of tests ***********************

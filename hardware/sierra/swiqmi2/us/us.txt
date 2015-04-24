@@ -1,0 +1,67 @@
+/*
+ * Filename: us.txt 
+ * Description: Initial checkin of this new package. Package is designed to wrap the OS
+ * USB calls to make it easier to use and to provide a place for the one-
+ * and-only usb control structure needed to run the SDK
+ *
+ * Name:  US Package User Information
+ * 
+ * Purpose: The US package implements a wrapper around the USB entry
+ *          points in the OS wrapper. The main reason this package is
+ *          required is so that there is just one copy of the USB
+ *          control block structure required by the USB portion of
+ *          the OS wrapper. That single structure can be used by any
+ *          package needing to access an endpoint, provided that only
+ *          one thread per endpoint ever does it. It is up to the
+ *          caller to ensure this is enforced.
+ *          
+ *          The package also provides a thread whose job is to
+ *          periodically call the USB scan routine to make sure the
+ *          device hasn't become unplugged. Calls to the read and 
+ *          write routines in this package take care of cleaning up
+ *          if the device ever does disappear, ensuring a seamless 
+ *          read or write operation. 
+ *          
+ *          
+ * Entry Points:
+ *          The US package provides the following entry points:
+ *             ussendtty()    - Send a packet to the TTY associated
+ *                              with a specified endpoint
+ *             usrcvtty()     - Receive a packet from the specified
+ *                              endpoint
+ *             usgetinfo()    - Get the vendor and product ID for the
+ *                              currently connected modem
+ *             usgethipep()   - Get the endpoint number for reading or
+ *                              writing to the HIP endpoint
+ *             ususbwait()    - Wait for the specified endpoint to 
+ *                              exist again
+ *             usinit()       - Initialize the US package
+ *             ustaskinit()   - Create the US package scanning thread
+ *          
+ * Testing:
+ *          To test this package, compile and link the images including
+ *          ustest.c from the command line. A number of tests can be 
+ *          performed with this program and verified by looking in 
+ *          /var/log/user.log
+ *
+ *          - Verify the HIP Echo Request is sent to the modem and 
+ *            received from the modem
+ *          - Ensure the /dev/ttyUSBi port is released if the modem
+ *            is reset. Do this by pulling the modem's USB cable 
+ *            while the test is running and then list the directory
+ *
+ *                                /dev/ttyUSB*
+ *
+ *            None of these should exist. If one does and then disappears
+ *            after you kill the test program, then the test program is 
+ *            not coded correctly. 
+ *          - Replace the modem's USB cable while the ustest program is 
+ *            running and observe the traffic resume once the USB 
+ *            system detects the modem again
+ *          
+ * Limitations:
+ *          None
+ *          
+ * NOTE:    None
+ *          
+ */          

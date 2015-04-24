@@ -1,0 +1,20 @@
+imtesti386 build procedure
+
+imtesti386 have dependency on "sl" and "pi" package under"pkgs" directory.
+
+imtesti386 can be compiled by two ways:
+
+1) Method 1:
+------------
+a) Execute "make -f sl.mak" is "sl" directory under "pkgs" directory.
+b) Execute "make -f pi.mak" in "pi" directory under "pkgs" directory.
+c) Execute "make -f im.mak" in "im" directory under "pkgs" directory.
+d) Execute the command : gcc -Wall -I.. -I.. -I../im -D SLQS imtest.c obji386/imapi.o obji386/imssdp_donefinal.o obji386/imssdp_error.o obji386/imssdp_image_preference.o obji386/imssdp_open_unframed.o obji386/imssdp_dload.o obji386/imssdp_done.o obji386/imssdp_hello.o obji386/imssdp.o obji386/imssdp_unframed_write.o obji386/imcommon.o obji386/imssdp_dload_to_sdp.o obji386/imtask_sdk.o ../../build/lib/i386/libslqsapi.a ../../build/lib/i386/libslqscore.a -static -lrt -lpthread -g -o imtesti386
+
+e) Run "im" exxecutable "./imtest1386 .
+
+2) Method 2:
+------------
+a) Replace "im.mak" and "gen.mak" in "im" and "pkgs" directory with the one in "Modified_im_make_files" "checked in" with the code.
+b) Execute "make -f im.mak" in "im" directory under "pkgs" directory.
+c) Run "im" exxecutable "./imtest1386 .

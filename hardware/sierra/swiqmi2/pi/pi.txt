@@ -1,0 +1,24 @@
+The pi packet provides functions for reading and writing packets in 
+network byte order.
+
+All functions increment the packet pointer pass the last read or 
+written field.
+
+No pointer validations is done by this package.  
+
+Here are some sample read/write functions using the pi package.
+
+writepacket(uint8 *packetp, uint32 AppCode, uint8 *VerStringp, uint16 VerLen)
+{
+	piput32(AppCode, &packetp);
+	piput16(VerLen, &packetp);
+	pimulti(VerStringp, &packetp, VerLen);
+}
+
+readpacket(uint8 *packetp, uint32 *AppCodep, uint8 **VerStringpp, uint16 *VerLenp)
+{
+	*AppCodep = piget32(&packetp);
+	*VerLenp = piget16(&packetp);
+	pigetmulti(&packetp, VerStringpp, *VerLenp);
+}
+	

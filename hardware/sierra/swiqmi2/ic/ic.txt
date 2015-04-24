@@ -1,0 +1,67 @@
+/* 
+ * Filename:    ic.txt
+ *
+ * Name:        IC Package User Information
+ * 
+ * Purpose:     The IC package provides facilities for tasks to 
+ *              communicate with one another. A task may be either 
+ *              a process or a thread, the IC package provides 
+ *              facilities for both types to exchange information. 
+ *
+ *              For the purposes of this package, it is sufficient
+ *              to identify processes as tasks which do not have 
+ *              shared memory, these are referred to as "user-mode
+ *              tasks" whenever a distinction is required. In the 
+ *              absence of shared memory another mechanism is required
+ *              for user-mode tasks to communicate with each other and
+ *              this package hides the details of that mechanism from 
+ *              its users. 
+ *
+ *              Threads exist in a shared-memory environment and this
+ *              package refers to them as "shared memory tasks" whenever
+ *              the distinction is important. 
+ *
+ *              The source files for this package have two naming 
+ *              conventions applied:
+ *              
+ *              icsmt_sdk.c - Code in support of inter-task communication
+ *                            for shared memory tasks. Not available for
+ *                            use in the application
+ *              icipc_sdk.c - Code in support of inter-task communication
+ *                            between user-mode tasks. This source file 
+ *                            contains code for the SDK-side
+ *              icipc_app.c   Code in support of inter-task communication
+ *                            between user-mode tasks. This source file
+ *                            contains code for the Application side
+ *                
+ *                
+ * Entry Points:
+ * 
+ *       Shared memory entry points:
+ *       ==========================
+ *       icsmt_create() - Create and initialize a shared memory
+ *                        inter-task message structure
+ *       icsmt_send()   - Send an inter-task message to another
+ *                        shared memory task
+ *       icsmt_rcv()    - Receive an inter-task message, blocking
+ *                        until one is available or a timeout
+ *
+ * Testing:  Testing is done via the ictestxxx executable, where xxx 
+ *           refers to the processor type. e.g. ictest386 is the
+ *           executable for a PC architecture. 
+ *           
+ *           Details of the test are located in the Notes section
+ *           of the file ictest.c. Essentially an SMT inter-task
+ *           message is ping-ponged between two threads and the 
+ *           output is sent to the system log file. Note that the
+ *           SDK process startup code is used for the test, although
+ *           it's not really the SDK running. It was needed to 
+ *           provide a context in which to create the threads
+ *          
+ * Limitations:
+ *          
+ * NOTE:        None
+ *          
+ * Copyright:   © 2008 Sierra Wireless, Inc., all rights reserved
+ *
+ */          
