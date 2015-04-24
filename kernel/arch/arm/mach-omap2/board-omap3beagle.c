@@ -1330,6 +1330,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_request(98,  "CAM_nRST");				/* {PS} : CAM_nRST			*/
 	gpio_request(167, "CAM_PWDN");				/* {PS} : CAM_PWDN			*/
 	gpio_request(157, "CAM_LED_nRST");			/* {PS} : CAM_LED_nRST		*/
+	gpio_request(11,  "3GM_SEC_PWR_EN");		/* {RD} : 3GM_SEC_PWR_EN	*/
 //	gpio_request(12,  "CP_INT");				/* {PS} : CP_INT			*/
 	gpio_request(13,  "3GM_UART_DCD_INT");		/* {PS} : 3GM_UART_DCD_INT	*/
 //	gpio_request(14,  "ACC_INT");				/* {PS} : ACC_INT			*/
@@ -1341,8 +1342,8 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_request(113, "AUD_INT");				/* {RD} : AUD_INT			*/
 	gpio_request(126, "TV_PWR_EN");				/* {PS} : TV_PWR_EN			*/
 	gpio_request(127, "TV_OUT_EN");				/* {PS} : TV_OUT_EN			*/
-	gpio_request(128, "3GM_W_DSBL");			/* {PS} : 3GM_W_DSBL		*/
-	gpio_request(129, "3GM_MDL_RST");			/* {PS} : 3GM_MDL_RST		*/
+	gpio_request(128, "3GM_W_nDSBL");			/* {PS} : 3GM_W_nDSBL		*/
+	gpio_request(129, "3GM_RST");				/* {PS} : 3GM_RST			*/
 //	gpio_request(140, "GPS_nEN");				/* {PS} : GPS_nEN			*/
 	gpio_request(141, "PWR03_EN");				/* {PS} : PWR03_EN			*/
 //	gpio_request(142, "AUD_PWR_EN");			/* {PS} : AUD_PWR_EN		*/
@@ -1369,6 +1370,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_direction_input(155);			/* {PS} : BT_WKUP			*/	/* Input */	
 //	gpio_direction_input(164);			/* {PS} : MMC1_WP			*/	/* Input */
 	
+	gpio_direction_output(11, 1);		/* {RD} : 3GM_SEC_PWR_EN	- HIGH	- Enable power*/
 	gpio_direction_output(64, 1);		/* {RD} : OMAP_STATUS_1		- HIGH	- Notify MSP430 that the OMAP is up*/
 	gpio_direction_output(98, 0);		/* {PS} : CAM_nRST			- LOW	- Reset Camera */
 	gpio_direction_output(167, 1);		/* {PS} : CAM_PWDN			- HIGH 	- Power down Camera */
@@ -1378,8 +1380,8 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_direction_output(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */
 	gpio_direction_output(126, 0);		/* {PS} : TV_PWR_EN			- LOW	- Turn off TV power supply */
 	gpio_direction_output(127, 1);		/* {PS} : TV_OUT_EN			- HIGH 	- Disable TV out */
-	gpio_direction_output(128, 1);		/* {PS} : 3GM_W_DSBL		- HIGH	- Disable 3G modem */
-	gpio_direction_output(129, 1);		/* {PS} : 3GM_MDL_RST		- HIGH	- Reset 3G modem */
+	gpio_direction_output(128, 1);		/* {PS} : 3GM_W_nDSBL		- HIGH	- Enable 3G modem */
+	gpio_direction_output(129, 0);		/* {PS} : 3GM_RST			- LOW	- Not Reset 3G modem */
 //	gpio_direction_output(140, 1);		/* {PS} : GPS_nEN			- HIGH	- Disable GPS */
 	gpio_direction_output(141, 0);		/* {PS} : PWR03_EN			- LOW	- Turn off Wi-Fi power supply */
 //	gpio_direction_output(142, 0);		/* {PS} : AUD_PWR_EN		- LOW 	- Turn off Audio power supply */
@@ -1392,6 +1394,7 @@ static void __init omap3_tcbin_gpio_init(void)
 
 	
 	/* {PS} : Set output value */
+	gpio_set_value(11, 1);		/* {RD} : 3GM_SEC_PWR_EN	- HIGH	- Enable power*/
 	gpio_set_value(98, 0);		/* {PS} : CAM_nRST			- LOW	- Reset Camera */
 	gpio_set_value(167, 1);		/* {PS} : CAM_PWDN			- HIGH 	- Power down Camera */
 
@@ -1414,11 +1417,11 @@ static void __init omap3_tcbin_gpio_init(void)
 //	gpio_set_value(127, 1);		/* {PS} : TV_OUT_EN			- HIGH 	- Disable TV out */	
 	gpio_set_value(127, 0);		/* {PS} : TV_OUT_EN			- LOW 	- Enable TV out */
 	
-//	gpio_set_value(128, 1);		/* {PS} : 3GM_W_DSBL		- HIGH	- Disable 3G modem */
-	gpio_set_value(128, 0);		/* {PS} : 3GM_W_DSBL		- LOW	- Enable 3G modem */
+	gpio_set_value(128, 1);		/* {PS} : 3GM_W_nDSBL		- HIGH	- Enable 3G modem radio */
+//	gpio_set_value(128, 0);		/* {PS} : 3GM_W_nDSBL		- LOW	- Disable 3G modem  radio */
 	
-//	gpio_set_value(129, 1);		/* {PS} : 3GM_MDL_RST		- HIGH	- Reset 3G modem */
-	gpio_set_value(129, 0);		/* {PS} : 3GM_MDL_RST		- LOW	- Not reset 3G modem */	
+//	gpio_set_value(129, 1);		/* {PS} : 3GM_RST		- HIGH	- Reset 3G modem */
+	gpio_set_value(129, 0);		/* {PS} : 3GM_RST		- LOW	- Not reset 3G modem */	
 	
 //	gpio_set_value(140, 1);		/* {PS} : GPS_nEN			- HIGH	- Disable GPS */
 //	gpio_set_value(140, 0);		/* {PS} : GPS_nEN			- LOW	- Enable GPS */
