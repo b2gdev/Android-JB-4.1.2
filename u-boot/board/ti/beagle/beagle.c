@@ -226,6 +226,7 @@ int misc_init_r(void)
 	omap_request_gpio(98);				/* {PS} : CAM_nRST			*/
 	omap_request_gpio(167);				/* {PS} : CAM_PWDN			*/
 	omap_request_gpio(157);				/* {PS} : CAM_LED_nRST		*/
+	omap_request_gpio(11);				/* {RD} : 3GM_SEC_PWR_EN	*/
 	omap_request_gpio(12);				/* {PS} : CP_INT			*/
 	omap_request_gpio(13);				/* {PS} : 3GM_UART_DCD_INT	*/
 	omap_request_gpio(14);				/* {PS} : ACC_INT			*/
@@ -239,8 +240,8 @@ int misc_init_r(void)
 	omap_request_gpio(65);				/* {RD} : OMAP_STATUS_2		*/
 	omap_request_gpio(126);				/* {PS} : TV_PWR_EN			*/
 	omap_request_gpio(127);				/* {PS} : TV_OUT_EN			*/
-	omap_request_gpio(128);				/* {PS} : 3GM_W_DSBL		*/
-	omap_request_gpio(129);				/* {PS} : 3GM_MDL_RST		*/
+	omap_request_gpio(128);				/* {PS} : 3GM_W_nDSBL		*/
+	omap_request_gpio(129);				/* {PS} : 3GM_RST		*/
 	omap_request_gpio(140);				/* {PS} : GPS_nEN			*/
 	omap_request_gpio(141);				/* {PS} : PWR03_EN			*/
 	omap_request_gpio(142);				/* {PS} : AUD_PWR_EN		*/
@@ -264,6 +265,7 @@ int misc_init_r(void)
 	omap_set_gpio_direction(54, 0);		/* {RD} : Enable U107		*/
 	omap_set_gpio_direction(64, 0);		/* {RD} : OMAP_STATUS_1		*/	
 	omap_set_gpio_direction(65, 0);		/* {RD} : OMAP_STATUS_2		*/
+	omap_set_gpio_direction(11, 0);		/* {RD} : 3GM_SEC_PWR_EN	*/	
 	omap_set_gpio_direction(12, 1);		/* {PS} : CP_INT			*/	/* Input */
 	omap_set_gpio_direction(13, 1);		/* {PS} : 3GM_UART_DCD_INT	*/	/* Input */
 	omap_set_gpio_direction(14, 1);		/* {PS} : ACC_INT			*/	/* Input */
@@ -273,8 +275,8 @@ int misc_init_r(void)
 	omap_set_gpio_direction(23, 0);		/* {PS} : 3GM_OE			*/
 	omap_set_gpio_direction(126, 0);	/* {PS} : TV_PWR_EN			*/
 	omap_set_gpio_direction(127, 0);	/* {PS} : TV_OUT_EN			*/
-	omap_set_gpio_direction(128, 0);	/* {PS} : 3GM_W_DSBL		*/
-	omap_set_gpio_direction(129, 0);	/* {PS} : 3GM_MDL_RST		*/
+	omap_set_gpio_direction(128, 0);	/* {PS} : 3GM_W_nDSBL		*/
+	omap_set_gpio_direction(129, 0);	/* {PS} : 3GM_RST		*/
 	omap_set_gpio_direction(140, 0);	/* {PS} : GPS_nEN			*/
 	omap_set_gpio_direction(141, 0);	/* {PS} : PWR03_EN			*/
 	omap_set_gpio_direction(142, 0);	/* {PS} : AUD_PWR_EN		*/
@@ -291,6 +293,9 @@ int misc_init_r(void)
 
 	
 	/* {PS} : Set output value */
+	omap_set_gpio_dataout(11, 0);		/* {RD} : 3GM_SEC_PWR_EN	- LOW	- Turn off 3G modem via secondary enable pin */	
+	omap_set_gpio_dataout(16, 1);		/* {PS} : 3GM_PWR_nEN		- HIGH	- Turn off 3G modem power supply */
+	udelay(1000000);
 	omap_set_gpio_dataout(98, 0);		/* {PS} : CAM_nRST			- LOW	- Reset Camera */
 	omap_set_gpio_dataout(167, 1);		/* {PS} : CAM_PWDN			- HIGH 	- Power down Camera */
 	omap_set_gpio_dataout(157, 0);		/* {PS} : CAM_LED_nRST		- LOW 	- Reset Camera LED driver */
@@ -298,13 +303,14 @@ int misc_init_r(void)
 	omap_set_gpio_dataout(54, 0);		/* {RD} : Enable U107		- LOW	*/
 	omap_set_gpio_dataout(64, 0);		/* {RD} : OMAP_STATUS_1		- LOW	- PWR STATUS GPIO pin low */
 	omap_set_gpio_dataout(65, 0);		/* {RD} : OMAP_STATUS_2		- LOW	- STATUS 2 GPIO pin low */
+	omap_set_gpio_dataout(11, 1);		/* {RD} : 3GM_SEC_PWR_EN	- HIGH	- Turn on 3G modem via secondary enable pin */	
 	omap_set_gpio_dataout(16, 0);		/* {PS} : 3GM_PWR_nEN		- LOW	- Turn on 3G modem power supply */
 	omap_set_gpio_dataout(21, 0);		/* {PS} : USB_PWR_EN		- LOW	- Turn off USB Hub power supply */
 	omap_set_gpio_dataout(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */
 	omap_set_gpio_dataout(126, 0);		/* {PS} : TV_PWR_EN			- LOW	- Turn off TV power supply */
 	omap_set_gpio_dataout(127, 0);		/* {PS} : TV_OUT_EN			- LOW 	- Disable TV out */
-	omap_set_gpio_dataout(128, 1);		/* {PS} : 3GM_W_DSBL		- HIGH	- Disable 3G modem */
-	omap_set_gpio_dataout(129, 1);		/* {PS} : 3GM_MDL_RST		- HIGH	- Reset 3G modem */
+	omap_set_gpio_dataout(128, 1);		/* {PS} : 3GM_W_nDSBL		- HIGH	- Enable 3G modem */
+	omap_set_gpio_dataout(129, 0);		/* {PS} : 3GM_RST		- LOW	- Not reset 3G modem */
 	omap_set_gpio_dataout(140, 1);		/* {PS} : GPS_nEN			- HIGH	- Disable GPS */
 	omap_set_gpio_dataout(141, 0);		/* {PS} : PWR03_EN			- LOW	- Turn off Wi-Fi power supply */
 	omap_set_gpio_dataout(142, 0);		/* {PS} : AUD_PWR_EN		- LOW 	- Turn off Audio power supply */

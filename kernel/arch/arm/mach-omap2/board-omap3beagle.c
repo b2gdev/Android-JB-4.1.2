@@ -125,7 +125,10 @@ static int tcbin_notifier_call(struct notifier_block *this,
 	/*{KW}: inform MSP430 about power status, set to low */
     printk("OMAP_STATUS_1 gpio down\r\n");
     gpio_set_value(64, 0);	
-			
+
+	gpio_set_value(11, 0);		/* 3GM_SEC_PWR_EN	- LOW	- Disable power*/
+	gpio_set_value(16, 1);		/* 3GM_PWR_nEN		- HIGH	- Turn off 3G modem power supply */
+				
 	return NOTIFY_DONE;
 }
 
@@ -1343,6 +1346,7 @@ static void __init omap3_tcbin_gpio_init(void)
 /*  gpio_request(98,  "CAM_nRST");	*/			/* {KW} : Added in board-omap3beagle-camera.c */
 /*	gpio_request(167, "CAM_PWDN");	*/			/* {KW} : Added in board-omap3beagle-camera.c */
 	gpio_request(157, "CAM_LED_nRST");			/* {PS} : CAM_LED_nRST		*/
+	gpio_request(11,  "3GM_SEC_PWR_EN");		/* {RD} : 3GM_SEC_PWR_EN	*/
 //	gpio_request(12,  "CP_INT");				/* {PS} : CP_INT			*/
 	gpio_request(13,  "3GM_UART_DCD_INT");		/* {PS} : 3GM_UART_DCD_INT	*/
 //	gpio_request(14,  "ACC_INT");				/* {PS} : ACC_INT			*/
@@ -1355,8 +1359,8 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_request(113, "AUD_INT");				/* {RD} : AUD_INT			*/
 	gpio_request(126, "TV_PWR_EN");				/* {PS} : TV_PWR_EN			*/
 	gpio_request(127, "TV_OUT_EN");				/* {PS} : TV_OUT_EN			*/
-	gpio_request(128, "3GM_W_DSBL");			/* {PS} : 3GM_W_DSBL		*/
-	gpio_request(129, "3GM_MDL_RST");			/* {PS} : 3GM_MDL_RST		*/
+	gpio_request(128, "3GM_W_nDSBL");			/* {PS} : 3GM_W_nDSBL		*/
+	gpio_request(129, "3GM_RST");				/* {PS} : 3GM_RST			*/
 //	gpio_request(140, "GPS_nEN");				/* {PS} : GPS_nEN			*/
 	gpio_request(141, "PWR03_EN");				/* {PS} : PWR03_EN			*/
 //	gpio_request(142, "AUD_PWR_EN");			/* {PS} : AUD_PWR_EN		*/
@@ -1383,6 +1387,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_direction_input(155);			/* {PS} : BT_WKUP			*/	/* Input */	
 //	gpio_direction_input(164);			/* {PS} : MMC1_WP			*/	/* Input */
 	
+	gpio_direction_output(11, 1);		/* {RD} : 3GM_SEC_PWR_EN	- HIGH	- Enable power*/
 	gpio_direction_output(64, 1);		/* {RD} : OMAP_STATUS_1		- HIGH	- Notify MSP430 that the OMAP is up*/
 	gpio_direction_output(65, 0);		/* {RD} : OMAP_STATUS_0		- LOW	- Notify MSP430 that the OMAP not restarting*/
 	/*	gpio_direction_output(98, 0);	*/	/* {KW} : Added in board-omap3beagle-camera.c */
@@ -1393,8 +1398,8 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_direction_output(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */
 	gpio_direction_output(126, 0);		/* {PS} : TV_PWR_EN			- LOW	- Turn off TV power supply */
 	gpio_direction_output(127, 1);		/* {PS} : TV_OUT_EN			- HIGH 	- Disable TV out */
-	gpio_direction_output(128, 1);		/* {PS} : 3GM_W_DSBL		- HIGH	- Disable 3G modem */
-	gpio_direction_output(129, 1);		/* {PS} : 3GM_MDL_RST		- HIGH	- Reset 3G modem */
+	gpio_direction_output(128, 1);		/* {PS} : 3GM_W_nDSBL		- HIGH	- Enable 3G modem */
+	gpio_direction_output(129, 0);		/* {PS} : 3GM_RST			- LOW	- Not Reset 3G modem */
 //	gpio_direction_output(140, 1);		/* {PS} : GPS_nEN			- HIGH	- Disable GPS */
 	gpio_direction_output(141, 0);		/* {PS} : PWR03_EN			- LOW	- Turn off Wi-Fi power supply */
 //	gpio_direction_output(142, 0);		/* {PS} : AUD_PWR_EN		- LOW 	- Turn off Audio power supply */
@@ -1409,6 +1414,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	/* {PS} : Set output value */
 /*	gpio_set_value(98, 0);		/* {KW} : Added in board-omap3beagle-camera.c */
 /*	gpio_set_value(167, 1);		/* {KW} : Added in board-omap3beagle-camera.c */
+	gpio_set_value(11, 1);		/* {RD} : 3GM_SEC_PWR_EN	- HIGH	- Enable power*/
 
 	gpio_set_value(157, 1);		/* {PS} : CAM_LED_nRST		- HIGH 	- Not reset Camera LED driver */
 //	gpio_set_value(157, 0);		/* {PS} : CAM_LED_nRST		- LOW 	- Reset Camera LED driver */
@@ -1419,7 +1425,8 @@ static void __init omap3_tcbin_gpio_init(void)
 //	gpio_set_value(21, 1);		/* {PS} : USB_PWR_EN		- HIGH	- Turn on USB Hub power supply */
 //	gpio_set_value(21, 0);		/* {PS} : USB_PWR_EN		- LOW	- Turn off USB Hub power supply */
 	
-	gpio_set_value(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */
+//	gpio_set_value(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */
+	gpio_set_value(23, 1);		/* {PS} : 3GM_OE			- HIGH 	- Connect 3G modem data bus */
 	
 	gpio_set_value(64, 1);		/* {RD} : OMAP_STATUS_1		- HIGH	- Notify MSP430 that the OMAP is up*/
 	gpio_set_value(65, 0);		/* {RD} : OMAP_STATUS_2		- LOW	- Notify MSP430 that the OMAP is not restarting*/
@@ -1430,11 +1437,11 @@ static void __init omap3_tcbin_gpio_init(void)
 //	gpio_set_value(127, 1);		/* {PS} : TV_OUT_EN			- HIGH 	- Disable TV out */	
 	gpio_set_value(127, 0);		/* {PS} : TV_OUT_EN			- LOW 	- Enable TV out */
 	
-//	gpio_set_value(128, 1);		/* {PS} : 3GM_W_DSBL		- HIGH	- Disable 3G modem */
-	gpio_set_value(128, 0);		/* {PS} : 3GM_W_DSBL		- LOW	- Enable 3G modem */
+	gpio_set_value(128, 1);		/* {PS} : 3GM_W_nDSBL		- HIGH	- Enable 3G modem radio */
+//	gpio_set_value(128, 0);		/* {PS} : 3GM_W_nDSBL		- LOW	- Disable 3G modem  radio */
 	
-//	gpio_set_value(129, 1);		/* {PS} : 3GM_MDL_RST		- HIGH	- Reset 3G modem */
-	gpio_set_value(129, 0);		/* {PS} : 3GM_MDL_RST		- LOW	- Not reset 3G modem */	
+//	gpio_set_value(129, 1);		/* {PS} : 3GM_RST		- HIGH	- Reset 3G modem */
+	gpio_set_value(129, 0);		/* {PS} : 3GM_RST		- LOW	- Not reset 3G modem */	
 	
 //	gpio_set_value(140, 1);		/* {PS} : GPS_nEN			- HIGH	- Disable GPS */
 //	gpio_set_value(140, 0);		/* {PS} : GPS_nEN			- LOW	- Enable GPS */
