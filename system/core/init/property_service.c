@@ -65,10 +65,8 @@ struct {
     unsigned int gid;
 } property_perms[] = {
 /* SWISTART */
-#ifdef SIERRA
     { "net.usb0.",        AID_RADIO,    0 },
     { "telephony.",       AID_RADIO,    0 },
-#endif
 /* SWISTOP */    
     { "net.rmnet",        AID_RADIO,    0 },
     { "net.gprs.",        AID_RADIO,    0 },
@@ -116,9 +114,7 @@ struct {
 } control_perms[] = {
     { "dumpstate",AID_SHELL, AID_LOG },
 /* SWISTART */
-#ifdef SIERRA
     { "sierra_dhcpcd", AID_RADIO, AID_RADIO },
-#endif
 /* SWISTOP */  
     { "ril-daemon",AID_RADIO, AID_RADIO },
      {NULL, 0, 0 }

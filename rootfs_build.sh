@@ -36,7 +36,7 @@ cp ../../../../tcbin_misc/BrailleBack.apk system/app/
 cp ../../../../tcbin_misc/TalkBack.apk system/app/
 cp ../../../../tcbin_misc/ESFileExplorer.apk system/app/
 cp ../../../../tcbin_misc/BIGLauncherFREE.apk system/app/
-
+cp ../../../../device/ti/beagleboard/sierra_binaries/system/app/com.sierra.logs.apk system/app/
 
 rm -rf data/nativebenchmark/
 rm -rf data/nativetest/
