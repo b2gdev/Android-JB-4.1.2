@@ -260,7 +260,8 @@ void env_relocate (void)
 		set_default_env();
 	}
 	else {
-		env_relocate_spec ();
+		//env_relocate_spec ();
+		set_default_env();
 	}
 	gd->env_addr = (ulong)&(env_ptr->data);
 
