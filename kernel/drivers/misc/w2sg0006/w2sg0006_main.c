@@ -75,9 +75,9 @@ static void gps_enable_toggle(void)
 {
     gpio_request(140, "GPS_nEN");				/* GPS_nEN			*/
     gpio_direction_output(140, 0);		/* GPS_nEN			- HIGH	- Disable GPS */    
-	gpio_set_value(140, 0);		/* GPS_nEN			- LOW	- Enable GPS */
+	gpio_set_value(140, 0);		/* GPS_EN			- LOW	- Disable GPS */
     mdelay(400);
-	gpio_set_value(140, 1);		/* GPS_nEN			- HIGH	- Disable GPS */   
+	gpio_set_value(140, 1);		/* GPS_EN			- HIGH	- Enable GPS */   
     return;
 }
 

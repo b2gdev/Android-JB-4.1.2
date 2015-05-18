@@ -208,51 +208,52 @@
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"loadaddr=0x82000000\0" \
-	"usbtty=cdc_acm\0" \
 	"console=ttyO2,115200n8\0" \
-	"mpurate=500\0" \
-	"vram=12M\0" \
-	"dvimode=1024x768MR-16@60\0" \
-	"defaultdisplay=dvi\0" \
+	"vram=8M\0" \
+	"tvmode=ntsc\0" \
+	"defaultdisplay=tv\0" \
 	"mmcroot=/dev/mmcblk0p2 rw\0" \
 	"mmcrootfstype=ext3 rootwait\0" \
-	"nandroot=/dev/mtdblock4 rw\0" \
-	"nandrootfstype=jffs2\0" \
+	"cpxl=nandecc hw 2 ; fatload mmc 0:3 82000000 MLO ; nand erase 0 80000 ; nand write 82000000 0 6000\0" \
+	"cpub=nandecc sw ; fatload mmc 0:3 0x82000000 u-boot.bin ; nand erase 0x80000 0x1E0000 ; nand write 0x82000000 0x80000 0x34800\0" \
+	"recoverycmd=run nandargs ; nandecc sw ; nand read 0x82000000 0xA80000 0x1000000 ; bootm 0x82000000\0" \
+	"cpuimage=nandecc sw ; fatload mmc 0:3 0x82000000 norm_uImage ; nand erase 0x280000 0x800000 ; nand write 0x82000000 0x280000 0x800000\0" \
+	"cpbkuimage=nandecc sw ; fatload mmc 0:3 0x82000000 bk_uImage ; nand erase 0xA80000 0x1000000 ; nand write 0x82000000 0xA80000 0x900000\0" \
+	"cpcache=nandecc sw ; fatload mmc 0:3 0x82000000 ubi_cache.img ; nand erase 0x1B80000 0xC000000 ; nand write 0x82000000 0x1B80000 0x200000\0" \
+	"cpsys=nandecc sw ; fatload mmc 0:3 0x82000000 ubi_system.img ; nand erase 0xDF80000; nand write 0x82000000 0xDF80000 0xA000000\0" \
+	"cpall=run cpxl ; run cpub ; run cpuimage ; run cpbkuimage ; run cpcache ; run cpsys\0" \
+	"cpkernelsys=run cpuimage ; run cpcache ; run cpsys\0" \
 	"mmcargs=setenv bootargs console=${console} " \
-		"mpurate=${mpurate} " \
+		"androidboot.console=ttyO2 mem=512M" \
+		"rootdelay=1 init=/init ip=off omap_vout.vid1_static_vrfb_alloc=y " \
+		"omapfb.vram=0:8M " \
 		"vram=${vram} " \
-		"omapfb.mode=dvi:${dvimode} " \
+		"omapfb.mode=tv:${tvmode} " \
 		"omapdss.def_disp=${defaultdisplay} " \
 		"root=${mmcroot} " \
 		"rootfstype=${mmcrootfstype}\0" \
 	"nandargs=setenv bootargs console=${console} " \
-		"mpurate=${mpurate} " \
+		"init=/init noinitrd ip=off androidboot.console=ttyO2 rootwait mem=512M " \
+		"omap_vout.vid1_static_vrfb_alloc=y rw ubi.mtd=system,2048 ubi.mtd=cache,2048 rootwait no_console_suspend=1 " \
+		"omapfb.vram=0:8M " \
 		"vram=${vram} " \
-		"omapfb.mode=dvi:${dvimode} " \
+		"omapfb.mode=tv:${tvmode} " \
 		"omapdss.def_disp=${defaultdisplay} " \
-		"root=${nandroot} " \
-		"rootfstype=${nandrootfstype}\0" \
-	"loadbootscript=fatload mmc 0 ${loadaddr} boot.scr\0" \
-	"bootscript=echo Running bootscript from mmc ...; " \
-		"source ${loadaddr}\0" \
 	"loaduimage=fatload mmc 0 ${loadaddr} uImage\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
 		"bootm ${loadaddr}\0" \
 	"nandboot=echo Booting from nand ...; " \
 		"run nandargs; " \
-		"nand read ${loadaddr} 280000 400000; " \
+		"nandecc sw; "\
+		"nand read ${loadaddr} 280000 3C0000; " \
 		"bootm ${loadaddr}\0" \
 
 #define CONFIG_BOOTCOMMAND \
 	"if mmc init; then " \
-		"if run loadbootscript; then " \
-			"run bootscript; " \
-		"else " \
-			"if run loaduimage; then " \
-				"run mmcboot; " \
-			"else run nandboot; " \
-			"fi; " \
+		"if run loaduimage; then " \
+			"run mmcboot; " \
+		"else run nandboot; " \
 		"fi; " \
 	"else run nandboot; fi"
 
