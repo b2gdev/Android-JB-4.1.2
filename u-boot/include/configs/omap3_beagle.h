@@ -218,7 +218,7 @@
 	"nandrootfstype=jffs2\0" \
 	"mmcargs=setenv bootargs console=${console} " \
 		"androidboot.console=ttyO2 mem=512M" \
-		"rootdelay=1 init=/init ip=off omap_vout.vid1_static_vrfb_alloc=y " \
+		"rootdelay=1 init=/init ip=off omap_vout.vid1_static_vrfb_alloc=y ubi.mtd=system,2048 ubi.mtd=cache,2048 rootwait" \
 		"omapfb.vram=0:8M " \
 		"vram=${vram} " \
 		"omapfb.mode=tv:${tvmode} " \

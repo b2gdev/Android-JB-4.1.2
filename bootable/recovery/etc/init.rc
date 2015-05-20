@@ -5,6 +5,10 @@ on early-init
     mkdir /cache
     mkdir /sdcard
     mkdir /misc
+    mkdir /nand_system 
+    mkdir /nand_cache
+    mkdir /nand_data
+	mount_all /fstab.omap3beagleboard
 	
 on init
 
