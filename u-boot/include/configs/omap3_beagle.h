@@ -216,7 +216,7 @@
 	"mmcrootfstype=ext3 rootwait\0" \
 	"cpxl=nandecc hw 2 ; fatload mmc 0:3 82000000 MLO ; nand erase 0 80000 ; nand write 82000000 0 6000\0" \
 	"cpub=nandecc sw ; fatload mmc 0:3 0x82000000 u-boot.bin ; nand erase 0x80000 0x1E0000 ; nand write 0x82000000 0x80000 0x34800\0" \
-	"recoverycmd=nandecc sw ; nand read 0x82000000 0xA80000 0x1000000 ; bootm 0x82000000\0" \
+	"recoverycmd=run nandargs ; nandecc sw ; nand read 0x82000000 0xA80000 0x1000000 ; bootm 0x82000000\0" \
 	"cpuimage=nandecc sw ; fatload mmc 0:3 0x82000000 norm_uImage ; nand erase 0x280000 0x800000 ; nand write 0x82000000 0x280000 0x800000\0" \
 	"cpbkuimage=nandecc sw ; fatload mmc 0:3 0x82000000 bk_uImage ; nand erase 0xA80000 0x1000000 ; nand write 0x82000000 0xA80000 0x900000\0" \
 	"cpcache=nandecc sw ; fatload mmc 0:3 0x82000000 ubi_cache.img ; nand erase 0x1B80000 0xC000000 ; nand write 0x82000000 0x1B80000 0x200000\0" \
