@@ -104,6 +104,9 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
     private Toast mToast;
     private boolean mShowingSpeakerphoneIcon;
     private boolean mShowingMuteIcon;
+    
+    // Use this flag to force show the in-call UI atleast once
+    private static boolean forceFullScreenIntent = false;
 
     public StatusBarHelper statusBarHelper;
 
@@ -1027,6 +1030,9 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
         // line), and maybe even when the user swaps calls (ie. if we only
         // show info here for the "current active call".)
 
+        if(allowFullScreenIntent){
+        	forceFullScreenIntent = true;
+        }
         // Activate a couple of special Notification features if an
         // incoming call is ringing:
         if (hasRingingCall) {
@@ -1044,7 +1050,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
             // call".)
             builder.setTicker(expandedViewLine2);
 
-            if (allowFullScreenIntent) {
+            if (allowFullScreenIntent || forceFullScreenIntent) {
                 // Ok, we actually want to launch the incoming call
                 // UI at this point (in addition to simply posting a notification
                 // to the status bar).  Setting fullScreenIntent will cause
@@ -1053,6 +1059,11 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
                 if (DBG) log("- Setting fullScreenIntent: " + inCallPendingIntent);
                 builder.setFullScreenIntent(inCallPendingIntent, true);
 
+                if(forceFullScreenIntent){
+                	forceFullScreenIntent = false;
+                	mNotificationManager.cancel(IN_CALL_NOTIFICATION);
+                }
+                
                 // Ugly hack alert:
                 //
                 // The NotificationManager has the (undocumented) behavior
