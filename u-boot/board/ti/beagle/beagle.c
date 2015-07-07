@@ -215,6 +215,7 @@ int misc_init_r(void)
 	omap_request_gpio(53);				/* {RD} : emmc reset		*/
 	omap_request_gpio(54);				/* {RD} : Enable U107		*/
 	omap_request_gpio(64);				/* {RD} : OMAP_STATUS_1		*/
+	omap_request_gpio(65);				/* {RD} : OMAP_STATUS_2		*/
 	omap_request_gpio(126);				/* {PS} : TV_PWR_EN			*/
 	omap_request_gpio(127);				/* {PS} : TV_OUT_EN			*/
 	omap_request_gpio(128);				/* {PS} : 3GM_W_nDSBL		*/
@@ -240,7 +241,8 @@ int misc_init_r(void)
 	omap_set_gpio_direction(157, 0);	/* {PS} : CAM_LED_nRST		*/
 	omap_set_gpio_direction(53, 0);		/* {RD} : emmc reset		*/
 	omap_set_gpio_direction(54, 0);		/* {RD} : Enable U107		*/
-	omap_set_gpio_direction(64, 0);		/* {RD} : OMAP_STATUS_1		*/	
+	omap_set_gpio_direction(64, 0);		/* {RD} : OMAP_STATUS_1		*/
+	omap_set_gpio_direction(65, 0);		/* {RD} : OMAP_STATUS_2		*/	
 	omap_set_gpio_direction(11, 0);		/* {RD} : 3GM_SEC_PWR_EN	*/	
 	omap_set_gpio_direction(12, 1);		/* {PS} : CP_INT			*/	/* Input */
 	omap_set_gpio_direction(13, 1);		/* {PS} : 3GM_UART_DCD_INT	*/	/* Input */
@@ -276,6 +278,7 @@ int misc_init_r(void)
 	omap_set_gpio_dataout(54, 0);		/* {RD} : Enable U107		- LOW	*/
 	omap_set_gpio_dataout(64, 0);		/* {RD} : OMAP_STATUS_1		- LOW	- PWR STATUS Gpio pin low */
 	omap_set_gpio_dataout(11, 1);		/* {RD} : 3GM_SEC_PWR_EN	- HIGH	- Turn on 3G modem via secondary enable pin */	
+	omap_set_gpio_dataout(65, 0);		/* {RD} : OMAP_STATUS_2		- LOW	- STATUS 2 GPIO pin low */
 	omap_set_gpio_dataout(16, 0);		/* {PS} : 3GM_PWR_nEN		- LOW	- Turn on 3G modem power supply */
 	omap_set_gpio_dataout(21, 0);		/* {PS} : USB_PWR_EN		- LOW	- Turn off USB Hub power supply */
 	omap_set_gpio_dataout(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */

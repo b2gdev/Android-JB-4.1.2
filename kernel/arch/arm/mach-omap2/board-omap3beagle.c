@@ -102,23 +102,30 @@ static int tcbin_notifier_call(struct notifier_block *this,
 	unsigned char val;
 	int mode = REBOOT_MODE_NONE;	
 
-	if ((code == SYS_RESTART) && _cmd) {
-		if (!strcmp((char *)_cmd, "recovery"))
-			mode = REBOOT_MODE_RECOVERY;
-		else if (!strcmp((char *)_cmd, "bootloader"))
-			mode = REBOOT_MODE_FAST_BOOT;
-		else
-			return NOTIFY_DONE;
+	printk(KERN_INFO "Reboot notifier call code: %X\n",code);
+	
+	if(code == SYS_RESTART){
+		gpio_set_value(65, 1);		/* OMAP_STATUS_2 - HIGH	- Notify MSP430 that the OMAP is restarting */
+		if (_cmd) {
+			if (!strcmp((char *)_cmd, "recovery"))
+				mode = REBOOT_MODE_RECOVERY;
+			else if (!strcmp((char *)_cmd, "bootloader"))
+				mode = REBOOT_MODE_FAST_BOOT;
 			
-		printk(KERN_INFO "Reboot notifier call with mode: %s\n",(char *)_cmd);
-			
-		ret = twl_i2c_write_u8(TWL4030_MODULE_RTC,
-			(10+mode), 12);
-		if (ret != 0)
-			printk(KERN_ERR "twl i2c write error: %d\n",ret);																	
-	}	
+			printk(KERN_INFO "Reboot notifier call with mode: %s\n",(char *)_cmd);
 
-				
+			if(	mode != REBOOT_MODE_NONE ){
+				ret = twl_i2c_write_u8(TWL4030_MODULE_RTC, (10+mode), 12);
+				if (ret != 0)
+					printk(KERN_ERR "twl i2c write error: %d\n",ret);
+			}																	
+		}	
+	}
+	
+	/*{KW}: inform MSP430 about power status, set to low */
+    printk("OMAP_STATUS_1 gpio down\r\n");
+    gpio_set_value(64, 0);	
+			
 	return NOTIFY_DONE;
 }
 
@@ -1339,6 +1346,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_request(21,  "USB_PWR_EN");			/* {PS} : USB_PWR_EN		*/
 	gpio_request(23,  "3GM_OE");				/* {PS} : 3GM_OE			*/
 	gpio_request(64,  "OMAP_STATUS_1");			/* {RD} : OMAP_STATUS_1		*/
+	gpio_request(65,  "OMAP_STATUS_2");			/* {RD} : OMAP_STATUS_2		*/
 	gpio_request(113, "AUD_INT");				/* {RD} : AUD_INT			*/
 	gpio_request(126, "TV_PWR_EN");				/* {PS} : TV_PWR_EN			*/
 	gpio_request(127, "TV_OUT_EN");				/* {PS} : TV_OUT_EN			*/
@@ -1372,6 +1380,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	
 	gpio_direction_output(11, 1);		/* {RD} : 3GM_SEC_PWR_EN	- HIGH	- Enable power*/
 	gpio_direction_output(64, 1);		/* {RD} : OMAP_STATUS_1		- HIGH	- Notify MSP430 that the OMAP is up*/
+	gpio_direction_output(65, 0);		/* {RD} : OMAP_STATUS_0		- LOW	- Notify MSP430 that the OMAP not restarting*/
 	gpio_direction_output(98, 0);		/* {PS} : CAM_nRST			- LOW	- Reset Camera */
 	gpio_direction_output(167, 1);		/* {PS} : CAM_PWDN			- HIGH 	- Power down Camera */
 	gpio_direction_output(157, 0);		/* {PS} : CAM_LED_nRST		- LOW 	- Reset Camera LED driver */
@@ -1410,6 +1419,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_set_value(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */
 	
 	gpio_set_value(64, 1);		/* {RD} : OMAP_STATUS_1		- HIGH	- Notify MSP430 that the OMAP is up*/
+	gpio_set_value(65, 0);		/* {RD} : OMAP_STATUS_2		- LOW	- Notify MSP430 that the OMAP is not restarting*/
 	
 //	gpio_set_value(126, 1);		/* {PS} : TV_PWR_EN			- HIGH	- Turn on TV power supply */
 	gpio_set_value(126, 0);		/* {PS} : TV_PWR_EN			- LOW	- Turn off TV power supply */
