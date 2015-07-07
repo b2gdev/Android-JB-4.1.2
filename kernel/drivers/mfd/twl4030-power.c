@@ -43,6 +43,12 @@ static u8 twl4030_start_script_address = 0x2b;
 #define STOPON_PWRON	(1<<6)
 #define SEQ_OFFSYNC	(1<<0)
 #define STARTON_PWON (1<<0)
+#define STARTON_CHG (1<<1)
+#define STARTON_USB (1<<2)
+#define STARTON_RTC (1<<3)
+#define STARTON_VBAT (1<<4)
+#define STARTON_VBUS (1<<5)
+#define STARTON_SWBUG (1<<7)
 /* {SW} END: */
 
 #define PHY_TO_OFF_PM_MASTER(p)		(p - 0x36)
@@ -708,10 +714,6 @@ void twl4030_power_off(void)
     * Meanwhile chip will only be started by pushing PWRON key
     */
     
-    /*{KW}: inform MSP430 about power status, set to low */
-    printk("OMAP_STATUS_1 gpio down\r\n");
-    gpio_set_value(64, 0);
-    
    err = twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, STARTON_PWON,
                           TWL4030_PM_MASTER_CFG_P1_TRANSITION);
    if (err)
@@ -744,6 +746,7 @@ int twl4030_power_init(struct twl4030_power_data *twl4030_scripts)
    /* {SW} BEGIN: adding power off support */
    u8 val;
    /* {SW} END: */
+   u8 data = STARTON_PWON;
 
 	err = twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER,
 			TWL4030_PM_MASTER_KEY_CFG1,
@@ -825,9 +828,52 @@ int twl4030_power_init(struct twl4030_power_data *twl4030_scripts)
 
       pm_power_off = twl4030_power_off;
    }
-
-relock:
 /* {SW} END: */
+
+/* {RD} BEGIN: Disable USB and Charger power on conditions */
+
+	err = twl_i2c_read_u8(TWL4030_MODULE_PM_MASTER, &data,
+                          TWL4030_PM_MASTER_CFG_P1_TRANSITION);
+	if (err)
+		goto cfg_px_error;
+	else // Disable Start on USB, Charger and VBUS detection
+		data &= ~(STARTON_CHG | STARTON_VBUS | STARTON_USB);
+	
+	err = twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, data,
+                          TWL4030_PM_MASTER_CFG_P1_TRANSITION);
+	if (err)
+		pr_err("TWL4030 Unable to setup CFG_P1_TRANSITION reg\n");
+
+	
+	err = twl_i2c_read_u8(TWL4030_MODULE_PM_MASTER, &data,
+                          TWL4030_PM_MASTER_CFG_P2_TRANSITION);
+	if (err)
+		goto cfg_px_error;
+	else // Disable Start on USB, Charger and VBUS detection
+		data &= ~(STARTON_CHG | STARTON_VBUS | STARTON_USB);
+
+	err = twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, data,
+                          TWL4030_PM_MASTER_CFG_P2_TRANSITION);
+	if (err)
+		pr_err("TWL4030 Unable to setup CFG_P2_TRANSITION reg\n");
+
+	err = twl_i2c_read_u8(TWL4030_MODULE_PM_MASTER, &data,
+                          TWL4030_PM_MASTER_CFG_P3_TRANSITION);
+	if (err)
+		goto cfg_px_error;
+	else // Disable Start on USB, Charger and VBUS detection
+		data &= ~(STARTON_CHG | STARTON_VBUS | STARTON_USB);
+
+	err = twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, data,
+                          TWL4030_PM_MASTER_CFG_P3_TRANSITION);
+	if (err)
+		pr_err("TWL4030 Unable to setup CFG_P3_TRANSITION reg\n");
+		
+cfg_px_error:
+	pr_err("Error setting CFG_Px_TRANSITION regs\n");		
+/* {RD} END: */
+      
+relock:
 
 	err = twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, 0,
 			TWL4030_PM_MASTER_PROTECT_KEY);
