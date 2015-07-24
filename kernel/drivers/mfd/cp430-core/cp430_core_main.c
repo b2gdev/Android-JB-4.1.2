@@ -403,7 +403,8 @@ void process_rx_fifo(unsigned long unused)
 						if (kfifo_len(&devices[c].rx_fifo) > 0) {
 							// still the previous packet is in the rx_fifo
 							// we lose data here
-							PDEBUG("Error ! previous packet is still in the rx_fifo of device = %d)\r\n", c);
+							PERROR("Error ! previous packet is still in the rx_fifo - Resetting RX FIFO of device = %d)\r\n", c);
+							kfifo_reset(&devices[c].rx_fifo);
 							rx_state = RX_STATE_HEADER1;
 						}
 						else {
@@ -560,8 +561,10 @@ void process_rx_fifo(unsigned long unused)
 					}
 				}
 				else {
+					PERROR("Error ! Invalid ETX - Resetting RX FIFO of dev %d\r\n",active_rx_device);
 					// out of sync
-					rx_state = RX_STATE_HEADER1;	
+					kfifo_reset(&devices[active_rx_device].rx_fifo);
+					rx_state = RX_STATE_HEADER1;
 				}
 
 				break;
