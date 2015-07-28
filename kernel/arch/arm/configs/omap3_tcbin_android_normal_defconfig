@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux/arm 2.6.37 Kernel Configuration
-# Thu Sep 20 18:00:16 2012
+# Mon Jul 20 15:21:19 2015
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -1527,11 +1527,12 @@ CONFIG_VIDEO_CAPTURE_DRIVERS=y
 # CONFIG_VIDEO_BT856 is not set
 # CONFIG_VIDEO_BT866 is not set
 # CONFIG_VIDEO_KS0127 is not set
+CONFIG_VIDEO_OV5640=y
 # CONFIG_VIDEO_OV7670 is not set
 # CONFIG_VIDEO_MT9T001 is not set
 CONFIG_VIDEO_MT9V011=y
 # CONFIG_VIDEO_MT9V032 is not set
-CONFIG_VIDEO_MT9V113=y
+# CONFIG_VIDEO_MT9V113 is not set
 # CONFIG_VIDEO_MT9T111 is not set
 # CONFIG_VIDEO_TCM825X is not set
 # CONFIG_VIDEO_SAA7110 is not set

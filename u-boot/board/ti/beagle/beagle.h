@@ -496,8 +496,8 @@ const omap3_sysinfo sysinfo = {
 	MUX_VAL(CP(CAM_XCLKA),		(IDIS | PTD | DIS | M0)) /*CAM_XCLKA*/	/* {PS} : Same as BeagleBoard */\
 	MUX_VAL(CP(CAM_PCLK),		(IEN  | PTU | EN  | M0)) /*CAM_PCLK*/	/* {PS} : Same as BeagleBoard */\
 	MUX_VAL(CP(CAM_FLD),		(IDIS | PTD | DIS | M4)) /*GPIO_98*/	/* {PS} : CAM_nRST - Output pin */\
-	MUX_VAL(CP(CAM_D0),		    (IDIS | PTD | DIS | M7)) /*CAM_D0*/		/* {PS} : Safe mode - NC pin */\
-	MUX_VAL(CP(CAM_D1),		    (IDIS | PTD | DIS | M7)) /*CAM_D1*/		/* {PS} : Safe mode - NC pin */\
+	MUX_VAL(CP(CAM_D0),		    (IEN  | PTD | EN  | M0)) /*CAM_D0*/		/* {PS} : Camera mode with Pull down */\
+	MUX_VAL(CP(CAM_D1),		    (IEN  | PTD | EN  | M0)) /*CAM_D1*/		/* {PS} : Camera mode with Pull down */\
 	MUX_VAL(CP(CAM_D2),		    (IEN  | PTD | DIS | M0)) /*CAM_D2*/		/* {PS} : Same as BeagleBoard */\
 	MUX_VAL(CP(CAM_D3),		    (IEN  | PTD | DIS | M0)) /*CAM_D3*/		/* {PS} : Same as BeagleBoard */\
 	MUX_VAL(CP(CAM_D4),		    (IEN  | PTD | DIS | M0)) /*CAM_D4*/		/* {PS} : Same as BeagleBoard */\

@@ -1185,9 +1185,12 @@ static struct i2c_board_info __initdata beagle_i2c2_boardinfo[] = {
 };
 
 static struct i2c_board_info __initdata beagle_i2c3_boardinfo[] = {
+/* { DSG : Set in board-omap3beagle-camera.c } */
+/*	
 	{
 		I2C_BOARD_INFO("camera", 0x3C),  	
 	},
+*/
 	{
 		I2C_BOARD_INFO("lm3553", 0x53),		/* {PK} */
 	},
@@ -1333,8 +1336,8 @@ static struct omap_musb_board_data musb_board_data = {
 static void __init omap3_tcbin_gpio_init(void)
 {
 	/* {PS} : Request GPIOs */
-	gpio_request(98,  "CAM_nRST");				/* {PS} : CAM_nRST			*/
-	gpio_request(167, "CAM_PWDN");				/* {PS} : CAM_PWDN			*/
+/*  gpio_request(98,  "CAM_nRST");	*/			/* {KW} : Added in board-omap3beagle-camera.c */
+/*	gpio_request(167, "CAM_PWDN");	*/			/* {KW} : Added in board-omap3beagle-camera.c */
 	gpio_request(157, "CAM_LED_nRST");			/* {PS} : CAM_LED_nRST		*/
 //	gpio_request(12,  "CP_INT");				/* {PS} : CP_INT			*/
 	gpio_request(13,  "3GM_UART_DCD_INT");		/* {PS} : 3GM_UART_DCD_INT	*/
@@ -1356,7 +1359,7 @@ static void __init omap3_tcbin_gpio_init(void)
 //	gpio_request(147, "USB2HS_nRST");			/* {PS} : USB2HS_nRST		*/
 //	gpio_request(149, "WL_INT");				/* {PS} : WL_INT			*/
 	gpio_request(150, "WL_EN");					/* {PS} : WL_EN				*/
-	gpio_request(152, "CAM_PWR_EN");			/* {PS} : CAM_PWR_EN		*/
+/*	gpio_request(152, "CAM_PWR_EN");		*/	/* {KW} : Added in board-omap3beagle-camera.c */
 	gpio_request(153, "CHRG_OTG");				/* {PS} : CHRG_OTG			*/
 	gpio_request(154, "3GM_GPIO_1");			/* {PS} : 3GM_GPIO_1		*/
 	gpio_request(155, "BT_WKUP");				/* {PS} : BT_WKUP			*/
@@ -1378,8 +1381,8 @@ static void __init omap3_tcbin_gpio_init(void)
 	
 	gpio_direction_output(64, 1);		/* {RD} : OMAP_STATUS_1		- HIGH	- Notify MSP430 that the OMAP is up*/
 	gpio_direction_output(65, 0);		/* {RD} : OMAP_STATUS_0		- LOW	- Notify MSP430 that the OMAP not restarting*/
-	gpio_direction_output(98, 0);		/* {PS} : CAM_nRST			- LOW	- Reset Camera */
-	gpio_direction_output(167, 1);		/* {PS} : CAM_PWDN			- HIGH 	- Power down Camera */
+	/*	gpio_direction_output(98, 0);	*/	/* {KW} : Added in board-omap3beagle-camera.c */
+	/*	gpio_direction_output(167, 1);	*/	/* {KW} : Added in board-omap3beagle-camera.c */
 	gpio_direction_output(157, 0);		/* {PS} : CAM_LED_nRST		- LOW 	- Reset Camera LED driver */
 	gpio_direction_output(16, 0);		/* {PS} : 3GM_PWR_nEN		- LOW	- Turn on 3G modem power supply */
 //	gpio_direction_output(21, 0);		/* {PS} : USB_PWR_EN		- LOW	- Turn off USB Hub power supply */
@@ -1393,15 +1396,15 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_direction_output(142, 0);		/* {PS} : AUD_PWR_EN		- LOW 	- Turn off Audio power supply */
 //	gpio_direction_output(147, 0);		/* {PS} : USB2HS_nRST		- LOW	- Reset USB Transciever */
 	gpio_direction_output(150, 0);		/* {PS} : WL_EN				- LOW	- Disable Wi-Fi */
-	gpio_direction_output(152, 0);		/* {PS} : CAM_PWR_EN		- LOW	- Turn off Camera power supply */
+	/*  gpio_direction_output(152, 0);	*/	/* {AH} : Added in board-omap3beagle-camera.c */
 	gpio_direction_output(153, 0);		/* {PS} : CHRG_OTG			- LOW	- Disable OTG mode */
 	gpio_direction_output(156, 0);		/* {PS} : FM_EN				- LOW	- Disable FM */
 //	gpio_direction_output(163, 0);		/* {PS} : GPS_PWR_EN		- LOW	- Turn off GPS power supply */
 
 	
 	/* {PS} : Set output value */
-	gpio_set_value(98, 0);		/* {PS} : CAM_nRST			- LOW	- Reset Camera */
-	gpio_set_value(167, 1);		/* {PS} : CAM_PWDN			- HIGH 	- Power down Camera */
+/*	gpio_set_value(98, 0);		/* {KW} : Added in board-omap3beagle-camera.c */
+/*	gpio_set_value(167, 1);		/* {KW} : Added in board-omap3beagle-camera.c */
 
 	gpio_set_value(157, 1);		/* {PS} : CAM_LED_nRST		- HIGH 	- Not reset Camera LED driver */
 //	gpio_set_value(157, 0);		/* {PS} : CAM_LED_nRST		- LOW 	- Reset Camera LED driver */
@@ -1444,7 +1447,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	printk(KERN_INFO "WLAN GPIO enabled\n");
 //	gpio_set_value(150, 0);		/* {PS} : WL_EN				- LOW	- Disable Wi-Fi */
 
-	gpio_set_value(152, 1);		/* {PS} : CAM_PWR_EN		- HIGH	- Turn on Camera power supply */
+//	gpio_set_value(152, 1);		/* {PS} : CAM_PWR_EN		- HIGH	- Turn on Camera power supply */
 //	gpio_set_value(152, 0);		/* {PS} : CAM_PWR_EN		- LOW	- Turn off Camera power supply */	
 
 	gpio_set_value(153, 0);		/* {PS} : CHRG_OTG			- LOW	- Disable OTG mode */

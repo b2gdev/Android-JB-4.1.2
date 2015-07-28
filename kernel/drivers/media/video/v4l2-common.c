@@ -392,8 +392,10 @@ struct v4l2_subdev *v4l2_i2c_new_subdev_board(struct v4l2_device *v4l2_dev,
 	   loaded. This delay-load mechanism doesn't work if other drivers
 	   want to use the i2c device, so explicitly loading the module
 	   is the best alternative. */
-	if (client == NULL || client->driver == NULL)
+	if (client == NULL || client->driver == NULL){
+		printk("I2C camera client not created: %s\n", __FUNCTION__);
 		goto error;
+	}
 
 	/* Lock the module so we can safely get the v4l2_subdev pointer */
 	if (!try_module_get(client->driver->driver.owner))

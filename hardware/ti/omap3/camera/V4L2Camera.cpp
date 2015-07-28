@@ -40,6 +40,7 @@ extern "C" {
 #define ENTITY_CCDC_NAME                "OMAP3 ISP CCDC"
 #define ENTITY_TVP514X_NAME             "tvp514x 3-005c"
 #define ENTITY_MT9T111_NAME             "mt9t111 2-003c"
+#define ENTITY_OV5640_NAME		"ov5640 3-003c"		/* {  DSG  } */
 #ifdef CONFIG_FLASHBOARD
 #define ENTITY_MT9V113_NAME             "mt9v113 3-003c"
 #else
@@ -47,6 +48,8 @@ extern "C" {
 #endif
 #define IMG_WIDTH_VGA           640
 #define IMG_HEIGHT_VGA          480
+#define IMG_WIDTH_5MP          	2592
+#define IMG_HEIGHT_5MP          1944
 #define DEF_PIX_FMT             V4L2_PIX_FMT_UYVY
 
 #include "V4L2Camera.h"
@@ -58,7 +61,8 @@ V4L2Camera::V4L2Camera ()
 {
     videoIn = (struct vdIn *) calloc (1, sizeof (struct vdIn));
     mediaIn = (struct mdIn *) calloc (1, sizeof (struct mdIn));
-    mediaIn->input_source=1;
+    //  /* {  DSG  } */    mediaIn->input_source=1;
+    mediaIn->input_source=3;	/* {  DSG  } */
     camHandle = -1;
 #ifdef _OMAP_RESIZER_
 	videoIn->resizeHandle = -1;
@@ -71,10 +75,10 @@ V4L2Camera::~V4L2Camera()
     free(mediaIn);
 }
 
-int V4L2Camera::Open(const char *device)
+int V4L2Camera::Open(const char *device,int purpose)
 {
 	int ret = 0;
-	int ccdc_fd, tvp_fd;
+	int ccdc_fd, ov5640_fd;
 	struct v4l2_subdev_format fmt;
 	char subdev[20];
 
@@ -98,8 +102,13 @@ int V4L2Camera::Open(const char *device)
 			fmt.pad = 0;
 			fmt.which = V4L2_SUBDEV_FORMAT_ACTIVE;
 			fmt.format.code = V4L2_MBUS_FMT_UYVY8_2X8;
-			fmt.format.width = IMG_WIDTH_VGA;
-			fmt.format.height = IMG_HEIGHT_VGA;
+			if(purpose == CAPTURE_PURPOSE){
+				fmt.format.width = IMG_WIDTH_5MP;
+				fmt.format.height = IMG_HEIGHT_5MP;
+			}else{
+				fmt.format.width = IMG_WIDTH_VGA;
+				fmt.format.height = IMG_HEIGHT_VGA;
+			}
 			fmt.format.colorspace = V4L2_COLORSPACE_SMPTE170M;
 			fmt.format.field = V4L2_FIELD_INTERLACED;
 			ret = ioctl(ccdc_fd, VIDIOC_SUBDEV_S_FMT, &fmt);
@@ -111,26 +120,49 @@ int V4L2Camera::Open(const char *device)
 			fmt.pad = 1;
 			fmt.which = V4L2_SUBDEV_FORMAT_ACTIVE;
 			fmt.format.code = V4L2_MBUS_FMT_UYVY8_2X8;
-			fmt.format.width = IMG_WIDTH_VGA;
-			fmt.format.height = IMG_HEIGHT_VGA;
+			if(purpose == CAPTURE_PURPOSE){
+				fmt.format.width = IMG_WIDTH_5MP;
+				fmt.format.height = IMG_HEIGHT_5MP;
+			}else{
+				fmt.format.width = IMG_WIDTH_VGA;
+				fmt.format.height = IMG_HEIGHT_VGA;
+			}
 			fmt.format.colorspace = V4L2_COLORSPACE_SMPTE170M;
 			fmt.format.field = V4L2_FIELD_INTERLACED;
 			ret = ioctl(ccdc_fd, VIDIOC_SUBDEV_S_FMT, &fmt);
 			if(ret) {
 				ALOGE("Failed to set format on pad");
 			}
+			
 			mediaIn->input_source=1;
 			if (mediaIn->input_source != 0)
 				strcpy(subdev, "/dev/v4l-subdev8");
 			else
 				strcpy(subdev, "/dev/v4l-subdev9");
-			tvp_fd = open(subdev, O_RDWR);
-			if(tvp_fd == -1) {
+			ov5640_fd = open(subdev, O_RDWR);
+			if(ov5640_fd == -1) {
 				ALOGE("Failed to open subdev");
 				ret=-1;
 				close(camHandle);
 				reset_links(MEDIA_DEVICE);
 				return ret;
+			}
+			memset(&fmt, 0, sizeof(fmt));
+			fmt.pad = 0;
+			fmt.which = V4L2_SUBDEV_FORMAT_ACTIVE;
+			fmt.format.code = V4L2_MBUS_FMT_UYVY8_2X8;
+			if(purpose == CAPTURE_PURPOSE){
+				fmt.format.width = IMG_WIDTH_5MP;
+				fmt.format.height = IMG_HEIGHT_5MP;
+			}else{
+				fmt.format.width = IMG_WIDTH_VGA;
+				fmt.format.height = IMG_HEIGHT_VGA;
+			}
+			fmt.format.colorspace = V4L2_COLORSPACE_SMPTE170M;
+			fmt.format.field = V4L2_FIELD_INTERLACED;
+			ret = ioctl(ov5640_fd, VIDIOC_SUBDEV_S_FMT, &fmt);
+			if(ret < 0) {
+				ALOGE("Failed to set format on ov5640");
 			}
 		}
 
@@ -192,6 +224,12 @@ int V4L2Camera::Open_media_device(const char *device)
 				mediaIn->mt9t111 =  mediaIn->entity[index].id;
 				mediaIn->input_source=1;
 			}
+			/* {  DSG  } */
+			else if (!strcmp(mediaIn->entity[index].name, ENTITY_OV5640_NAME))
+			{
+				mediaIn->ov5640 =  mediaIn->entity[index].id;
+				mediaIn->input_source=3;
+			}
 			else if (!strcmp(mediaIn->entity[index].name, ENTITY_CCDC_NAME))
 				mediaIn->ccdc =  mediaIn->entity[index].id;
 			else if (!strcmp(mediaIn->entity[index].name, ENTITY_MT9V113_NAME))
@@ -241,6 +279,8 @@ int V4L2Camera::Open_media_device(const char *device)
 		input_v4l = mediaIn->mt9t111;
 	else if (mediaIn->input_source == 2)
 		input_v4l = mediaIn->mt9v113;
+	else if (mediaIn->input_source == 3)	/* {  DSG  } */
+		input_v4l = mediaIn->ov5640;		/* {  DSG  } */
 	else
 		input_v4l = mediaIn->tvp5146;
 
@@ -285,7 +325,7 @@ int V4L2Camera::Configure(int width,int height,int pixelformat,int fps)
 	int ret = 0;
 	struct v4l2_streamparm parm;
 
-	if(version >= KERNEL_VERSION(2,6,37))
+	/*if(version >= KERNEL_VERSION(2,6,37))
 	{
 		videoIn->width = IMG_WIDTH_VGA;
 		videoIn->height = IMG_HEIGHT_VGA;
@@ -305,7 +345,17 @@ int V4L2Camera::Configure(int width,int height,int pixelformat,int fps)
 		videoIn->format.fmt.pix.width =width;
 		videoIn->format.fmt.pix.height =height;
 		videoIn->format.fmt.pix.pixelformat = pixelformat;
-	}
+	}*/
+	
+	videoIn->width = width;										//Added to support multiple sizes
+	videoIn->height = height;
+	videoIn->framesizeIn =((width * height) << 1);
+	videoIn->formatIn = DEF_PIX_FMT;
+
+	videoIn->format.fmt.pix.width =width;
+	videoIn->format.fmt.pix.height =height;
+	videoIn->format.fmt.pix.pixelformat = DEF_PIX_FMT;
+	
     videoIn->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	do
 	{

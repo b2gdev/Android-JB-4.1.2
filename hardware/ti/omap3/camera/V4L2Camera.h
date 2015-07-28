@@ -36,6 +36,9 @@
 #define LOG_FUNCTION_START    LOGD("%d: %s() ENTER", __LINE__, __FUNCTION__);
 #define LOG_FUNCTION_EXIT    LOGD("%d: %s() EXIT", __LINE__, __FUNCTION__);
 
+#define CAPTURE_PURPOSE 1
+#define PREVIEW_PURPOSE 0
+
 /* TODO: enable once resizer driver is up */
 /* #define _OMAP_RESIZER_ 0 */
 
@@ -69,6 +72,7 @@ struct mdIn {
 	int tvp5146;
 	int mt9t111;
 	int mt9v113;
+	int ov5640;	/* { DSG } */
 	unsigned int num_entities;
 };
 
@@ -78,7 +82,7 @@ public:
     V4L2Camera();
     ~V4L2Camera();
 
-    int Open (const char *device);
+    int Open (const char *device,int purpose);
     int Configure(int width,int height,int pixelformat,int fps);
     void Close ();
     void reset_links(const char *device);

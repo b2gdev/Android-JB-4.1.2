@@ -33,8 +33,10 @@
 #define VIDEO_DEVICE_2      "/dev/video2"
 #define VIDEO_DEVICE_0      "/dev/video0"
 #define MEDIA_DEVICE        "/dev/media0"
-#define PREVIEW_WIDTH       320
-#define PREVIEW_HEIGHT      240
+#define PREVIEW_WIDTH       640
+#define PREVIEW_HEIGHT      480
+#define PICTURE_WIDTH       2592
+#define PICTURE_HEIGHT      1944
 #define PIXEL_FORMAT        V4L2_PIX_FMT_YUYV
 
 #define CAMHAL_GRALLOC_USAGE GRALLOC_USAGE_HW_TEXTURE | \
@@ -56,11 +58,11 @@ int version=0;
 namespace android {
 
 /* 29/12/10 : preview/picture size validation logic */
-const char CameraHardware::supportedPictureSizes [] = "640x480,352x288,320x240";
-const char CameraHardware::supportedPreviewSizes [] = "640x480,352x288,320x240";
+const char CameraHardware::supportedPictureSizes [] = "2592x1944";
+const char CameraHardware::supportedPreviewSizes [] = "640x480";
 
-const supported_resolution CameraHardware::supportedPictureRes[] = {{640, 480}, {352, 288}, {320, 240} };
-const supported_resolution CameraHardware::supportedPreviewRes[] = {{640, 480}, {352, 288}, {320, 240} };
+const supported_resolution CameraHardware::supportedPictureRes[] = {{2592, 1944}};
+const supported_resolution CameraHardware::supportedPreviewRes[] = {{640, 480}};
 
 CameraHardware::CameraHardware()
                   : mParameters(),
@@ -79,7 +81,7 @@ CameraHardware::CameraHardware()
 	/* create camera */
 	mCamera = new V4L2Camera();
 	#ifdef _USE_USB_CAMERA_
-	mCamera->Open(VIDEO_DEVICE_0);  /*USB camera use this node*/
+	mCamera->Open(VIDEO_DEVICE_0,PREVIEW_PURPOSE);  /*USB camera use this node*/
 
 	#else
 	version = get_kernel_version();
@@ -88,12 +90,12 @@ CameraHardware::CameraHardware()
 	if(version >= KERNEL_VERSION(2,6,37))
 	{
 		ALOGE("version >= KERNEL_VERSION(2,6,37)");
-		mCamera->Open(VIDEO_DEVICE_2);
+		mCamera->Open(VIDEO_DEVICE_2,PREVIEW_PURPOSE);
 		mCamera->Open_media_device(MEDIA_DEVICE);
 	}
 	else
 	{
-		mCamera->Open(VIDEO_DEVICE_0);
+		mCamera->Open(VIDEO_DEVICE_0,PREVIEW_PURPOSE);
 	}
 	#endif
 
@@ -115,7 +117,7 @@ void CameraHardware::initDefaultParameters()
     p.setPreviewFrameRate(DEFAULT_FRAME_RATE);
     p.setPreviewFormat(CameraParameters::PIXEL_FORMAT_YUV422SP);
 
-    p.setPictureSize(PREVIEW_WIDTH, PREVIEW_HEIGHT);
+    p.setPictureSize(PICTURE_WIDTH, PICTURE_HEIGHT);
     p.setPictureFormat(CameraParameters::PIXEL_FORMAT_JPEG);
     p.set(CameraParameters::KEY_JPEG_QUALITY, 100);
     p.set("picture-size-values", CameraHardware::supportedPictureSizes);
@@ -382,10 +384,10 @@ status_t CameraHardware::startPreview()
     }
 
     if(version >= KERNEL_VERSION(2,6,37)) {
-        if (mCamera->Open(VIDEO_DEVICE_2) < 0)
+        if (mCamera->Open(VIDEO_DEVICE_2,PREVIEW_PURPOSE) < 0)
             return INVALID_OPERATION;
     } else {
-        if (mCamera->Open(VIDEO_DEVICE_0) < 0)
+        if (mCamera->Open(VIDEO_DEVICE_0,PREVIEW_PURPOSE) < 0)
             return INVALID_OPERATION;
     }
 
@@ -561,7 +563,7 @@ int CameraHardware::beginPictureThread(void *cookie)
     ALOGE("begin Picture Thread");
     return c->pictureThread();
 }
-
+#include <unistd.h>
 int CameraHardware::pictureThread()
 {
     unsigned char *frame;
@@ -576,8 +578,11 @@ int CameraHardware::pictureThread()
     int i;
     char devnode[12];
     camera_memory_t* picture = NULL;
+    void *tempbuf;
 
-    ALOGV("Picture Thread:%d",mMsgEnabled);
+//DSG:    ALOGV("Picture Thread:%d",mMsgEnabled);
+    ALOGE("DSG: Picture Thread:%d",mMsgEnabled);	//DSG:++
+    ALOGE("\nDSG: Picture Thread:%d\n",mMsgEnabled);	//DSG:++
     if (mMsgEnabled & CAMERA_MSG_SHUTTER)
         mNotifyCb(CAMERA_MSG_SHUTTER, 0, 0, mCallbackCookie);
 
@@ -589,14 +594,14 @@ int CameraHardware::pictureThread()
      mParameters.getPreviewSize(&width, &height);
 
      if(version >= KERNEL_VERSION(2,6,37)) {
-         if (mCamera->Open(VIDEO_DEVICE_2) < 0)
+         if (mCamera->Open(VIDEO_DEVICE_2,CAPTURE_PURPOSE) < 0)
              return INVALID_OPERATION;
      } else {
-         if (mCamera->Open(VIDEO_DEVICE_0) < 0)
+         if (mCamera->Open(VIDEO_DEVICE_0,CAPTURE_PURPOSE) < 0)
              return INVALID_OPERATION;
      }
 
-     ret = mCamera->Configure(mPreviewWidth,mPreviewHeight,PIXEL_FORMAT,30);
+     ret = mCamera->Configure(w,h,PIXEL_FORMAT,30);
      if(ret < 0) {
 	     ALOGE("Fail to configure camera device");
 	     return INVALID_OPERATION;
@@ -619,6 +624,13 @@ int CameraHardware::pictureThread()
      //TODO xxx : Optimize the memory capture call. Too many memcpy
      if (mMsgEnabled & CAMERA_MSG_COMPRESSED_IMAGE) {
         ALOGV ("mJpegPictureCallback");
+        
+        tempbuf = mCamera->GrabPreviewFrame();		//Discard first two frames
+        mCamera->ReleasePreviewFrame();
+        tempbuf = mCamera->GrabPreviewFrame();
+        mCamera->ReleasePreviewFrame();
+        
+        ALOGE ("\nDSG: Grab JPEG image\n");
         picture = mCamera->GrabJpegFrame(mRequestMemory);
         mDataCb(CAMERA_MSG_COMPRESSED_IMAGE,picture,0,NULL ,mCallbackCookie);
     }

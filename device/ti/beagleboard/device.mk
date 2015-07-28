@@ -70,7 +70,8 @@ PRODUCT_PACKAGES += \
 		audio_policy.beagleboard \
         tinycap \
         tinymix \
-        tinyplay
+        tinyplay \
+	media-ctl
 
 PRODUCT_PACKAGES += \
 	dhcpcd.conf
