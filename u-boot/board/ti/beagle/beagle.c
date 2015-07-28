@@ -99,6 +99,23 @@ void beagle_identify(void)
 }
 
 /*
+ * Routine: boot_to_recovery
+ * Description: Detect if key combination to boot into recovery has been pressed,
+ *		MSP430 will drive GPIO_63 (CP_STATUS_1) if the correct key combo was pressed
+ * 		during bootup
+ * 		Return 1 if correct key combo was pressed and return 0 if otherwise
+ */
+int boot_to_recovery(void)
+{
+	int ret = 0;
+	omap_request_gpio(63);
+	omap_set_gpio_direction(63, 1);
+	ret = omap_get_gpio_datain(63);
+	omap_free_gpio(63);
+	return ret;
+}
+
+/*
  * Routine: misc_init_r
  * Description: Configure board specific parts
  */
@@ -163,21 +180,26 @@ int misc_init_r(void)
 		printf("Beagle unknown 0x%02x\n", beagle_revision);
 	}
 	
-	// {RD} Begin: check conditions to load recovery mode	
-	twl4030_i2c_read_u8(TWL4030_CHIP_RTC,&val,(TWL4030_BASEADD_RTC+12));	
-	if(val == 14){		
-		printf("Entering recovery mode via TWL RTC flag\n");
+	// {RD} Begin: check conditions to load recovery mode
+	if(boot_to_recovery() == 1){
+		printf("Entering recovery mode via Keypad shortcut\n");
 		setenv("dorecovery","1");		
-	}else{
-		do_switch_ecc(NULL, 0, 2, ecc);
-		sprintf(addr, "0x%x", buf);
-		read[2] = addr;
-		do_nand(NULL, 0, 5, read);
-		if(!strncmp(buf+2048, "boot-recovery", 13)){
-				printf("Entering recovery mode via bootloader control block flag\n");
-				setenv("dorecovery","1");
-		}else
-			setenv("dorecovery","0");		
+	}else{	
+		twl4030_i2c_read_u8(TWL4030_CHIP_RTC,&val,(TWL4030_BASEADD_RTC+12));	
+		if(val == 14){		
+			printf("Entering recovery mode via TWL RTC flag\n");
+			setenv("dorecovery","1");		
+		}else{
+			do_switch_ecc(NULL, 0, 2, ecc);
+			sprintf(addr, "0x%x", buf);
+			read[2] = addr;
+			do_nand(NULL, 0, 5, read);
+			if(!strncmp(buf+2048, "boot-recovery", 13)){
+					printf("Entering recovery mode via bootloader control block flag\n");
+					setenv("dorecovery","1");
+			}else
+				setenv("dorecovery","0");		
+		}
 	}								
 	// {RD} End: 
 		

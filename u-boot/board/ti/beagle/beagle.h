@@ -461,7 +461,6 @@ const omap3_sysinfo sysinfo = {
 	MUX_VAL(CP(GPMC_NBE0_CLE),	(IDIS | PTD | DIS | M0)) /*GPMC_nBE0_CLE*/\
 	MUX_VAL(CP(GPMC_NWP),		(IEN  | PTD | DIS | M0)) /*GPMC_nWP*/\
 	MUX_VAL(CP(GPMC_WAIT0),		(IEN  | PTU | EN  | M0)) /*GPMC_WAIT0*/\
-	MUX_VAL(CP(GPMC_WAIT1),		(IEN  | PTU | EN  | M0)) /*GPMC_WAIT1*/\
  /*DSS*/  /* {PS} : Same as BeagleBoard */\
 	MUX_VAL(CP(DSS_PCLK),		(IDIS | PTD | DIS | M0)) /*DSS_PCLK*/\
 	MUX_VAL(CP(DSS_HSYNC),		(IDIS | PTD | DIS | M0)) /*DSS_HSYNC*/\
@@ -704,6 +703,7 @@ const omap3_sysinfo sysinfo = {
 	MUX_VAL(CP(MCSPI1_CS0),		(IDIS | PTU | EN  | M0)) /*MCSPI1_CS0*/	/* {PS} : CP_INT_RST 	- Configured as MCSPI1_CS0 */\
 	\
 	/* {RD}  */\
+	MUX_VAL(CP(GPMC_WAIT1),		(IEN  | PTD | EN  | M4)) /*GPIO_63*/	/* {RD} : CP_STATUS_1 - Input pin */\
 	MUX_VAL(CP(GPMC_WAIT2),		(IDIS | PTD | DIS | M4)) /*GPIO_64*/	/* {RD} : OMAP_STATUS_1 - Output pin */\
 	MUX_VAL(CP(GPMC_WAIT3),		(IDIS | PTD | DIS | M4)) /*GPIO_65*/	/* {RD} : OMAP_STATUS_2 - Output pin */\
 	MUX_VAL(CP(GPMC_NCS2),		(IDIS | PTU | DIS | M4)) /*GPIO_53*/    /* {RD} : emmc reset pin  */\
