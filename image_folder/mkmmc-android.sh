@@ -4,7 +4,7 @@ EXPECTED_ARGS=1
 
 if [ $# == 2 ]
 then
-	if [ $2 = "testing" ]; then
+	if [ $2 = "syscheck" ]; then
 		echo "Flashing Testing file system"
 		$0 $1 Boot_Images/MLO Boot_Images/u-boot.bin Boot_Images/uImage Filesystem/testing*
 		exit 

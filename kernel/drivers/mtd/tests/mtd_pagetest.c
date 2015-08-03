@@ -504,6 +504,7 @@ static int __init mtd_pagetest_init(void)
 
 	printk(KERN_INFO "\n");
 	printk(KERN_INFO "=================================================\n");
+	// Iterate for all MTD blocks
 	printk(PRINT_PREF "MTD device: %d\n", dev);
 
 	mtd = get_mtd_device(NULL, dev);
