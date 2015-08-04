@@ -10,4 +10,5 @@ cp -v kernel/drivers/input/keyboard/cp430_keypad/cp430_keypad.ko out/target/prod
 cp -v kernel/drivers/mfd/cp430-core/cp430_core.ko out/target/product/beagleboard/recovery/root/usr/modules/
 cp -v kernel/drivers/misc/cp430_charger/cp430_charger.ko out/target/product/beagleboard/recovery/root/usr/modules/
 cp -v kernel/drivers/power/tcbin_power/cp430_power/cp430_power.ko out/target/product/beagleboard/recovery/root/usr/modules/
-cp -v kernel/drivers/mtd/tests/*.ko out/target/product/beagleboard/recovery/root/usr/modules/
+cp -v kernel/drivers/mtd/tests/mtd_subpagetest.ko out/target/product/beagleboard/recovery/root/usr/modules/
+cp -v kernel/drivers/mtd/tests/mtd_readtest.ko out/target/product/beagleboard/recovery/root/usr/modules/

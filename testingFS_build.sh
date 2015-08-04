@@ -1,7 +1,10 @@
 #!/bin/sh
 
 ./backupfs_build.sh
+mkdir -p out/target/product/beagleboard/recovery/root/lib/modules/2.6.37/
 cp -v tcbin_misc/syscheck out/target/product/beagleboard/recovery/root/system/bin/
+cp -v tcbin_misc/non_destructive_nandtest out/target/product/beagleboard/recovery/root/system/bin/
+cp -v tcbin_misc/destructive_nandtest out/target/product/beagleboard/recovery/root/system/bin/
 cp -v tcbin_misc/gps_test out/target/product/beagleboard/recovery/root/system/bin/
 cp -v tcbin_misc/twl3040_vib_test out/target/product/beagleboard/recovery/root/system/bin/
 cp -v tcbin_misc/testing.fstab.omap3beagleboard out/target/product/beagleboard/recovery/root/fstab.omap3beagleboard

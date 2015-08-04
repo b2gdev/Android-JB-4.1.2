@@ -1,0 +1,6 @@
+#!/system/bin/sh
+
+printf "\n********      Starting non-destructive NAND test     ********\n** Warning! Test will fail if X-loader is flashed to NAND  **\n"
+
+insmod /usr/modules/mtd_readtest.ko
+rmmod mtd_readtest
