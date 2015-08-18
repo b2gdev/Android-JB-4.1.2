@@ -84,6 +84,10 @@ on boot
 		
 on fs
 
+	service wifi_mac /system/usr/bin/set_wifi_mac
+		class main
+		oneshot
+    
     # This board does not have battery, force battery-level to 100%
     setprop hw.nobattery false
     
