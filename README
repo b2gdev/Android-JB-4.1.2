@@ -37,16 +37,15 @@ Setup the toolchain path to point to arm-eabi- tools in prebuilts/gcc/linux-x86/
   $ export PATH=$HOME/rowboat-android/prebuilts/gcc/linux-x86/arm/arm-eabi-4.6/bin:$PATH
 
 
-
 2) Building
 ============
 2.1) Refer build_all.sh for build instructions
-2.2) Use nandfs_build.sh to build NAND filesystem
+2.2) Use ./tcbin_misc/build_scripts/nandfs_build.sh to build NAND filesystem
 
 
 3) Deployment
 ==============
-3.1) Use U-boot commands listed in the NAND_setup document to setup the macros required to copy the NAND partitions
+3.1) Refer the NAND_setup document for instructions on how to deploy to NAND
 
 
 More info at: from: http://processors.wiki.ti.com/index.php/TI-Android-JB-4.1.2-DevKit-4.0.0_DeveloperGuide

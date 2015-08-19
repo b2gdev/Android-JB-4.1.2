@@ -1,66 +1,10 @@
 HOW TO SET NAND BOOT VARIABLES
 ===================================
 
+o Prepare a bootable SD card (Recommend to use "syscheck 1.1" image)
+o Copy the contents of the “NandFS” folder to the 3rd partition (named “Data”) of the SD card
 o Hit any key and stop the boot processes when the U-boot prompts “Hit any key to stop autoboot”
-o Enter the following commands in sequence
-o Note: The following commands assume that the contents of the “NandFS” folder were copied into the 3rd partition (named “Data”) of the SD card that you’d normally use to boot from
+o Enter the following command
 
-
-
-nandecc hw 1
-
-nand erase 0x260000 0x20000
-
-setenv bootdelay 6
-
-# BOOT FROM NAND
-setenv bootcmd 'nandecc sw ; nand read 0x82000000 0x280000 0x3C0000 ; bootm 0x82000000'
-# BOOT FROM SD
-#setenv bootcmd 'mmc init; fatload mmc 0 82000000 uImage; bootm 82000000'
-
-
-# BOOT FROM NAND 512MB RAM + 512MB NAND
-setenv bootargs 'init=/init console=ttyO2,115200n8 noinitrd ip=off androidboot.console=ttyO2 rootwait mem=512M omap_vout.vid1_static_vrfb_alloc=y rw ubi.mtd=system,2048 ubi.mtd=userdata,2048 ubi.mtd=cache,2048 rootwait vram=8M omapfb.vram=0:8M omapdss.def_disp="tv" omapfb.mode=tv:ntsc no_console_suspend=1'
-# BOOT FROM NAND 256MB RAM + 512MB NAND
-#setenv bootargs 'init=/init console=ttyO2,115200n8 noinitrd ip=off androidboot.console=ttyO2 rootwait mem=256M omap_vout.vid1_static_vrfb_alloc=y rw ubi.mtd=system,2048 ubi.mtd=userdata,2048 ubi.mtd=cache,2048 rootwait vram=8M omapfb.vram=0:8M omapdss.def_disp="tv" omapfb.mode=tv:ntsc no_console_suspend=1'
-# BOOT FROM SD CARD 512MB RAM
-#setenv bootargs 'console=ttyO2,115200n8 androidboot.console=ttyO2 mem=512M root=/dev/mmcblk0p2 rw rootfstype=ext3 rootdelay=1 init=/init ip=off omap_vout.vid1_static_vrfb_alloc=y vram=8M omapfb.vram=0:8M omapdss.def_disp="tv" omapfb.mode=tv:ntsc'
-# BOOT FROM NAND 512MB RAM + 1GB NAND
-setenv bootargs 'init=/init console=ttyO2,115200n8 noinitrd ip=off androidboot.console=ttyO2 rootwait mem=512M omap_vout.vid1_static_vrfb_alloc=y rw ubi.mtd=system,2048 ubi.mtd=cache,2048 rootwait vram=8M omapfb.vram=0:8M omapdss.def_disp="tv" omapfb.mode=tv:ntsc no_console_suspend=1'
-
-setenv cpxl 'nandecc hw 2 ; fatload mmc 0:3 82000000 MLO ; nand erase 0 80000 ; nand write 82000000 0 6000'
-
-setenv cpub 'nandecc sw ; fatload mmc 0:3 0x82000000 u-boot.bin ; nand erase 0x80000 0x1E0000 ; nand write 0x82000000 0x80000 0x34800'
-
-setenv clrecovery 'nandecc sw ; nand erase 0xF80000  0x100000'
-
-# FOR 512MB NAND
-setenv recoverycmd 'nandecc sw ; nand read 0x82000000 0x680000 0x8C0000 ; bootm 0x82000000'
-setenv cpuimage 'nandecc sw ; fatload mmc 0:3 0x82000000 norm_uImage ; nand erase 0x280000 0x3C0000 ; nand write 0x82000000 0x280000 0x3C0000'
-setenv cpbkuimage 'nandecc sw ; fatload mmc 0:3 0x82000000 bk_uImage ; nand erase 0x680000 0x900000 ; nand write 0x82000000 0x680000 0x8C0000'
-setenv cpsys 'nandecc sw ; fatload mmc 0:3 0x82000000 ubi_system.img ; nand erase 0x1080000 0xA000000 ; nand write 0x82000000 0x1080000 0x9800000'
-setenv cpdata 'nandecc sw ; fatload mmc 0:3 0x82000000 ubi_data.img ; nand erase 0x11080000 ; nand write 0x82000000 0x11080000 0x200000'
-setenv cpcache 'nandecc sw ; fatload mmc 0:3 0x82000000 ubi_cache.img ; nand erase 0xB080000 0x6000000; nand write 0x82000000 0xB080000 0x200000'
-
-# FOR 1GB NAND
-setenv recoverycmd 'nandecc sw ; nand read 0x82000000 0xA80000 0x1000000 ; bootm 0x82000000'
-setenv cpuimage 'nandecc sw ; fatload mmc 0:3 0x82000000 norm_uImage ; nand erase 0x280000 0x800000 ; nand write 0x82000000 0x280000 0x800000'
-setenv cpbkuimage 'nandecc sw ; fatload mmc 0:3 0x82000000 bk_uImage ; nand erase 0xA80000 0x1000000 ; nand write 0x82000000 0xA80000 0x900000'
-setenv cpcache 'nandecc sw ; fatload mmc 0:3 0x82000000 ubi_cache.img ; nand erase 0x1B80000 0xC000000 ; nand write 0x82000000 0x1B80000 0x200000'
-setenv cpsys 'nandecc sw ; fatload mmc 0:3 0x82000000 ubi_system.img ; nand erase 0xDF80000; nand write 0x82000000 0xDF80000 0xA000000'
-
-saveenv
-
-
-
-
-HOW TO RUN COPY MACROS
-========================
-
-type "run command" on uboot console
-
-
-Note: You will have to adjust the read/write/erase size values of the NAND bootagrs and bootcmd if your new ubi.img file's size is larger than what is set in the bootargs.
-
-Also note that the "# setenv bootargs ..." command needs to be updated to allow support for the boards with 512MB of RAM. Its "mem" parameter should be equal to the available amount of RAM (256M or 512M).
+run cpall
 

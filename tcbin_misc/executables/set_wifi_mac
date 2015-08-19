@@ -1,0 +1,10 @@
+#!/system/usr/bin/sh
+if ! [[ -e /system/etc/firmware/ti-connectivity/random_mac_set ]]
+then	
+	echo "Creating new random MAC for WiFi"
+	macaddr=$(echo $RANDOM|md5sum|sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
+	mount -o remount,rw /system
+	calibrator set nvs_mac /system/etc/firmware/ti-connectivity/wl1271-nvs.bin $macaddr
+	touch /system/etc/firmware/ti-connectivity/random_mac_set	
+	mount -o remount,ro /system
+fi

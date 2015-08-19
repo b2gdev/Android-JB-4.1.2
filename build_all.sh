@@ -44,7 +44,9 @@ make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- uImage -j8
 cp ./kernel/arch/arm/boot/uImage ./image_folder/NandFS/norm_uImage
 
 # Build Recovery kernel
+cd ./tcbin_misc/build_scripts
 ./backupfs_build.sh
+cd ../../
 make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- omap3_tcbin_android_backup_defconfig
 make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- uImage -j8
 cp ./kernel/arch/arm/boot/uImage ./image_folder/NandFS/bk_uImage
