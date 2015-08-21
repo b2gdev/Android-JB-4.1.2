@@ -132,22 +132,21 @@ static int tcbin_notifier_call(struct notifier_block *this,
 static struct notifier_block tcbin_reboot_notifier = {
 	.notifier_call = tcbin_notifier_call,
 };
-/* {RD} Hide ADB only and UMS only modes so that ADB and UMS Mode is automatically selected */
-static char *usb_functions_ums_adb[] = {
-	"usb_mass_storage",
+/* {RD} Allow only ADB Mode */
+static char *usb_functions_adb[] = {
 	"adb",
 };
 
 static char *usb_functions_all[] = {
-	"adb", "usb_mass_storage",
+	"adb",
 };
 
 static struct android_usb_product usb_products[] = {
-	/* {RD} Hide ADB only and UMS only modes so that ADB and UMS Mode is automatically selected */	
+	/* {RD} Allow only ADB Mode */	
 	{
 		.product_id	= GOOGLE_PRODUCT_ID,
-		.num_functions	= ARRAY_SIZE(usb_functions_ums_adb),
-		.functions	= usb_functions_ums_adb,
+		.num_functions	= ARRAY_SIZE(usb_functions_adb),
+		.functions	= usb_functions_adb,
 	},
 };
 

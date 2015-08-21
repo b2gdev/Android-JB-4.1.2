@@ -45,15 +45,11 @@ public class UsbSettings extends SettingsPreferenceFragment {
 
     private static final String TAG = "UsbSettings";
 
-    private static final String KEY_MTP = "usb_mtp";
-    private static final String KEY_PTP = "usb_ptp";
     private static final String KEY_MASS_STORAGE = "usb_mass_storage";
 
     private UsbManager mUsbManager;
     private StorageManager storageManager;
     private StorageVolume[] storageVolumes;
-    private CheckBoxPreference mMtp;
-    private CheckBoxPreference mPtp;
     private CheckBoxPreference mUms;
 
     private final BroadcastReceiver mStateReceiver = new BroadcastReceiver() {
@@ -70,9 +66,6 @@ public class UsbSettings extends SettingsPreferenceFragment {
         addPreferencesFromResource(R.xml.usb_settings);
         root = getPreferenceScreen();
 
-
-        mMtp = (CheckBoxPreference)root.findPreference(KEY_MTP);
-        mPtp = (CheckBoxPreference)root.findPreference(KEY_PTP);
         mUms = (CheckBoxPreference)root.findPreference(KEY_MASS_STORAGE);
         if (!storageVolumes[0].allowMassStorage()) {
             root.removePreference(mUms);
@@ -109,21 +102,9 @@ public class UsbSettings extends SettingsPreferenceFragment {
     }
 
     private void updateToggles(String function) {
-        if (UsbManager.USB_FUNCTION_MTP.equals(function)) {
-            mMtp.setChecked(true);
-            mPtp.setChecked(false);
-            mUms.setChecked(false);
-        } else if (UsbManager.USB_FUNCTION_PTP.equals(function)) {
-            mMtp.setChecked(false);
-            mUms.setChecked(false);
-            mPtp.setChecked(true);
-        } else if (UsbManager.USB_FUNCTION_MASS_STORAGE.equals(function)) {
-            mMtp.setChecked(false);
-            mPtp.setChecked(false);
+        if (UsbManager.USB_FUNCTION_MASS_STORAGE.equals(function)) {
             mUms.setChecked(true);
         } else  {
-            mMtp.setChecked(false);
-            mPtp.setChecked(false);
             mUms.setChecked(false);
         }
     }
@@ -145,15 +126,7 @@ public class UsbSettings extends SettingsPreferenceFragment {
                 return true;
             }
         }
-        if (preference == mMtp) {
-            Settings.Secure.putInt(getContentResolver(), Settings.Secure.USB_MASS_STORAGE_ENABLED, 0);
-            mUsbManager.setCurrentFunction(UsbManager.USB_FUNCTION_MTP, true);
-            updateToggles(UsbManager.USB_FUNCTION_MTP);
-        } else if (preference == mPtp) {
-            Settings.Secure.putInt(getContentResolver(), Settings.Secure.USB_MASS_STORAGE_ENABLED, 0);
-            mUsbManager.setCurrentFunction(UsbManager.USB_FUNCTION_PTP, true);
-            updateToggles(UsbManager.USB_FUNCTION_PTP);
-        } else if (preference == mUms) {
+        if (preference == mUms) {
             Settings.Secure.putInt(getContentResolver(), Settings.Secure.USB_MASS_STORAGE_ENABLED, 1);
             mUsbManager.setCurrentFunction(UsbManager.USB_FUNCTION_MASS_STORAGE, true);
             updateToggles(UsbManager.USB_FUNCTION_MASS_STORAGE);

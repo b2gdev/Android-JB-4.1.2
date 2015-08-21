@@ -48,7 +48,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 	persist.sys.strictmode.disable=1
 
 PRODUCT_PROPERTY_OVERRIDES += \
-	persist.sys.usb.config=mass_storage,adb
+	persist.sys.usb.config=adb
 
 PRODUCT_CHARACTERISTICS := tablet
 
