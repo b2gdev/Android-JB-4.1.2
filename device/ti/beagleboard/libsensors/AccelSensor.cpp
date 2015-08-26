@@ -144,9 +144,9 @@ again:
         if (type == EV_ABS) {
             float value = event->value;
             if (event->code == EVENT_TYPE_ACCEL_Y) {
-                mPendingEvent.data[0] =  (value * CONVERT_A_Y);
+                mPendingEvent.data[1] = (value * CONVERT_A_Y);
             } else if (event->code == EVENT_TYPE_ACCEL_X) {
-                mPendingEvent.data[1] = (value * CONVERT_A_X);
+                mPendingEvent.data[0] = (-1)*(value * CONVERT_A_X);
             } else if (event->code == EVENT_TYPE_ACCEL_Z) {
                 mPendingEvent.data[2] = (value * CONVERT_A_Z);
             }

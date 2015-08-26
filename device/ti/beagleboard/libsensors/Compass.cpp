@@ -29,6 +29,11 @@
 
 #define FETCH_FULL_EVENT_BEFORE_RETURN 1
 
+// The offset required to componsate for the addition magnetic flux inside the enclosure in uT
+static const float enclosure_offsets_y = 59.0f;
+static const float enclosure_offsets_x = -15.0f;
+static const float enclosure_offsets_z = 74.50f;
+
 /*****************************************************************************/
 
 Compass::Compass()
@@ -202,18 +207,21 @@ int Compass::readEvents(sensors_event_t* data, int count)
         if (type == EV_ABS) {
             float value = event->value;
             if (event->code == EVENT_TYPE_ACCEL_Y) {
-                mPendingEvent.data[0] = TwosComplmentToDecimal(value) * CONVERT_M_Y;
+                mPendingEvent.data[0] = ( ( TwosComplmentToDecimal(value) * CONVERT_M_Y ) + enclosure_offsets_x );
             } else if (event->code == EVENT_TYPE_ACCEL_X) {
-                mPendingEvent.data[1] = TwosComplmentToDecimal(value) * CONVERT_M_X;
+                mPendingEvent.data[1] = ( ( TwosComplmentToDecimal(value) * CONVERT_M_X ) + enclosure_offsets_y );
             } else if (event->code == EVENT_TYPE_ACCEL_Z) {
-                mPendingEvent.data[2] = TwosComplmentToDecimal(value) * CONVERT_M_Z;
+                mPendingEvent.data[2] = ( ( TwosComplmentToDecimal(value) * CONVERT_M_Z ) + enclosure_offsets_z );
             }
         } else if (type == EV_SYN) {
             mPendingEvent.timestamp = timevalToNano(event->time);
             if (mEnabled) {
                 *data++ = mPendingEvent;
                 count--;
-                numEventReceived++;		
+                numEventReceived++;
+                //ALOGE("compass: Reading (y=%.2f(%0.2f), x=%.2f(%0.2f), z=%.2f(%0.2f))",
+                //    mPendingEvent.data[1], enclosure_offsets_y, mPendingEvent.data[0], enclosure_offsets_x, 
+                //    mPendingEvent.data[2], enclosure_offsets_z);		
 			}
         } else {
             ALOGE("compass: unknown event (type=%d, code=%d)",
