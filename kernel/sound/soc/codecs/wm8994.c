@@ -2743,13 +2743,13 @@ SND_SOC_DAPM_MIXER("DAC1R Mixer", SND_SOC_NOPM, 0, 0,
 		   dac1r_mix, ARRAY_SIZE(dac1r_mix)),
 
 SND_SOC_DAPM_AIF_OUT("AIF2ADCL", NULL, 0,
-		     WM8994_POWER_MANAGEMENT_4, 13, 0),
+		     WM8994_POWER_MANAGEMENT_4, 13, 1),
 SND_SOC_DAPM_AIF_OUT("AIF2ADCR", NULL, 0,
-		     WM8994_POWER_MANAGEMENT_4, 12, 0),
+		     WM8994_POWER_MANAGEMENT_4, 12, 1),
 SND_SOC_DAPM_AIF_IN("AIF2DACL", NULL, 0,
-		    WM8994_POWER_MANAGEMENT_5, 13, 0),
+		    WM8994_POWER_MANAGEMENT_5, 13, 1),
 SND_SOC_DAPM_AIF_IN("AIF2DACR", NULL, 0,
-		    WM8994_POWER_MANAGEMENT_5, 12, 0),
+		    WM8994_POWER_MANAGEMENT_5, 12, 1),
 
 SND_SOC_DAPM_AIF_IN("AIF1DACDAT", "AIF1 Playback", 0, SND_SOC_NOPM, 0, 0),
 SND_SOC_DAPM_AIF_IN("AIF2DACDAT", "AIF2 Playback", 0, SND_SOC_NOPM, 0, 0),
@@ -4324,6 +4324,142 @@ void wm8994_mic_init(struct snd_soc_codec *codec)
 }
 /* {PS} END: */
 
+/* {RD} BEGIN: */
+void aif2_init(struct snd_soc_codec *codec)
+{
+	u16 val;
+	#ifdef CONFIG_MFD_WM8994_DEBUG
+	printk("[%08u] - %s - %s\n", (unsigned int)jiffies, __FILE__, __FUNCTION__);	/* {RD} */
+	#endif		
+	
+	/* Common */
+	val = wm8994_read(codec, WM8994_GPIO_2); // MCLK2
+	//val &= (~0x1F);
+	val = 0x8100;
+	wm8994_write(codec, WM8994_GPIO_2, val);
+	
+	val = wm8994_read(codec, WM8994_GPIO_3); // BCLK2
+	//val &= (~0x1F);
+	val = 0x8100;
+	wm8994_write(codec, WM8994_GPIO_3, val); 
+	
+	val = wm8994_read(codec, WM8994_GPIO_4); // LRCLK2
+	//val &= (~0x1F);
+	val = 0x8100;
+	wm8994_write(codec, WM8994_GPIO_4, val);
+	
+	val = wm8994_read(codec, WM8994_GPIO_5); // DACDAT2
+	//val &= (~0x1F);
+	val = 0x8100;
+	wm8994_write(codec, WM8994_GPIO_5, val);
+	
+	val = wm8994_read(codec, WM8994_GPIO_7); // ADCDAT2
+	//val &= (~0x1F);
+	val = 0x8100;
+	wm8994_write(codec, WM8994_GPIO_7, val);
+	
+	//wm8994_write(codec, WM8994_AIF2_CONTROL_2, 0x1e); // set a-law companding
+	
+	/* Slave */
+	
+	val = wm8994_read(codec, WM8994_AIF2_MASTER_SLAVE);
+	val &= (~WM8994_AIF2_MSTR) ;
+	wm8994_write(codec, WM8994_AIF2_MASTER_SLAVE, val); // set AIF2 slave
+	
+	val = wm8994_read(codec, WM8994_AIF2_RATE);
+	val = 0x03; // AIF2 Sample Rate = 8 kHz, AIF2CLK/Fs ratio = 256
+	wm8994_write(codec, WM8994_AIF2_RATE, val);
+	
+	val = wm8994_read(codec, WM8994_AIF2_CONTROL_1);
+	val &= (~0x60); // 16bit
+	val |= 0x18; // DSP
+	val &= (~0x80); // A mode
+	val |= 0x100; // BCLK2 inverted
+	//val &= (~0x400); // Left ADC data is output on right channel
+	val = 0x4118; // Final value
+	wm8994_write(codec, WM8994_AIF2_CONTROL_1, val); 
+	
+	val = wm8994_read(codec, WM8994_AIF2_CONTROL_2);
+	val |= 0x100; // Mono
+	//val &= (~0x400); // Right DAC receives left interface data
+	val |= 0xC00; // Input path boost +18dB
+	//val |= 0x2e; // 8-bit a-law
+	val = 0x4D00; // Final value
+	wm8994_write(codec, WM8994_AIF2_CONTROL_2, val); 		
+	
+	val = wm8994_read(codec, WM8994_CLOCKING_1);
+	val |= 0x06; //Enable the DSP processing clock for AIF2, Enable the core clock
+	wm8994_write(codec, WM8994_CLOCKING_1, val);
+	
+	// ADC settings
+	val = wm8994_read(codec, WM8994_OVERSAMPLING);
+	val = 0x00; // Select Low Power ADC/DMIC Oversample Rate, Select Low Power DAC Oversample Rate (Default)
+	wm8994_write(codec, WM8994_OVERSAMPLING, val);
+
+	// Unmute DAC
+	val = wm8994_read(codec, WM8994_DAC2_LEFT_VOLUME);
+	val |= 0xC0; // Unmute DAC 2 (Left)
+	wm8994_write(codec, WM8994_DAC2_LEFT_VOLUME, val);
+	
+	val = wm8994_read(codec, WM8994_DAC2_RIGHT_VOLUME);
+	val |= 0xC0; // Unmute DAC 2 (Right)
+	wm8994_write(codec, WM8994_DAC2_RIGHT_VOLUME, val);
+	
+	val = wm8994_read(codec, WM8994_AIF2_DAC_FILTERS_1);
+	val = 0x00; // Unmute the AIF2 DAC path
+	wm8994_write(codec, WM8994_AIF2_DAC_FILTERS_1, val);
+	
+	// Mixing 
+	val = wm8994_read(codec, WM8994_DAC2_MIXER_VOLUMES);
+	val = 0x018C; // Set the volume on the STR & STL to DAC2 mixer paths to 0dB
+	wm8994_write(codec, WM8994_DAC2_MIXER_VOLUMES, val);
+	
+	val = wm8994_read(codec, WM8994_DAC2_RIGHT_MIXER_ROUTING);
+	val = 0x0030; // Enable the STR & STL to DAC 2 (Right) mixer path
+	wm8994_write(codec, WM8994_DAC2_RIGHT_MIXER_ROUTING, val);
+	
+	// Enable clock
+	msleep(50);
+	val = wm8994_read(codec, WM8994_AIF2_CLOCKING_1);
+	val = 0x01; // Enable AIF2 Clock
+	wm8994_write(codec, WM8994_AIF2_CLOCKING_1, val);
+	
+	/* Master */
+	
+	/*
+	wm8994_write(codec, WM8994_AIF2_RATE, 0x73); // AIF2 = 44.1KHz AIF2clk/fs = 256
+	
+	val = wm8994_read(codec, WM8994_AIF2_BCLK);
+	val = 0x60; // AIF2_BLK = AIF2CLK/6 = 32KHz
+	//val = 0x40; // AIF2_BLK = AIF2CLK/4 = 48KHz
+	//val = 0x50; // AIF2_BLK = AIF2CLK/5
+	wm8994_write(codec, WM8994_AIF2_BCLK, val); 
+	
+	val = wm8994_read(codec, WM8994_AIF2_MASTER_SLAVE);
+	val |= (WM8994_AIF2_MSTR | WM8994_AIF2_CLK_FRC);
+	wm8994_write(codec, WM8994_AIF2_MASTER_SLAVE, val); // set AIF2 master + force clock	
+	
+	val = wm8994_read(codec, WM8994_AIF2_CLOCKING_1);
+	val &= (~0x18); // MCLK1 source
+	val |=0x2; // AIF2CLK/2
+	val |= WM8994_AIF2CLK_ENA; // enable AIF2 clock	
+	wm8994_write(codec, WM8994_AIF2_CLOCKING_1, val);
+	*/
+	
+	/* Common */
+	
+	val = wm8994_read(codec, WM8994_POWER_MANAGEMENT_5);
+	val |= (WM8994_AIF2DACL_ENA | WM8994_AIF2DACR_ENA | WM8994_DAC2L_ENA | WM8994_DAC2R_ENA);
+	wm8994_write(codec, WM8994_POWER_MANAGEMENT_5, val); // enable AIF2 DAC
+	
+	val = wm8994_read(codec, WM8994_POWER_MANAGEMENT_4);
+	val |= (WM8994_AIF2ADCL_ENA | WM8994_AIF2ADCR_ENA | WM8994_ADCR_ENA | WM8994_ADCL_ENA);
+	wm8994_write(codec, WM8994_POWER_MANAGEMENT_4, val); // enable AIF2 ADC
+	
+	
+}
+// {RD} END:
+
 static int wm8994_codec_probe(struct snd_soc_codec *codec)
 {
 	struct wm8994_priv *wm8994;
@@ -4507,6 +4643,8 @@ static int wm8994_codec_probe(struct snd_soc_codec *codec)
 /* {PS} BEGIN: */
 	wm8994_mic_init(codec);
 /* {PS} END: */
+	
+	aif2_init(codec);
 	
 	return 0;
 

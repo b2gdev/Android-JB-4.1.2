@@ -4,6 +4,10 @@
    <!-- We are able to have most of our routing static so do that -->
 <path>
 
+<!-- Playback speed drops if this is removed -->
+        <ctl name="Left Output Mixer IN1L Switch" val="1" />
+        <ctl name="Left Output Mixer IN1L Volume" val="0" />
+        
 <!-- Common inputs -->
         <ctl name="ADCL Mux" val="0" />
         <!-- ctl name="AIF1ADC1L DRC Switch" val="1" / -->
@@ -25,37 +29,23 @@
         <ctl name="MIXINR IN1R Volume" val="1"/>
 
 <!-- from 3G-->
-        <ctl name="IN2L PGA IN2LP Switch" val="1" />
-        <ctl name="IN2L PGA IN2LN Switch" val="1" />
-        <ctl name="IN2L Volume" val="30" />
-        <ctl name="MIXINL IN2L Switch" val="1" />
-        <ctl name="Left Sidetone" val="0" />
-        <ctl name="DAC1 Left Sidetone Volume" val="4" />
-        <ctl name="DAC1 Right Sidetone Volume" val="4" />
+        <ctl name="DAC1L Mixer AIF2 Switch" val="1" />
+        <ctl name="DAC1R Mixer AIF2 Switch" val="1" />
 
 <!-- Speaker/Headphone -->
-        <ctl name="DAC1L Mixer AIF1.1 Switch" val="1" />
+        <ctl name="DAC1L Mixer AIF1.1 Switch" val="1" />        
         <ctl name="DAC1R Mixer AIF1.1 Switch" val="1" />
-        
 
 <!-- Headphone -->
-     <ctl name="Left Headphone Mux" val="1" />
-         <ctl name="Right Headphone Mux" val="1" />
+        <ctl name="Left Headphone Mux" val="1" />
+        <ctl name="Right Headphone Mux" val="1" />
 
 <!-- Speaker -->
-     <ctl name="Left Output Mixer DAC Switch" val="1" />
-     <ctl name="Right Output Mixer DAC Switch" val="1" />
-     <ctl name="SPKL Output Switch" val="1" />
-     <ctl name="SPKR Output Switch" val="1" />
-
-<!-- to 3G -->
-        <ctl name="LINEOUT1 Volume" val="1" />
-        <ctl name="LINEOUT1N Switch" val="1" />
-        <ctl name="LINEOUT1N Mixer Left Output Switch" val="1" />
-        <ctl name="LINEOUT1P Switch" val="1" />
-        <ctl name="LINEOUT1P Mixer Left Output Switch" val="1" />
-        <ctl name="Left Output Mixer IN1L Switch" val="1" />
-        <ctl name="Left Output Mixer IN1R Switch" val="1" />
+        <ctl name="Left Output Mixer DAC Switch" val="1" />
+        <ctl name="Right Output Mixer DAC Switch" val="1" />
+        <ctl name="SPKL Output Switch" val="1" />
+        <ctl name="SPKR Output Switch" val="1" />
+        
 </path>
 
 <device name="speaker">
@@ -92,26 +82,16 @@
 <device name="headset">
   <path name="on">
         <ctl name="IN1L Switch" val="1" />
-        <ctl name="Right Output Mixer IN1L Switch" val="1" />
-        <ctl name="MIXINR Output Record Volume" val="7"/>
   </path>
   <path name="off">
      <ctl name="IN1L Switch" val="0" />
-     <ctl name="Right Output Mixer IN1L Switch" val="0" />
-         <ctl name="MIXINR Output Record Volume" val="0"/>
   </path>
 </device>
 
 <device name="3g-output">
   <path name="on">
-    <ctl name="IN2L Switch" val="1" />
-    <ctl name="DAC1R Mixer Left Sidetone Switch" val="1" />
-        <ctl name="DAC1L Mixer Left Sidetone Switch" val="1" />
   </path>
   <path name="off">
-    <ctl name="IN2L Switch" val="0" />
-    <ctl name="DAC1R Mixer Left Sidetone Switch" val="0" />
-        <ctl name="DAC1L Mixer Left Sidetone Switch" val="0" />
   </path>
 </device>
 

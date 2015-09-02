@@ -312,22 +312,26 @@ static int out_standby(struct audio_stream *stream)
 		if(!adev->in_call){			
 			deselect_all_output_devices(adev);
 			usleep(USLEEP_DESELECT_OUTPUT);
+			
+			ALOGV("out_standby(%p) closing PCM\n", stream);
+			ret = pcm_close(out->pcm);
+			
+			if (ret != 0) {
+				ALOGE("out_standby(%p) failed: %d\n", stream, ret);
+				pthread_mutex_unlock(&out->lock);
+				pthread_mutex_unlock(&adev->route_lock);
+				return ret;
+			}	
+			
+			adev->is_pcm_out_active = 0;
+			out->pcm = NULL;
+		
 		}else{
 			ALOGV("out_standby(%p) INCALL not deselecting output\n", stream);
+			ALOGV("out_standby(%p) INCALL not closing output\n", stream);
 		}
 				
-		ALOGV("out_standby(%p) closing PCM\n", stream);
-		ret = pcm_close(out->pcm);
-					
-		if (ret != 0) {
-			ALOGE("out_standby(%p) failed: %d\n", stream, ret);
-			pthread_mutex_unlock(&out->lock);
-			pthread_mutex_unlock(&adev->route_lock);
-			return ret;
-		}	
-		
-		adev->is_pcm_out_active = 0;
-		out->pcm = NULL;							
+									
     }
 	pthread_mutex_unlock(&out->lock);
 	pthread_mutex_unlock(&adev->route_lock);
@@ -890,9 +894,8 @@ static void select_mode(struct tiny_audio_device *adev, int new_mode)
     if ((new_mode == AUDIO_MODE_IN_CALL)||(new_mode == AUDIO_MODE_RINGTONE)) {
 		
 		ALOGV("Entering IN_CALL/RingTone state");
-		adev->mode == new_mode;
+		adev->mode = new_mode;
 							
-		//To-Do Close PCM's ?
 		if (!adev->in_call) {                                                          
 			ALOGI("enabling 3G audio!\n");
 			adev->devices |= AUDIO_DEVICE_IN_VOICE_CALL;				
@@ -900,7 +903,7 @@ static void select_mode(struct tiny_audio_device *adev, int new_mode)
             adev->in_call = 1;
         }
     } else if(new_mode == AUDIO_MODE_NORMAL){
-		adev->mode == new_mode;
+		adev->mode = new_mode;
 		ALOGV("Entering normal state");
         if (adev->in_call) {
             adev->in_call = 0;
@@ -909,7 +912,7 @@ static void select_mode(struct tiny_audio_device *adev, int new_mode)
 			deselect_all_output_devices(adev);
 			usleep(USLEEP_DESELECT_OUTPUT);						
 			if(adev->is_pcm_out_active){																	
-				ALOGV("closing PCM\n");							
+				ALOGV("closing PCM!\n");							
 				if (pcm_close(adev->active_output->pcm))
 					ALOGE("failed to close PCM \n");
 				else{
@@ -1567,6 +1570,7 @@ static int adev_open(const hw_module_t* module, const char* name,
     adev->active_devices = 0;
     adev->is_pcm_out_active = 0;
     adev->is_pcm_in_active = 0;
+    adev->in_call = 0;
     
     ret = pthread_create(&thread_ID, NULL, event_listner, adev);
 
