@@ -1,18 +1,63 @@
 #!/system/usr/bin/sh
-if [ $# -lt 1 ]; then
-        $0 /data/update.zip
-        exit
-fi
-echo "Install OTA from $1"
-if ! [[ -e $1 ]]
+set -e
+
+programName=`basename "${0}"`
+
+otaExtension="zip"
+otaDefault="/data/update.${otaExtension}"
+
+programMessage() {
+  local message="${1}"
+
+  echo >&2 "${programName}: ${message}"
+}
+
+syntaxError() {
+  local message="${1}"
+
+  programMessage "${message}"
+  exit 2
+}
+
+semanticError() {
+  local message="${1}"
+  
+  programMessage "${message}"
+  exit 3
+}
+
+internalError() {
+  local message="${1}"
+  
+  programMessage "${message}"
+  exit 4
+}
+
+if [ "${#}" -eq 0 ]
 then
-	echo "$1 does not exist"
-	exit
+  otaPath="${otaDefault}"
+else
+  otaPath="${1}"
+  shift 1
+  
+  [ "${#}" -eq 0 ] || syntaxError "too many parameters"
 fi
-chmod 777 $1
-mkdir /cache/recovery/
-chmod 777 /cache/recovery
-touch /cache/recovery/command
-chmod 777 /cache/recovery/command
-echo "--update_package=$1" > /cache/recovery/command
+
+[ -e "${otaPath}" ] || semanticError "OTA not found: ${otaPath}"
+[ -f "${otaPath}" ] || semanticError "OTA not a file: ${otaPath}"
+[ -r "${otaPath}" ] || semanticError "OTA not readable: ${otaPath}"
+
+otaPath=`realpath "${otaPath}"`
+echo "installing OTA from ${otaPath}"
+
+recoveryDirectory="/cache/recovery/"
+mkdir -p "${recoveryDirectory}"
+chmod 755 "${recoveryDirectory}"
+
+commandFile="${recoveryDirectory}command"
+: >"${commandFile}"
+chmod 644 "${commandFile}"
+
+echo >>"${commandFile}" "--update_package=${otaPath}"
 reboot recovery
+internalError "system not rebooted to recovery mode"
