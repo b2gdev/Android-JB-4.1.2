@@ -1341,7 +1341,7 @@ static void __init omap3_tcbin_gpio_init(void)
 //	gpio_request(14,  "ACC_INT");				/* {PS} : ACC_INT			*/
 	gpio_request(15,  "3GM_UART_RI_INT");		/* {PS} : 3GM_UART_RI_INT	*/
 	gpio_request(16,  "3GM_PWR_EN");			/* {PS} : 3GM_PWR_nEN		*/
-	gpio_request(21,  "USB_PWR_EN");			/* {PS} : USB_PWR_EN		*/
+//	gpio_request(21,  "USB_PWR_EN");			/* {PS} : USB_PWR_EN		*/
 	gpio_request(23,  "3GM_OE");				/* {PS} : 3GM_OE			*/
 	gpio_request(64,  "OMAP_STATUS_1");			/* {RD} : OMAP_STATUS_1		*/
 	gpio_request(65,  "OMAP_STATUS_2");			/* {RD} : OMAP_STATUS_2		*/
@@ -1382,7 +1382,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_direction_output(167, 1);		/* {PS} : CAM_PWDN			- HIGH 	- Power down Camera */
 	gpio_direction_output(157, 0);		/* {PS} : CAM_LED_nRST		- LOW 	- Reset Camera LED driver */
 	gpio_direction_output(16, 0);		/* {PS} : 3GM_PWR_nEN		- LOW	- Turn on 3G modem power supply */
-	gpio_direction_output(21, 0);		/* {PS} : USB_PWR_EN		- LOW	- Turn off USB Hub power supply */
+//	gpio_direction_output(21, 0);		/* {PS} : USB_PWR_EN		- LOW	- Turn off USB Hub power supply */
 	gpio_direction_output(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */
 	gpio_direction_output(126, 0);		/* {PS} : TV_PWR_EN			- LOW	- Turn off TV power supply */
 	gpio_direction_output(127, 1);		/* {PS} : TV_OUT_EN			- HIGH 	- Disable TV out */
@@ -1409,7 +1409,7 @@ static void __init omap3_tcbin_gpio_init(void)
 //	gpio_set_value(16, 1);		/* {PS} : 3GM_PWR_nEN		- HIGH	- Turn off 3G modem power supply */	
 	gpio_set_value(16, 0);		/* {PS} : 3GM_PWR_nEN		- LOW	- Turn on 3G modem power supply */
 
-	gpio_set_value(21, 1);		/* {PS} : USB_PWR_EN		- HIGH	- Turn on USB Hub power supply */
+//	gpio_set_value(21, 1);		/* {PS} : USB_PWR_EN		- HIGH	- Turn on USB Hub power supply */
 //	gpio_set_value(21, 0);		/* {PS} : USB_PWR_EN		- LOW	- Turn off USB Hub power supply */
 	
 	gpio_set_value(23, 0);		/* {PS} : 3GM_OE			- LOW 	- Disconnect 3G modem data bus */

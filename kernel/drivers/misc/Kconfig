@@ -508,6 +508,10 @@ config TCBIN_CP430_CHARGER
 
 	 If unsure, say N.
 
+config B2G_USB_HUB
+	tristate "Driver to enable the USB hub on the b2g"
+	default y
+
 menu "TCBIN sensor drivers"
 
 config LM3553_CAMERA_FLASH_DRIVER

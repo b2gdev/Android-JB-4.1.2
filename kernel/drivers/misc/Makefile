@@ -47,6 +47,7 @@ obj-y				+= hmc5883l/
 obj-y				+= twl3040_vib/
 obj-y				+= w2sg0006/
 # {PK} END:
+obj-y				+= b2g_usb_hub/
 obj-$(CONFIG_VMWARE_BALLOON)	+= vmw_balloon.o
 obj-$(CONFIG_ARM_CHARLCD)	+= arm-charlcd.o
 obj-$(CONFIG_PCH_PHUB)		+= pch_phub.o
