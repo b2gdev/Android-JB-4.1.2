@@ -205,7 +205,7 @@ batt_charger_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
 			}
 			
 			atomic_set(&cmd_reply_received_flag, 0);
-			ret = cp430_core_write(CP430_DEV_DISPLAY, cmd_packet, sizeof(cmd_packet));
+			ret = cp430_core_write(CP430_DEV_CHARGER, cmd_packet, sizeof(cmd_packet));
 			if (ret < 0) {
 				PDEBUG("batt_charger: cp430_core_write failed.\r\n");
 				ret = -EFAULT;

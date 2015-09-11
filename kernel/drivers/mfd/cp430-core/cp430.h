@@ -29,6 +29,20 @@
 #define	CP430_CHECKSUM		7
 #define	CP430_END		8
 
+/* received data lengths */
+#define RCVD_DATA_LEN_CMD_RESP		0x01
+#define RCVD_DATA_LEN_CP430_VER		0x04
+#define RCVD_DATA_LEN_KEYPAD_STAT	0x0C
+#define RCVD_DATA_LEN_CHGR_STAT		0x06
+
+/* received packet types */
+#define PKT_TYP_CP430_GET_STATUS    	((CP430_CORE   << 8) + 0x01)
+#define PKT_TYP_KEYPAD_GET_STATUS   	((CP430_DEV_KEYPAD  << 8) + 0x01)
+#define PKT_TYP_DISPLAY_ON_OFF      	((CP430_DEV_DISPLAY << 8) + 0x01)
+#define PKT_TYP_DISPLAY_WRITE       	((CP430_DEV_DISPLAY << 8) + 0x02)
+#define PKT_TYP_CHARGER_GET_STATUS  	((CP430_DEV_CHARGER << 8) + 0x01)
+#define PKT_TYP_UPDATE_CC_PWR_STATUS  	((CP430_DEV_POWER << 8) + 0x01)
+
 /* transmit events */
 #define TX_EVENT_IDLE		0
 

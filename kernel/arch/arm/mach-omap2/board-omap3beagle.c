@@ -1097,7 +1097,7 @@ static struct wm8994_pdata wm8994_pdata = {
 			.init_data = &wm8994_ldo1,
 		},
 		{
-			.enable = 0,		/* {PS} GPIO 142 is common for both LDO1 and LDO2, control is given to LDO1 */
+			.enable = 142,		/* {PS} GPIO 142 is common for both LDO1 and LDO2, control is given to LDO1 */
 			.supply = "DCVDD",	/* {PS} */
 			.init_data = &wm8994_ldo2,
 		}	  
@@ -1355,7 +1355,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_request(129, "3GM_MDL_RST");			/* {PS} : 3GM_MDL_RST		*/
 //	gpio_request(140, "GPS_nEN");				/* {PS} : GPS_nEN			*/
 	gpio_request(141, "PWR03_EN");				/* {PS} : PWR03_EN			*/
-	gpio_request(142, "AUD_PWR_EN");			/* {PS} : AUD_PWR_EN		*/
+//	gpio_request(142, "AUD_PWR_EN");			/* {PS} : AUD_PWR_EN		*/
 //	gpio_request(147, "USB2HS_nRST");			/* {PS} : USB2HS_nRST		*/
 //	gpio_request(149, "WL_INT");				/* {PS} : WL_INT			*/
 	gpio_request(150, "WL_EN");					/* {PS} : WL_EN				*/
@@ -1393,7 +1393,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_direction_output(129, 1);		/* {PS} : 3GM_MDL_RST		- HIGH	- Reset 3G modem */
 //	gpio_direction_output(140, 1);		/* {PS} : GPS_nEN			- HIGH	- Disable GPS */
 	gpio_direction_output(141, 0);		/* {PS} : PWR03_EN			- LOW	- Turn off Wi-Fi power supply */
-	gpio_direction_output(142, 0);		/* {PS} : AUD_PWR_EN		- LOW 	- Turn off Audio power supply */
+//	gpio_direction_output(142, 0);		/* {PS} : AUD_PWR_EN		- LOW 	- Turn off Audio power supply */
 //	gpio_direction_output(147, 0);		/* {PS} : USB2HS_nRST		- LOW	- Reset USB Transciever */
 	gpio_direction_output(150, 0);		/* {PS} : WL_EN				- LOW	- Disable Wi-Fi */
 	/*  gpio_direction_output(152, 0);	*/	/* {AH} : Added in board-omap3beagle-camera.c */
@@ -1438,7 +1438,7 @@ static void __init omap3_tcbin_gpio_init(void)
 	gpio_set_value(141, 1);		/* {PS} : PWR03_EN			- HIGH	- Turn on Wi-Fi power supply */
 //	gpio_set_value(141, 0);		/* {PS} : PWR03_EN			- LOW	- Turn off Wi-Fi power supply */
 	
-	gpio_set_value(142, 1);		/* {PS} : AUD_PWR_EN		- HIGH 	- Turn on Audio power supply */
+//	gpio_set_value(142, 1);		/* {PS} : AUD_PWR_EN		- HIGH 	- Turn on Audio power supply */
 //	gpio_set_value(142, 0);		/* {PS} : AUD_PWR_EN		- LOW 	- Turn off Audio power supply */
 	
 //	gpio_set_value(147, 0);		/* {PS} : USB2HS_nRST		- LOW	- Reset USB Transciever */

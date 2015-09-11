@@ -333,6 +333,23 @@ struct core_operations cp430_core_ops = {
 };
 EXPORT_SYMBOL(cp430_core_ops);
 
+unsigned short get_data_length(void) {
+	unsigned char active_rx_command = active_rx_packet_head[RX_STATE_COMMAND];
+	unsigned short packetType = ((active_rx_device << 8) + active_rx_command);
+
+	if ((packetType == PKT_TYP_UPDATE_CC_PWR_STATUS) || (packetType ==  PKT_TYP_DISPLAY_WRITE) || (packetType ==  PKT_TYP_DISPLAY_ON_OFF)){
+		return RCVD_DATA_LEN_CMD_RESP;
+	}else if (packetType == PKT_TYP_CP430_GET_STATUS){
+		return RCVD_DATA_LEN_CP430_VER;
+	}else if (packetType ==  PKT_TYP_KEYPAD_GET_STATUS){
+		return RCVD_DATA_LEN_KEYPAD_STAT;
+	}else if (packetType ==  PKT_TYP_CHARGER_GET_STATUS){
+		return RCVD_DATA_LEN_CHGR_STAT;
+	}else{
+		return 0;				//Undefined packet type
+	}
+}
+
 void process_rx_fifo(unsigned long unused)
 {
 	unsigned char c = 0x00;
@@ -492,7 +509,13 @@ void process_rx_fifo(unsigned long unused)
 
 					active_rx_data_count = 0;
 
-					if (active_rx_packet_length > 0) {
+					if(active_rx_packet_length != get_data_length()){
+						PDEBUG("Error ! invalid data length\r\n");
+						// out of sync
+                    	kfifo_reset(&devices[active_rx_device].rx_fifo);
+						rx_state = RX_STATE_HEADER1;
+                    }
+					else if (active_rx_packet_length > 0) {
 						rx_state = RX_STATE_DATA;
 					}
 					else {
