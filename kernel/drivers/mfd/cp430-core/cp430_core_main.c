@@ -64,6 +64,10 @@ static atomic_t is_sys_suspend = ATOMIC_INIT(1);
 static unsigned int rx_event_handler_flag = SYS_NOFLAG;
 
 unsigned short masked_flag = SYS_NOFLAG; /*{KW}: separate flag from rx event arg */
+
+unsigned char  fw_version_major;
+unsigned char  fw_version_minor;
+
 /** {KW}:
  * Called by cp430_core driver on data reception for this device.
  * @arg: 32bit value containing 2 fields as follows.
@@ -88,15 +92,32 @@ int cp430_dev_receive_event_handler(unsigned int arg)
 		}
 		else {
 			PDEBUG("cp430_dev : packet received\r\n");
-			
-			if(buffer[6] != 0x00) {
-				PDEBUG("Error in Command Response %02X\r\n", buffer[6]);
-				command_response_received_flag = -1;
-				wake_up(&command_response_received_wq);
-			} 
+			if(CP430_CORE == buffer[CP430_DEVICE]) {
+				switch(buffer[CP430_COMMAND]) {
+					case CMD_CP430_CORE_GET_STATUS:
+						if( (0x00 == buffer[CP430_LENGTH_H]) && (0x04 == buffer[CP430_LENGTH_L]) ) {
+							fw_version_major = buffer[CP430_DATA + 0];
+							fw_version_minor = buffer[CP430_DATA + 1];
+
+							printk(KERN_INFO "MSP430 - Firmware version: %d:%d\r\n",fw_version_major,fw_version_minor);
+
+							command_response_received_flag = 1;
+							wake_up(&command_response_received_wq);
+						}
+						else {
+							PDEBUG("cp430_dev: CMD_CP430_CORE_GET_STATUS invalid data length\r\n");
+
+							command_response_received_flag = -1;
+							wake_up(&command_response_received_wq);
+						}
+						break;
+					default:
+						PDEBUG("cp430_dev: packet received, but unknown command\r\n");
+						break;
+					}
+			}
 			else {
-				command_response_received_flag = 1;
-				wake_up(&command_response_received_wq);
+				PDEBUG("cp430_dev: packet received, but not for us\r\n");
 			}
 		}
 
@@ -896,7 +917,9 @@ long cp430_core_ioctl(struct file *filp,
 
 	int err = 0;
 	int retval = 0;
-    
+	int ret = 0;
+	char fw_ver[2];
+	const char * fw_version;
 
 	PDEBUG("> : %s\r\n",__FUNCTION__);
 	
@@ -912,6 +935,15 @@ long cp430_core_ioctl(struct file *filp,
 	switch(cmd) {
 
 	  case CP430_CORE_GET_DRIVER_VERSION:
+		break;
+	  case CP430_CORE_GET_STATUS:
+		fw_ver[0]= fw_version_major;
+		fw_ver[1]= fw_version_minor;
+		fw_version = fw_ver;
+		
+		ret = copy_to_user((void *)arg, (const void *)(fw_version), 2) ? -EFAULT : 0;
+			if (ret) 
+				PDEBUG("cp430_core: copy_to_user failed\n");
 		break;
 	
 	/* .. */
