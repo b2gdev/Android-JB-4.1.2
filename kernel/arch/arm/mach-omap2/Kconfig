@@ -346,6 +346,10 @@ config OMAP3_EMU
 	help
 	  Say Y here to enable debugging hardware of omap3
 
+config IS_RECOVERY_KERNEL
+	bool "Is this an Android recovery kernel?"
+	default n
+	
 config OMAP3_PM_DISABLE_VT_SWITCH
         bool "OMAP3 Disable PM Console Switch"
         depends on ARCH_OMAP3

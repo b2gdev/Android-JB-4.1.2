@@ -281,13 +281,17 @@ static struct mtd_partition omap3beagle_nand_partitions[] = {
 		.name		= "X-Loader",
 		.offset		= 0,
 		.size		= 4 * NAND_BLOCK_SIZE,
+#ifndef CONFIG_IS_RECOVERY_KERNEL
 		.mask_flags	= MTD_WRITEABLE,	/* force read-only */
+#endif		
 	},
 	{
 		.name		= "U-Boot",
 		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x80000 */
 		.size		= 15 * NAND_BLOCK_SIZE,
+#ifndef CONFIG_IS_RECOVERY_KERNEL		
 		.mask_flags	= MTD_WRITEABLE,	/* force read-only */
+#endif		
 	},
 	{
 		.name		= "U-Boot Env",
