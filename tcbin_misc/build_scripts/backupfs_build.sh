@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cd ../../
-cp -rPp tcbin_misc/recovery/usr/ out/target/product/beagleboard/recovery/root/
+cp -rPp tcbin_misc/recovery/* out/target/product/beagleboard/recovery/root/
 mkdir -p out/target/product/beagleboard/recovery/root/system/bin
 cp -v tcbin_misc/executables/format_emmc out/target/product/beagleboard/recovery/root/system/bin/
 cp -v tcbin_misc/executables/nuke_emmc out/target/product/beagleboard/recovery/root/system/bin/

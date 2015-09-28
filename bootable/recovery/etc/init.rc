@@ -58,6 +58,9 @@ service recovery /sbin/recovery
 
 service adbd /sbin/adbd recovery
     disabled
+
+service braille /sbin/braille start
+    oneshot
         
 # Always start adbd on userdebug and eng builds
 on property:ro.debuggable=1
