@@ -220,7 +220,7 @@
 	"cpuimage=nandecc sw ; fatload mmc 0:3 0x82000000 norm_uImage ; nand erase 0x280000 0x800000 ; nand write 0x82000000 0x280000 0x800000\0" \
 	"cpbkuimage=nandecc sw ; fatload mmc 0:3 0x82000000 bk_uImage ; nand erase 0xA80000 0x1000000 ; nand write 0x82000000 0xA80000 0x900000\0" \
 	"cpcache=nandecc sw ; fatload mmc 0:3 0x82000000 ubi_cache.img ; nand erase 0x1B80000 0xC000000 ; nand write 0x82000000 0x1B80000 0x200000\0" \
-	"cpsys=nandecc sw ; fatload mmc 0:3 0x82000000 ubi_system.img ; nand erase 0xDF80000; nand write 0x82000000 0xDF80000 0xA000000\0" \
+	"cpsys=nandecc sw ; fatload mmc 0:3 0x82000000 ubi_system.img ; nand erase 0xDF80000; nand write 0x82000000 0xDF80000 0xE000000\0" \
 	"cpall=run cpxl ; run cpub ; run cpuimage ; run cpbkuimage ; run cpcache ; run cpsys\0" \
 	"cpkernelsys=run cpuimage ; run cpcache ; run cpsys\0" \
 	"mmcargs=setenv bootargs console=${console} " \

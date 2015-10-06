@@ -3,6 +3,7 @@
 echo "Creating NAND rootfs ..."
 
 ./copy_prebuilt.sh
+./copy_gapps.sh
 
 echo "Building NAND UBIFS FS"
 
