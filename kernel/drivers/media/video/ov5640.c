@@ -176,8 +176,8 @@ static struct ov5640_reg ov5640_back_to_vga[] = {
 	{0x370c, 0x03},
 	{0x3a02, 0x03},
 	{0x3a03, 0xd8},
-	{0x3a0e, 0x03},
-	{0x3a0d, 0x04},
+	{0x3a0e, 0x06}, /* ***********Max Bands*********** */
+	{0x3a0d, 0x08},	/* ******************************* */
 	{0x3a14, 0x03},
 	{0x3a15, 0xd8},
 	{0x4004, 0x02},
@@ -214,20 +214,20 @@ static struct ov5640_reg ov5640_5m_cap[] = {
 	{0x380b, 0x98},
 	{0x380c, 0x0b},
 	{0x380d, 0x1c},
-	{0x380e, 0x07},
-	{0x380f, 0xb0},
+	{0x380e, 0x0f},
+	{0x380f, 0x60},
 	{0x3813, 0x04},
 	{0x3618, 0x04},
 	{0x3612, 0x4b},
 	{0x3708, 0x21},
 	{0x3709, 0x12},
 	{0x370c, 0x00},
-	{0x3a02, 0x07},
-	{0x3a03, 0xb0},
+	{0x3a02, 0x0f},
+	{0x3a03, 0x60},
 	{0x3a0e, 0x06},
 	{0x3a0d, 0x08},
-	{0x3a14, 0x07},
-	{0x3a15, 0xb0},
+	{0x3a14, 0x0f},
+	{0x3a15, 0x60},
 	{0x4004, 0x06},
 	{0x5000, 0x07},
 	{0x5181, 0x52},
@@ -283,8 +283,8 @@ static struct ov5640_reg ov5640_new_reg_list[] = {					//VGA streaming setup
 	{0x371b, 0x20},
 	{0x471c, 0x50},
 	{0x3a13, 0x43},
-	{0x3a18, 0x00},
-	{0x3a19, 0xf8},
+	{0x3a18, 0x00},	/* *********Gain Ceiling********** */
+	{0x3a19, 0xf8}, /* ******************************* */
 	{0x3635, 0x13},
 	{0x3636, 0x03},
 	{0x3634, 0x40},
@@ -333,8 +333,8 @@ static struct ov5640_reg ov5640_new_reg_list[] = {					//VGA streaming setup
 	{0x3a09, 0x27},
 	{0x3a0a, 0x00},
 	{0x3a0b, 0xf6},
-	{0x3a0e, 0x03},
-	{0x3a0d, 0x04},
+	{0x3a0e, 0x06}, /* ***********Max Bands*********** */
+	{0x3a0d, 0x08},	/* ******************************* */
 	{0x3a14, 0x03},
 	{0x3a15, 0xd8},
 	{0x4001, 0x02},
@@ -495,12 +495,12 @@ static struct ov5640_reg ov5640_new_reg_list[] = {					//VGA streaming setup
 	{0x583c, 0x42},
 	{0x583d, 0xce},
 	{0x5025, 0x00},
-	{0x3a0f, 0x30},
-	{0x3a10, 0x28},
-	{0x3a1b, 0x30},
-	{0x3a1e, 0x26},
-	{0x3a11, 0x60},
-	{0x3a1f, 0x14},
+	{0x3a0f, 0x3D},	/* *********AEC********** */
+	{0x3a10, 0x35},
+	{0x3a1b, 0x3D},
+	{0x3a1e, 0x33},
+	{0x3a11, 0x7A},
+	{0x3a1f, 0x1B}, /* ********************** */
 	{0x3008, 0x02},
 	{0x3035, 0x21},
 	{0x3c01, 0xb4},
@@ -5268,6 +5268,10 @@ static int ov5640_get_sysclk(struct v4l2_subdev *subdev)
 	return sysclk;
 }
 
+
+uint preview_shutter, preview_gain16;
+uint preview_HTS, preview_sysclk;
+u8 average;
 /*
  * Perform 5M capture
  */
@@ -5277,44 +5281,22 @@ static int ov5640_new_capture(struct v4l2_subdev *subdev)
 	u8 tmpreg = 0;
 	uint capture_shutter = 0, capture_gain16 = 0;
 	uint capture_gain16_shutter = 0;
-	uint AE_TARGET = 0x34;
+	uint AE_TARGET = 0x39;
 	uint AE_low = AE_TARGET * 23 / 25;
 	uint AE_high = AE_TARGET * 27 / 25;
 	uint capture_max_band;
 	uint capture_bandingfilter = 0;
-	uint preview_shutter, preview_gain16;
+	
 	uint capture_HTS, capture_VTS, capture_sysclk;
-	uint preview_HTS, preview_sysclk;
+	
 	int light_frequency;
-	u8 average;
+	u8 n;
 	
 	struct i2c_client *client = NULL;
 	
 	client = v4l2_get_subdevdata(subdev);
 	
-	preview_sysclk = ((uint) (ov5640_get_sysclk(subdev)));
-	tmpreg = ov5640_read_reg(client, 0x380c);
-	preview_HTS = (((uint) (tmpreg & 0x1f))<<8);
-	tmpreg = ov5640_read_reg(client, 0x380d);
-	preview_HTS += tmpreg;
-	
 	ov5640_write_reg(client, 0x3503, 0x03); //AE manual mode
-
-	//AE below
-	tmpreg = ov5640_read_reg(client, 0x3500);    		//Exposure
-	preview_shutter = (((uint) (tmpreg & 0x0f)) << 12);
-	tmpreg = ov5640_read_reg(client, 0x3501);
-	preview_shutter += (((uint) tmpreg) << 4);
-	tmpreg = ov5640_read_reg(client, 0x3502);
-	preview_shutter += (tmpreg >> 4);
-	tmpreg = ov5640_read_reg(client, 0x350a);			//Gain
-	preview_gain16 = (((uint) (tmpreg & 0x03)) << 8);
-	tmpreg = ov5640_read_reg(client, 0x350b);
-	preview_gain16 += tmpreg;
-
-	// get average
-	average = ov5640_read_reg(client, 0x56a1);
-	printk("Preview Exposure %d, Gain %d, average %d\n",preview_shutter,preview_gain16,average);
 	
 	
 #if 0
@@ -5403,7 +5385,7 @@ static int ov5640_new_capture(struct v4l2_subdev *subdev)
 	}*/
 
 	// gain to shutter
-	if(capture_gain16_shutter < (capture_bandingfilter * 16)) {
+	/*if(capture_gain16_shutter < (capture_bandingfilter * 16)) {
 		// shutter < 1/100
 		capture_shutter = capture_gain16_shutter/16;
 		if(capture_shutter <1)
@@ -5421,10 +5403,47 @@ static int ov5640_new_capture(struct v4l2_subdev *subdev)
 		}
 		else {
 			// 1/100 < capture_shutter =< max, capture_shutter = n/100
-			capture_shutter = ((int) (capture_gain16_shutter/16/capture_bandingfilter)) * capture_bandingfilter;
+			capture_shutter = ((int) (capture_gain16_shutter/48/capture_bandingfilter)) * capture_bandingfilter;
+			capture_gain16 = capture_gain16_shutter / capture_shutter;
+		}
+	}*/
+	
+	if(preview_shutter < 1770){
+		capture_gain16 = preview_gain16 * 9 / 10;
+		if(capture_gain16 == 0){
+			capture_gain16 = 1;
+		}
+		capture_shutter = capture_gain16_shutter / capture_gain16;
+		n = capture_shutter / capture_bandingfilter;
+		if(n > 2){
+			if(abs(capture_shutter - n*capture_bandingfilter) > abs(capture_shutter - (n+1)*capture_bandingfilter)){
+				capture_shutter = (n+1) * capture_bandingfilter;
+			}else{
+				capture_shutter = n*capture_bandingfilter;
+			}
+		}
+		if(capture_shutter > capture_VTS){
+			capture_shutter = capture_bandingfilter * capture_max_band;
+		}
+		capture_gain16 = capture_gain16_shutter / capture_shutter;
+	}else{
+		if(capture_gain16_shutter > (capture_bandingfilter*capture_max_band*16)) {
+			// exposure reach max
+			capture_shutter = ((int) (capture_gain16_shutter/48/capture_bandingfilter)) * capture_bandingfilter;
+			if(capture_shutter > capture_VTS){
+				capture_shutter = capture_bandingfilter*capture_max_band;
+			}
+			capture_gain16 = capture_gain16_shutter / capture_shutter;
+		}
+		else {
+			// 1/100 < capture_shutter =< max, capture_shutter = n/100
+			capture_shutter = ((int) (capture_gain16_shutter/48/capture_bandingfilter)) * capture_bandingfilter;
 			capture_gain16 = capture_gain16_shutter / capture_shutter;
 		}
 	}
+	
+	
+	
 	printk("Capture Exposure %d, Gain %d\n",capture_shutter,capture_gain16);
 
 	// write capture gain
@@ -6150,6 +6169,29 @@ static int ov5640_s_stream(struct v4l2_subdev *subdev, int streaming)
 		
 	}else{
 		u8 tmpreg = 0;
+		
+		preview_sysclk = ((uint) (ov5640_get_sysclk(subdev)));
+		tmpreg = ov5640_read_reg(client, 0x380c);
+		preview_HTS = (((uint) (tmpreg & 0x1f))<<8);
+		tmpreg = ov5640_read_reg(client, 0x380d);
+		preview_HTS += tmpreg;
+
+		//AE below
+		tmpreg = ov5640_read_reg(client, 0x3500);    		//Exposure
+		preview_shutter = (((uint) (tmpreg & 0x0f)) << 12);
+		tmpreg = ov5640_read_reg(client, 0x3501);
+		preview_shutter += (((uint) tmpreg) << 4);
+		tmpreg = ov5640_read_reg(client, 0x3502);
+		preview_shutter += (tmpreg >> 4);
+		tmpreg = ov5640_read_reg(client, 0x350a);			//Gain
+		preview_gain16 = (((uint) (tmpreg & 0x03)) << 8);
+		tmpreg = ov5640_read_reg(client, 0x350b);
+		preview_gain16 += tmpreg;
+
+		// get average
+		average = ov5640_read_reg(client, 0x56a1);
+		printk("Preview Exposure %d, Gain %d, average %d\n",preview_shutter,preview_gain16,average);
+		
 		printk("DSG: %s Stop stream\n", __FUNCTION__);
 
 		tmpreg = ov5640_read_reg(client, 0x3008);			//DSG: System Control 0
