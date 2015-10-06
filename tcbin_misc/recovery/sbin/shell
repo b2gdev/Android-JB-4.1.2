@@ -29,6 +29,9 @@ askUser() {
     programMessage "end of file"
     exit 1
   }
+  
+  ! REPLY="$(expr "${REPLY}" : ' *\(.*\)')" ||
+  REPLY="$(expr "${REPLY}" : '\(.*[^ ]\) *$')"
 }
 
 confirmAction() {
@@ -164,18 +167,6 @@ performAction_cache() {
   fi
 }
 
-addAction data "wipe data partition (factory reset)"
-performAction_data() {
-  if confirmAction "wipe data"
-  then
-    stopBraille
-    recovery --wipe_data
-    startBraille
-  else
-    programMessage "wipe cancelled"
-  fi
-}
-
 addAction exit "exit this menu"
 performAction_exit() {
   if confirmAction "exit menu"
@@ -188,25 +179,39 @@ performAction_exit() {
   fi
 }
 
+addAction reset "factory reset (wipe cache and user data)"
+performAction_reset() {
+  if confirmAction "factory reset"
+  then
+    stopBraille
+    recovery --wipe_data
+    startBraille
+  else
+    programMessage "reset cancelled"
+  fi
+}
+
 addAction shell "start interactive shell"
 performAction_shell() {
   PS1="${programName}:\W# " /usr/bin/sh || :
 }
 
-writeCharacters() {
-  local characters="${1}"
-
-  echo >&2 -e "${characters}\\c"
-}
-
 writeLine() {
   local line="${1}"
 
-  writeCharacters "\\r${line}\\e[K"
+  echo >&2 -e "${line}"
 }
 
-soundAlarm() {
-  writeCharacters '\a'
+writeCharacters() {
+  local characters="${1}"
+
+  writeLine "${characters}\\c"
+}
+
+rewriteLine() {
+  local line="${1}"
+
+  writeCharacters "\\r${line}\\e[K"
 }
 
 mountDirectory() {
@@ -240,14 +245,45 @@ chooseFile() {
     then
       eval 'local name=${'"${index}"'}'
       local path="${directory}${name}"
-      [ ! -d "${path}" ] || name="${name}/"
+      local indicator=""
+
+      if [ -d "${path}" ]
+      then
+        indicator='/'
+      elif [ -f "${path}" ]
+      then
+        if [ -x "${path}" ]
+        then
+          indicator='*'
+        fi
+      elif [ -h "${path}" ]
+      then
+        indicator='@'
+      elif [ -p "${path}" ]
+      then
+        indicator='|'
+      elif [ -S "${path}" ]
+      then
+        indicator='='
+      elif [ -c "${path}" ]
+      then
+        indicator='%'
+      elif [ -b "${path}" ]
+      then
+        indicator='$'
+      else
+        indicator='?'
+      fi
+
+      name="${name}${indicator}"
     else
-      local name="(empty directory)"
+      local name="(empty folder)"
       local path=""
     fi
 
-    writeLine "${name}"
+    rewriteLine "${name}"
     read -s -n 1 || return 1
+    local problem=""
 
     case "${REPLY}"
     in
@@ -256,6 +292,8 @@ chooseFile() {
           let "index -= 1"
           continue
         }
+
+        problem="start of list"
       };;
 
      \`|j) {
@@ -263,6 +301,8 @@ chooseFile() {
           let "index += 1"
           continue
         }
+
+        problem="end of list"
       };;
 
      \'|s) {
@@ -292,15 +332,26 @@ chooseFile() {
           return 1
         }
       };;
+
+      *) {
+        problem="unrecognized action"
+      };;
     esac
 
-    soundAlarm
+    rewriteLine "\\a${problem}"
+    sleep 1.5
   done
 }
 
 findFile() {
+  writeLine "Dot1  previous"
+  writeLine "Dot4  next"
+  writeLine "Dot2  back"
+  writeLine "Dot5  select"
+  writeLine "Dot3  quit"
+
   local file="$(chooseFile / cache data sdcard || :)"
-  writeLine ""
+  rewriteLine ""
 
   [ -z "${file}" ] || echo "${file}"
 }
