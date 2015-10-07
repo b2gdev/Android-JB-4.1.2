@@ -3,8 +3,9 @@ on early-init
 	mkdir /system
     mkdir /data
     mkdir /cache
-    mkdir /sdcard
     mkdir /misc
+    mkdir /storage
+    mkdir /storage/sdcard1
 	
 on init
 
@@ -14,6 +15,8 @@ loglevel 3
     export ANDROID_DATA /data
     export EXTERNAL_STORAGE /sdcard
 
+    symlink /data/media /sdcard    
+    symlink /data/media /storage/sdcard0
     symlink /system/etc /etc    
     
     mkdir /tmp/recovery

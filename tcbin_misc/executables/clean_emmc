@@ -1,0 +1,4 @@
+#!/system/bin/sh
+cd /data/
+find ! -name "media" -type d -maxdepth 1 -exec rm -rf {} +
+find . -path ./media -type f -exec rm -f {} +

@@ -63,7 +63,7 @@ static const char *LOG_FILE = "/cache/recovery/log";
 static const char *LAST_LOG_FILE = "/cache/recovery/last_log";
 static const char *LAST_INSTALL_FILE = "/cache/recovery/last_install";
 static const char *CACHE_ROOT = "/cache";
-static const char *SDCARD_ROOT = "/sdcard";
+static const char *SDCARD_ROOT = "/storage/sdcard1";
 static const char *TEMPORARY_LOG_FILE = "/tmp/recovery/recovery.log";
 static const char *TEMPORARY_INSTALL_FILE = "/tmp/recovery/last_install";
 static const char *SIDELOAD_TEMP_DIR = "/tmp/sideload";
@@ -857,6 +857,17 @@ main(int argc, char **argv) {
                    update_package, modified_path);
             update_package = modified_path;
         }
+        else if (strncmp(update_package, "/storage/sdcard0", 16) == 0){
+			// modify /storage/sdcard0 path to /data/media
+			printf("modifying /storage/sdcard0 path to /data/media \n");
+			int len = strlen(update_package)+10;
+			char* modified_path = (char*)malloc(len);
+			strlcpy(modified_path, "/data/media", len);
+			strlcat(modified_path, update_package+16, len);
+			printf("(replacing path \"%s\" with \"%s\")\n",
+                   update_package, modified_path);
+		   update_package = modified_path;
+		}
     }
     printf("\n");
 

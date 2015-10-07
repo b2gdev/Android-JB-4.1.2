@@ -23,7 +23,8 @@
 #include "device.h"
 #include "screen_ui.h"
 
-const char* HEADERS[] = { "       Volume up/down or Mouse to move highlight;",
+const char* HEADERS[] = { "     Press Volume up & down together to enable keypad for navigation!",
+                          "       Use D-Pad to move selection;",
                           "       Press Enter to select.",
                           "",
                           NULL };

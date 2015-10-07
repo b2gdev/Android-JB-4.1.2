@@ -3,5 +3,5 @@
 /system		ubifs		ubi0:system	/dev/ubi0_0
 /cache		ubifs		ubi1:cache	/dev/ubi1_0
 /data		ext4		/dev/block/platform/mmci-omap-hs.1/by-num/p1
-/sdcard		vfat		/dev/block/platform/mmci-omap-hs.0/by-num/p1
+/storage/sdcard1	vfat		/dev/block/platform/mmci-omap-hs.0/by-num/p1
 /misc		mtd			misc

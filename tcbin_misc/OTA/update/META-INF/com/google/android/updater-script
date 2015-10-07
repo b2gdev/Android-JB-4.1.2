@@ -1,8 +1,14 @@
 ui_print("********************************************");
 ui_print("             ZONE24X7 INC ");
-ui_print("            b2g OTA v3.4.1 ");
+ui_print("            b2g OTA v4.1.3 ");
 ui_print("********************************************");
 show_progress(0.1000000, 0);
+ui_print("Flashing u-boot...");
+assert(package_extract_file("u-boot.bin", "/tmp/u-boot.bin"),
+write_raw_image("/tmp/u-boot.bin","U-Boot"),
+delete("/tmp/u-boot.bin"));
+ui_print("u-boot flashed...");
+ui_print("");
 ui_print("Flashing Kernel...");
 assert(package_extract_file("norm_uImage", "/tmp/norm_uImage"),
 write_raw_image("/tmp/norm_uImage","Kernel"),
@@ -25,12 +31,12 @@ delete("/tmp/ubi_system.img"));
 ui_print("system image flashed...");
 ui_print("");
 set_progress(0.75000);
-ui_print("Flashing data image...");
+ui_print("Wiping data partition...");
+run_program("/system/bin/mount_emmc");
+run_program("/system/bin/clean_emmc");
 unmount("/data");
-assert(package_extract_file("ubi_data.img", "/tmp/ubi_data.img"),
-write_raw_image("/tmp/ubi_data.img","userdata"),
-delete("/tmp/ubi_data.img"));
-ui_print("data image flashed...");
+ui_print("Data partition wiped...");
 ui_print("Clear Cache...");
 wipe_cache();
 show_progress(1.0, 10);
+
