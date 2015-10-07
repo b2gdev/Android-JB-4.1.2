@@ -488,14 +488,15 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
         // Show All Apps cling if we are finished transitioning, otherwise, we will try again when
         // the transition completes in AppsCustomizeTabHost (otherwise the wrong offsets will be
         // returned while animating)
-        if (!hostIsTransitioning) {
+        // Disabled tutorial screen
+        /*if (!hostIsTransitioning) {
             post(new Runnable() {
                 @Override
                 public void run() {
                     showAllAppsCling();
                 }
             });
-        }
+        }*/
     }
 
     void showAllAppsCling() {
