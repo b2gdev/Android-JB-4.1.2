@@ -204,7 +204,7 @@
 							/* partition */
 
 /* Environment information */
-#define CONFIG_BOOTDELAY		10
+#define CONFIG_BOOTDELAY		5
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"loadaddr=0x82000000\0" \
