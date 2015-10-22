@@ -1,4 +1,10 @@
 /*
+ * This source code is "Not a Contribution" under Apache license
+ *
+ * Based on work by The Android Open Source Project
+ * Modified by Sierra Wireless, Inc.
+ *
+ * Copyright (C) 2012 Sierra Wireless, Inc.
  * Copyright (C) 2006 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -111,6 +117,9 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
         p.mCM.registerForAvailable (this, EVENT_RADIO_AVAILABLE, null);
         p.mCM.registerForOffOrNotAvailable(this, EVENT_RADIO_OFF_OR_NOT_AVAILABLE, null);
         p.mIccRecords.registerForRecordsLoaded(this, EVENT_RECORDS_LOADED, null);
+/* SWISTART */
+        p.mSST.registerForSubscriptionInfoReady(this, EVENT_SUBSCRIPTION_READY, null);
+/* SWISTOP */
         p.mCM.registerForDataNetworkStateChanged (this, EVENT_DATA_STATE_CHANGED, null);
         p.mCT.registerForVoiceCallEnded (this, EVENT_VOICE_CALL_ENDED, null);
         p.mCT.registerForVoiceCallStarted (this, EVENT_VOICE_CALL_STARTED, null);
@@ -604,8 +613,22 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
         if (mState == State.FAILED) {
             cleanUpAllConnections(null);
         }
+/* SWISTART */
+        /* Wait for EVENT_SUBSCRIPTION_READY to setup data call
+         * sendMessage(obtainMessage(EVENT_TRY_SETUP_DATA));
+         */
+/* SWISTOP */
+    }
+
+/* SWISTART */
+    protected void onSubsReady() {
+        if (mState == State.FAILED) {
+            cleanUpAllConnections(null);
+        }
+		
         sendMessage(obtainMessage(EVENT_TRY_SETUP_DATA));
     }
+/* SWISTOP */
 
     /**
      * @override com.android.internal.telephony.DataConnectionTracker
@@ -985,6 +1008,12 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
                 }
                 break;
 
+/* SWISTART */
+            case EVENT_SUBSCRIPTION_READY:
+                onSubsReady();
+                break;
+/* SWISTOP */
+                
             case EVENT_CDMA_DATA_DETACHED:
                 onCdmaDataDetached();
                 break;

@@ -1,4 +1,10 @@
 /*
+ * This source code is "Not a Contribution" under Apache license
+ *
+ * Based on work by The Android Open Source Project
+ * Modified by Sierra Wireless, Inc.
+ *
+ * Copyright (C) 2012 Sierra Wireless, Inc.
  * Copyright (C) 2006 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -143,6 +149,17 @@ cat include/telephony/ril.h | \
      * Block packet data access due to restriction.
      */
     int RIL_RESTRICTED_STATE_PS_ALL = 0x10;
+
+/* SWISTART */
+    /* OEM Hookstring codes. Must agree 
+     * with definitions in swiril_oem.c
+     */
+    String OEM_HOOK_STRING_CDMA_ACTIVATION = "5";
+    String OEM_HOOK_STRING_FACTORY_RESET = "6";
+    String OEM_HOOK_STRING_PRL_UPDATE = "7";
+    String OEM_HOOK_STRING_SAR_GET = "8";
+    String OEM_HOOK_STRING_SAR_SET = "9";
+/* SWISTOP */
 
     /** Data profile for RIL_REQUEST_SETUP_DATA_CALL */
     public static final int DATA_PROFILE_DEFAULT   = 0;

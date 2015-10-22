@@ -23,7 +23,20 @@ PRODUCT_COPY_FILES := \
 	device/ti/beagleboard/fstab.omap3beagleboard:root/fstab.omap3beagleboard \
 	device/ti/beagleboard/media_codecs.xml:system/etc/media_codecs.xml \
 	device/ti/beagleboard/b2g-init:system/bin/b2g-init \
-	device/ti/beagleboard/audio_policy.conf:system/etc/audio_policy.conf
+	device/ti/beagleboard/audio_policy.conf:system/etc/audio_policy.conf \
+	device/ti/beagleboard/sierra_binaries/system/bin/init.dhcpcd:system/bin/init.dhcpcd \
+	device/ti/beagleboard/sierra_binaries/system/bin/init.ril-daemon:system/bin/init.ril-daemon \
+	device/ti/beagleboard/sierra_binaries/system/bin/ash:system/bin/ash \
+	device/ti/beagleboard/sierra_binaries/system/bin/SierraDMLog:system/bin/SierraDMLog \
+	device/ti/beagleboard/sierra_binaries/system/bin/SierraFwDl77xx:system/bin/SierraFwDl77xx \
+	device/ti/beagleboard/sierra_binaries/system/bin/SierraSARTool:system/bin/SierraSARTool \
+	device/ti/beagleboard/sierra_binaries/system/bin/SierraImgMgr:system/bin/SierraImgMgr \
+	device/ti/beagleboard/sierra_binaries/system/bin/slqssdk:system/bin/slqssdk \
+	device/ti/beagleboard/sierra_binaries/system/lib/libswiqmiapi.so:system/lib/libswiqmiapi.so \
+	device/ti/beagleboard/sierra_binaries/system/lib/libswigpsqmi.so:system/lib/libswigpsqmi.so \
+	device/ti/beagleboard/sierra_binaries/system/lib/libsierra-ril.so:system/lib/libsierra-ril.so \
+	device/ti/beagleboard/sierra_binaries/system/lib/libswims.so:system/lib/libswims.so
+	
 
 PRODUCT_COPY_FILES += \
 	frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml \
@@ -38,7 +51,7 @@ PRODUCT_COPY_FILES += \
 	frameworks/native/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml \
 	frameworks/native/data/etc/android.hardware.bluetooth.xml:system/etc/permissions/android.hardware.bluetooth.xml \
     	system/bluetooth/data/main.nonsmartphone.conf:system/etc/bluetooth/main.conf
-	
+
 PRODUCT_PROPERTY_OVERRIDES := \
 	hwui.render_dirty_regions=false \
 	ro.sf.lcd_density=120
@@ -50,12 +63,18 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_PROPERTY_OVERRIDES += \
 	persist.sys.usb.config=adb
 
+PRODUCT_PROPERTY_OVERRIDES += \
+	ro.sierra.voice=1
+
 PRODUCT_CHARACTERISTICS := tablet
 
 DEVICE_PACKAGE_OVERLAYS := \
     device/ti/beagleboard/overlay
 
 PRODUCT_TAGS += dalvik.gc.type-precise
+
+PRODUCT_PACKAGES += \
+	ash
 
 PRODUCT_PACKAGES += \
 	librs_jni \

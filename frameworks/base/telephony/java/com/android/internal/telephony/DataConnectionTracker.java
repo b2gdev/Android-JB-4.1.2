@@ -1,4 +1,10 @@
 /*
+ * This source code is "Not a Contribution" under Apache license
+ *
+ * Based on work by The Android Open Source Project
+ * Modified by Sierra Wireless, Inc.
+ *
+ * Copyright (C) 2012 Sierra Wireless, Inc.
  * Copyright (C) 2006 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -138,6 +144,10 @@ public abstract class DataConnectionTracker extends Handler {
     public static final int EVENT_CLEAN_UP_ALL_CONNECTIONS = BASE + 30;
     public static final int CMD_SET_DEPENDENCY_MET = BASE + 31;
     public static final int CMD_SET_POLICY_DATA_ENABLE = BASE + 32;
+/* SWISTART */
+    /* leave some space for Android */
+    protected static final int EVENT_SUBSCRIPTION_READY = BASE + 254;
+/* SWISTOP */
 
     /***** Constants *****/
 
@@ -154,6 +164,14 @@ public abstract class DataConnectionTracker extends Handler {
 
     public static final int DISABLED = 0;
     public static final int ENABLED = 1;
+
+    /**
+     * Constants for the data connection activity:
+     * physical link down/up
+     */
+    protected static final int DATA_CONNECTION_ACTIVE_PH_LINK_INACTIVE = 0;
+    protected static final int DATA_CONNECTION_ACTIVE_PH_LINK_DOWN = 1;
+    protected static final int DATA_CONNECTION_ACTIVE_PH_LINK_UP = 2;
 
     public static final String APN_TYPE_KEY = "apnType";
 
