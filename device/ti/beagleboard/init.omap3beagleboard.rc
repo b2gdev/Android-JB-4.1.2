@@ -4,20 +4,18 @@ on early-init
 	   
     # for backwards compatibility
     export EXTERNAL_STORAGE /storage/sdcard0
-    export SECONDARY_STORAGE /storage/sdcard1
+    export SECONDARY_STORAGE /storage/sdcard1:/storage/usb1
     mkdir /storage 0050 system sdcard_r
     mkdir /storage/sdcard0 0000 system system
-    mkdir /storage/sdcard1 0000 system system
     symlink /storage/sdcard0 /sdcard
     symlink /storage/sdcard0 /mnt/sdcard
+    mkdir /storage/sdcard1 0000 system system
+    symlink /storage/sdcard1 /mnt/sdcard2
 
     # create directory for mounting usb drives
     mkdir /storage/usb1 0000 system system
     symlink /storage/usb1 /usbdrive
     symlink /storage/usb1 /mnt/usb1
-    mkdir /storage/usb2 0000 system system
-    symlink /storage/usb2 /usbdrive2
-    symlink /storage/usb2 /mnt/usb2       
     
 on post-fs-data
     mkdir /data/misc/dhcp 0770 dhcp dhcp
