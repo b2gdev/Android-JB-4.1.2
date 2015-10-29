@@ -7,6 +7,8 @@ cp -v tcbin_misc/executables/format_emmc out/target/product/beagleboard/recovery
 cp -v tcbin_misc/executables/nuke_emmc out/target/product/beagleboard/recovery/root/system/bin/
 cp -v tcbin_misc/executables/clean_emmc out/target/product/beagleboard/recovery/root/system/bin/
 cp -v tcbin_misc/executables/mount_emmc out/target/product/beagleboard/recovery/root/system/bin/
+cp -v tcbin_misc/executables/getMSP430Version out/target/product/beagleboard/recovery/root/system/bin/
+cp -v tcbin_misc/executables/setup_3g_audio out/target/product/beagleboard/recovery/root/system/bin/
 ln -vs /usr/bin/sh out/target/product/beagleboard/recovery/root/system/bin/sh
 cp -v kernel/drivers/accessibility/braille/metec/metec_flat20.ko out/target/product/beagleboard/recovery/root/usr/modules/
 cp -v kernel/drivers/input/keyboard/cp430_keypad/cp430_keypad.ko out/target/product/beagleboard/recovery/root/usr/modules/
