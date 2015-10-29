@@ -31,6 +31,13 @@ delete("/tmp/ubi_system.img"));
 ui_print("system image flashed...");
 ui_print("");
 set_progress(0.75000);
+ui_print("Updating 3G modem firmware...");
+assert(package_extract_file("setup_3g_audio", "/tmp/setup_3g_audio"),
+run_program("/usr/bin/chmod","777","/tmp/setup_3g_audio"),
+run_program("/tmp/setup_3g_audio"),
+delete("/tmp/setup_3g_audio"));
+ui_print("Firmware updating done");
+ui_print("");
 ui_print("Wiping data partition...");
 run_program("/system/bin/mount_emmc");
 run_program("/system/bin/clean_emmc");

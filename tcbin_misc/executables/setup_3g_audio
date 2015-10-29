@@ -1,0 +1,9 @@
+#!/system/bin/sh
+echo "AT!AVSETPROFILE=7,0,0,0,7" > /dev/ttyUSB2
+echo -e "\n" > /dev/ttyUSB2
+echo "at!entercnd="\""A710"\""" > /dev/ttyUSB2
+echo -e "\n" > /dev/ttyUSB2
+sleep 4
+echo "AT!AVEXTPCMCFG=0,2,0" > /dev/ttyUSB2
+echo -e "\n" > /dev/ttyUSB2
+
