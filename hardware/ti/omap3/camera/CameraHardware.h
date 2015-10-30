@@ -70,7 +70,7 @@ public:
     virtual int setPreviewWindow( struct preview_stream_ops *window);
 
     virtual status_t    startPreview();
-    virtual void        stopPreview();
+    virtual void        stopPreview(bool releaseAF);
     virtual bool        previewEnabled();
 
     virtual status_t    startRecording();
@@ -161,6 +161,17 @@ private:
 	static const supported_resolution supportedPictureRes[];
 	static const char supportedPictureSizes[];
 	static const char supportedPreviewSizes[];
+	
+	static const char supportedFlashModes [];
+	static const char supportedFocusModes [];
+	static const char supportedSceneModes [];
+	static const char supportedWhiteBalance [];
+	
+	static char currentFlashMode [];
+	static char currentFocusMode[];
+	static char currentSceneMode [];
+	static char currentWhiteBalance [];
+
 
     /* protected by mLock */
     sp<PreviewThread>   mPreviewThread;

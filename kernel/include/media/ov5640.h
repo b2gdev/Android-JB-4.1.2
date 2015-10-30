@@ -61,5 +61,19 @@ struct ov5640_platform_data {
 #define OV5640_CLK_MAX		(54000000) /* 54MHz */
 #define OV5640_CLK_MIN		(6000000)  /* 6Mhz */
 
+/*Addresses and commands of AF Module*/
+#define OV5640_AF_REG_ACK		0x3023
+#define OV5640_AF_REG_MAIN		0x3022
+#define OV5640_AF_REG_PARA4		0x3028
+#define OV5640_AF_REG_FW_STAT	0x3029
+
+#define OV5640_AF_SINGLE_AF		0x03
+#define OV5640_AF_CONT_AF		0x04
+#define OV5640_AF_PAUSE_AF		0x06
+#define OV5640_AF_RELEASE_AF	0x08
+
+#define OV5640_AF_FW_IDLE		0x70
+
+
 #endif				/* ifndef _OV5640_H */
 

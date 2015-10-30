@@ -36,9 +36,6 @@
 #define LOG_FUNCTION_START    LOGD("%d: %s() ENTER", __LINE__, __FUNCTION__);
 #define LOG_FUNCTION_EXIT    LOGD("%d: %s() EXIT", __LINE__, __FUNCTION__);
 
-#define CAPTURE_PURPOSE 1
-#define PREVIEW_PURPOSE 0
-
 /* TODO: enable once resizer driver is up */
 /* #define _OMAP_RESIZER_ 0 */
 
@@ -76,13 +73,18 @@ struct mdIn {
 	unsigned int num_entities;
 };
 
+enum Camera_Purpose {
+	CAPTURE_PURPOSE,
+	PREVIEW_PURPOSE
+};
+
 class V4L2Camera {
 
 public:
     V4L2Camera();
     ~V4L2Camera();
 
-    int Open (const char *device,int purpose);
+    int Open (const char *device,Camera_Purpose camera_purpose);
     int Configure(int width,int height,int pixelformat,int fps);
     void Close ();
     void reset_links(const char *device);
@@ -102,16 +104,30 @@ public:
     camera_memory_t* CreateJpegFromBuffer(void *rawBuffer, camera_request_memory mRequestMemory);
     int savePicture(unsigned char *inputBuffer, const char * filename);
     void convert(unsigned char *buf, unsigned char *rgb, int width, int height);
+    
+    int EmbeddedAFRelease ();
+    int EmbeddedAFStart ();
+    
+    int FlashMode (const char * flMode);
+    int FlashStrobe ();
+    int FlashStrobeStop ();
 
 private:
     struct vdIn *videoIn;
     struct mdIn *mediaIn;
     int camHandle;
+    
+    int ov5640_fd;
 
     int nQueued;
     int nDequeued;
+    
+    int led_flasher_fd;
 
     int saveYUYVtoJPEG (unsigned char *inputBuffer, int width, int height, FILE *file, int quality);
+    
+    static const char * flashMode [];
+	static const __s32  flashModeControl[];
 };
 
 }; // namespace android

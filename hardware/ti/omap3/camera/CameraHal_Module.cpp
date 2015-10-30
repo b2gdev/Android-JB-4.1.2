@@ -148,7 +148,7 @@ int camera_start_preview(struct camera_device * device)
 void camera_stop_preview(struct camera_device * device)
 {
 LOG_FUNCTION_NAME
-V4L2CameraHardware->stopPreview();
+V4L2CameraHardware->stopPreview(true);
 }
 
 int camera_preview_enabled(struct camera_device * device)

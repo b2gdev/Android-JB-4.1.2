@@ -1664,6 +1664,10 @@ enum  v4l2_exposure_auto_type {
 #define V4L2_CID_IRIS_ABSOLUTE			(V4L2_CID_CAMERA_CLASS_BASE+17)
 #define V4L2_CID_IRIS_RELATIVE			(V4L2_CID_CAMERA_CLASS_BASE+18)
 
+/* Supports auto focus functions - Imported from kerner version 3.6 */
+#define V4L2_CID_AUTO_FOCUS_START               (V4L2_CID_CAMERA_CLASS_BASE+28)
+#define V4L2_CID_AUTO_FOCUS_STOP                (V4L2_CID_CAMERA_CLASS_BASE+29)
+
 /* FM Modulator class control IDs */
 #define V4L2_CID_FM_TX_CLASS_BASE		(V4L2_CTRL_CLASS_FM_TX | 0x900)
 #define V4L2_CID_FM_TX_CLASS			(V4L2_CTRL_CLASS_FM_TX | 1)
@@ -1733,6 +1737,15 @@ enum v4l2_flash_strobe_source {
 
 #define V4L2_CID_FLASH_CHARGE			(V4L2_CID_FLASH_CLASS_BASE + 11)
 #define V4L2_CID_FLASH_READY			(V4L2_CID_FLASH_CLASS_BASE + 12)
+
+/* Custom flash controls */
+#define V4L2_OV5640_FLASHER_MODE			(V4L2_CID_FLASH_CLASS_BASE + 13)
+enum v4l2_ov5640_flasher_mode {
+	V4L2_OV5640_FLASHER_AUTO,
+	V4L2_OV5640_FLASHER_ON,
+	V4L2_OV5640_FLASHER_OFF,
+	V4L2_OV5640_FLASHER_TORCH
+};
 
 /*
  *	T U N I N G

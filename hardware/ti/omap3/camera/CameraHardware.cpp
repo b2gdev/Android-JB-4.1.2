@@ -64,6 +64,17 @@ const char CameraHardware::supportedPreviewSizes [] = "640x480";
 const supported_resolution CameraHardware::supportedPictureRes[] = {{2592, 1944}};
 const supported_resolution CameraHardware::supportedPreviewRes[] = {{640, 480}};
 
+const char CameraHardware::supportedFlashModes [] = "auto,on,off,torch";
+const char CameraHardware::supportedFocusModes [] = "continuous-picture";
+const char CameraHardware::supportedSceneModes [] = "auto";
+const char CameraHardware::supportedWhiteBalance [] = "auto";
+
+char CameraHardware::currentFlashMode [] = "auto";
+char CameraHardware::currentFocusMode[] = "continuous-picture";
+char CameraHardware::currentSceneMode [] = "auto";
+char CameraHardware::currentWhiteBalance [] = "auto";
+
+
 CameraHardware::CameraHardware()
                   : mParameters(),
                     mHeap(0),
@@ -120,14 +131,22 @@ void CameraHardware::initDefaultParameters()
     p.setPictureSize(PICTURE_WIDTH, PICTURE_HEIGHT);
     p.setPictureFormat(CameraParameters::PIXEL_FORMAT_JPEG);
     p.set(CameraParameters::KEY_JPEG_QUALITY, 100);
-    p.set("picture-size-values", CameraHardware::supportedPictureSizes);
 
 	p.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, CameraHardware::supportedPictureSizes);
 	p.set(CameraParameters::KEY_SUPPORTED_PICTURE_FORMATS, CameraParameters::PIXEL_FORMAT_JPEG);
 	p.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, CameraHardware::supportedPreviewSizes);
 	p.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FORMATS, CameraParameters::PIXEL_FORMAT_YUV422SP);
 	p.set(CameraParameters::KEY_VIDEO_FRAME_FORMAT, CameraParameters::PIXEL_FORMAT_YUV420SP);
-    p.set(CameraParameters::KEY_FOCUS_MODE,0);
+	
+	p.set(CameraParameters::KEY_FLASH_MODE,(const char *) CameraHardware::currentFlashMode);
+	p.set(CameraParameters::KEY_FOCUS_MODE,(const char *) CameraHardware::currentFocusMode);
+	p.set(CameraParameters::KEY_SCENE_MODE,(const char *) CameraHardware::currentSceneMode);
+	p.set(CameraParameters::KEY_WHITE_BALANCE,(const char *) CameraHardware::currentWhiteBalance);
+	
+    p.set(CameraParameters::KEY_SUPPORTED_FLASH_MODES,CameraHardware::supportedFlashModes);
+    p.set(CameraParameters::KEY_SUPPORTED_FOCUS_MODES,CameraHardware::supportedFocusModes);
+    p.set(CameraParameters::KEY_SUPPORTED_SCENE_MODES,CameraHardware::supportedSceneModes);
+    p.set(CameraParameters::KEY_SUPPORTED_WHITE_BALANCE,CameraHardware::supportedWhiteBalance);
 
     if (setParameters(p) != NO_ERROR) {
         ALOGE("Failed to set default parameters?!");
@@ -455,11 +474,13 @@ status_t CameraHardware::startPreview()
     /* start preview thread */
      previewStopped = false;
      mPreviewThread = new PreviewThread(this);
+     
+     mCamera->EmbeddedAFStart();
 
     return NO_ERROR;
 }
 
-void CameraHardware::stopPreview()
+void CameraHardware::stopPreview(bool releaseAF)
 {
     sp<PreviewThread> previewThread;
     { /* scope for the lock */
@@ -475,6 +496,9 @@ void CameraHardware::stopPreview()
 
     if (mPreviewThread != 0) {
         mCamera->Uninit();
+        if(releaseAF){
+			mCamera->EmbeddedAFRelease();
+		}
         mCamera->StopStreaming();
         mCamera->Close();
     }
@@ -600,7 +624,7 @@ int CameraHardware::pictureThread()
          if (mCamera->Open(VIDEO_DEVICE_0,CAPTURE_PURPOSE) < 0)
              return INVALID_OPERATION;
      }
-
+     
      ret = mCamera->Configure(w,h,PIXEL_FORMAT,30);
      if(ret < 0) {
 	     ALOGE("Fail to configure camera device");
@@ -630,8 +654,13 @@ int CameraHardware::pictureThread()
         tempbuf = mCamera->GrabPreviewFrame();
         mCamera->ReleasePreviewFrame();
         
+        mCamera->FlashStrobe();						//Strobe flash if necessay
+        
         ALOGE ("\nDSG: Grab JPEG image\n");
         picture = mCamera->GrabJpegFrame(mRequestMemory);
+        
+        mCamera->FlashStrobeStop();					//Stop if strobed
+        
         mDataCb(CAMERA_MSG_COMPRESSED_IMAGE,picture,0,NULL ,mCallbackCookie);
     }
 
@@ -645,7 +674,7 @@ int CameraHardware::pictureThread()
 
 status_t CameraHardware::takePicture()
 {
-    stopPreview();
+    stopPreview(false);
     pictureThread();
     return NO_ERROR;
 }
@@ -666,6 +695,7 @@ status_t CameraHardware::setParameters(const CameraParameters& params)
 	int width  = 0;
 	int height = 0;
 	int framerate = 0;
+	int ret;
 	params.getPreviewSize(&width,&height);
 
 	ALOGD("Set Parameter...!! ");
@@ -712,6 +742,38 @@ status_t CameraHardware::setParameters(const CameraParameters& params)
 
     mParameters.getPreviewSize(&width, &height);
     ALOGD("Preview Resolution by CamHAL %d x %d", width, height);
+    
+    
+    if((params.get(CameraParameters::KEY_FLASH_MODE) != NULL) && (CameraHardware::currentFlashMode != NULL)){
+		if(strcmp(params.get(CameraParameters::KEY_FLASH_MODE), (const char *) CameraHardware::currentFlashMode) != 0){
+			ret = mCamera->FlashMode(params.get(CameraParameters::KEY_FLASH_MODE));
+			if(ret == 0){
+				strcpy(CameraHardware::currentFlashMode,params.get(CameraParameters::KEY_FLASH_MODE));
+				ALOGD("FlashMode Changed : %s", params.get(CameraParameters::KEY_FLASH_MODE));
+			}else{
+				return ret;
+			}
+		}
+	}
+	
+	if((params.get(CameraParameters::KEY_FOCUS_MODE) != NULL) && (CameraHardware::currentFocusMode != NULL)){
+		if(strcmp(params.get(CameraParameters::KEY_FOCUS_MODE), (const char *)  currentFocusMode) != 0){
+			ALOGD("FocusMode Changed : %s", params.get(CameraParameters::KEY_FOCUS_MODE));
+		}
+	}
+	
+	if((params.get(CameraParameters::KEY_SCENE_MODE) != NULL) && (CameraHardware::currentSceneMode != NULL)){
+		if(strcmp(params.get(CameraParameters::KEY_SCENE_MODE), (const char *)  currentSceneMode) != 0){
+			ALOGD("SceneMode Changed : %s", params.get(CameraParameters::KEY_SCENE_MODE));
+		}
+	}
+	
+	if((params.get(CameraParameters::KEY_WHITE_BALANCE) != NULL) && (CameraHardware::currentWhiteBalance != NULL)){
+		if(strcmp(params.get(CameraParameters::KEY_WHITE_BALANCE), (const char *)  currentWhiteBalance) != 0){
+			ALOGD("WhiteBalance Changed : %s", params.get(CameraParameters::KEY_WHITE_BALANCE));
+		}
+	}
+    
 
     return NO_ERROR;
 }

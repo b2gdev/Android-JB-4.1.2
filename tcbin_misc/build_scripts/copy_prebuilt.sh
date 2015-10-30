@@ -25,6 +25,7 @@ cp ../../../../kernel/drivers/mfd/cp430-core/cp430_core.ko ./system/usr/modules/
 cp ../../../../kernel/drivers/misc/cp430_charger/cp430_charger.ko ./system/usr/modules/
 cp ../../../../kernel/drivers/power/tcbin_power/cp430_power/cp430_power.ko ./system/usr/modules/
 cp ../../../../kernel/drivers/net/usb/GobiNet.ko ./system/usr/modules/
+cp ../../../../kernel/drivers/misc/lm3553/lm3553.ko ./system/usr/modules/
 
 # other bundled apps
 cp ../../../../tcbin_misc/apks/AndroSensor_1.9.4.4a.apk system/app/
