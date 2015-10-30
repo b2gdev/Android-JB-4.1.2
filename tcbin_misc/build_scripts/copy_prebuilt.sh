@@ -34,6 +34,8 @@ cp ../../../../tcbin_misc/apks/Easy_Voice_Recorder.apk system/app/
 cp ../../../../tcbin_misc/apks/TalkBack.apk system/app/
 cp ../../../../tcbin_misc/apks/ESFileExplorer.apk system/app/
 cp ../../../../device/ti/beagleboard/sierra_binaries/system/app/com.sierra.logs.apk system/app/
+cp ../../../../tcbin_misc/apks/com.flavionet.android.camera.lite.apk system/app/
+cp ../../../../tcbin_misc/apks/com.surpax.ledflashlight.panel.apk system/app/
 
 # Copy b2g-ui
 cp ../../../../tcbin_misc/apks/b2g_ui.apk system/app/
