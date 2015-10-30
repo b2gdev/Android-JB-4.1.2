@@ -171,7 +171,7 @@ lm3553_set_default_values(void)
 	ret = lm3553_write_register(&reg_info);
 	
 	reg_info.address = REG_ADDRESS_FLASH_DURATION_CTRL;
-	reg_info.value = DEFAULT_FLASH_SAFETY_DURATION;
+	reg_info.value = MAX_FLASH_SAFETY_DURATION;
 	ret = lm3553_write_register(&reg_info);
 	
 	return ret;
@@ -848,3 +848,4 @@ MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION("Driver for TCBIN lm3553 led driver");
 MODULE_AUTHOR("Pubudu Karunaratna <pubuduk@zone24x7.com>");
 MODULE_VERSION(DRIVER_VERSION);
+

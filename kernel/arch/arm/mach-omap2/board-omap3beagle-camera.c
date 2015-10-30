@@ -139,6 +139,10 @@ static int beagle_ov5640_s_power(struct v4l2_subdev *subdev, int on)
 		 * ((1000000 * 100) / 24000000) = aprox 5 us.
 		 */
 		udelay(5);
+		/*
+		 * Wait 20ms before initializaion of the sensor
+		 */
+		mdelay(20);
 	} else {		
 		if (isp->platform_cb.set_xclk)
 			isp->platform_cb.set_xclk(isp, 0, CAM_USE_XCLKA);

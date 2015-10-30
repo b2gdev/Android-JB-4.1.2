@@ -59,8 +59,10 @@ on boot
     insmod /system/usr/modules/cp430_core.ko
     insmod /system/usr/modules/cp430_power.ko
     insmod /system/usr/modules/cp430_keypad.ko
-    insmod /system/usr/modules/metec_flat20.ko    
+    insmod /system/usr/modules/metec_flat20.ko
+    insmod /system/usr/modules/lm3553.ko
     chmod 666 /dev/braille0
+    chmod 666 /dev/cam_lamp
     # {KW} END:
 
     # {RD} BEGIN: BT configuration

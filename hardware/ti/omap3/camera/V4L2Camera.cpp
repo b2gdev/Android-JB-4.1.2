@@ -30,6 +30,7 @@
 #include <sys/select.h>
 
 #include <linux/videodev.h>
+#include "lm3553_ioctl.h"
 extern int version;
 
 extern "C" {
@@ -52,9 +53,15 @@ extern "C" {
 #define IMG_HEIGHT_5MP          1944
 #define DEF_PIX_FMT             V4L2_PIX_FMT_UYVY
 
+#define FLASH_MODE_INDEX_TORCH	3
+#define FLASH_MODE_INDEX_OFF	2
+
 #include "V4L2Camera.h"
 
 namespace android {
+
+const char * V4L2Camera::flashMode [] = {"auto","on","off","torch"};
+const __s32  V4L2Camera::flashModeControl[] ={V4L2_OV5640_FLASHER_AUTO,V4L2_OV5640_FLASHER_ON,V4L2_OV5640_FLASHER_OFF,V4L2_OV5640_FLASHER_TORCH};
 
 V4L2Camera::V4L2Camera ()
     : nQueued(0), nDequeued(0)
@@ -75,10 +82,10 @@ V4L2Camera::~V4L2Camera()
     free(mediaIn);
 }
 
-int V4L2Camera::Open(const char *device,int purpose)
+int V4L2Camera::Open(const char *device,Camera_Purpose camera_purpose)
 {
 	int ret = 0;
-	int ccdc_fd, ov5640_fd;
+	int ccdc_fd;
 	struct v4l2_subdev_format fmt;
 	char subdev[20];
 
@@ -99,10 +106,12 @@ int V4L2Camera::Open(const char *device,int purpose)
 				reset_links(MEDIA_DEVICE);
 				return -1;
 			}
+			
+			memset(&fmt, 0, sizeof(fmt));
 			fmt.pad = 0;
 			fmt.which = V4L2_SUBDEV_FORMAT_ACTIVE;
 			fmt.format.code = V4L2_MBUS_FMT_UYVY8_2X8;
-			if(purpose == CAPTURE_PURPOSE){
+			if(camera_purpose == CAPTURE_PURPOSE){
 				fmt.format.width = IMG_WIDTH_5MP;
 				fmt.format.height = IMG_HEIGHT_5MP;
 			}else{
@@ -115,23 +124,19 @@ int V4L2Camera::Open(const char *device,int purpose)
 			if(ret < 0)
 			{
 				ALOGE("Failed to set format on pad");
+				close(camHandle);
+				close(ccdc_fd);
+				reset_links(MEDIA_DEVICE);
+				return ret;
 			}
-			memset(&fmt, 0, sizeof(fmt));
 			fmt.pad = 1;
-			fmt.which = V4L2_SUBDEV_FORMAT_ACTIVE;
-			fmt.format.code = V4L2_MBUS_FMT_UYVY8_2X8;
-			if(purpose == CAPTURE_PURPOSE){
-				fmt.format.width = IMG_WIDTH_5MP;
-				fmt.format.height = IMG_HEIGHT_5MP;
-			}else{
-				fmt.format.width = IMG_WIDTH_VGA;
-				fmt.format.height = IMG_HEIGHT_VGA;
-			}
-			fmt.format.colorspace = V4L2_COLORSPACE_SMPTE170M;
-			fmt.format.field = V4L2_FIELD_INTERLACED;
 			ret = ioctl(ccdc_fd, VIDIOC_SUBDEV_S_FMT, &fmt);
-			if(ret) {
+			if(ret < 0) {
 				ALOGE("Failed to set format on pad");
+				close(camHandle);
+				close(ccdc_fd);
+				reset_links(MEDIA_DEVICE);
+				return ret;
 			}
 			
 			mediaIn->input_source=1;
@@ -144,25 +149,26 @@ int V4L2Camera::Open(const char *device,int purpose)
 				ALOGE("Failed to open subdev");
 				ret=-1;
 				close(camHandle);
+				close(ccdc_fd);
 				reset_links(MEDIA_DEVICE);
 				return ret;
 			}
-			memset(&fmt, 0, sizeof(fmt));
+			
 			fmt.pad = 0;
-			fmt.which = V4L2_SUBDEV_FORMAT_ACTIVE;
-			fmt.format.code = V4L2_MBUS_FMT_UYVY8_2X8;
-			if(purpose == CAPTURE_PURPOSE){
-				fmt.format.width = IMG_WIDTH_5MP;
-				fmt.format.height = IMG_HEIGHT_5MP;
-			}else{
-				fmt.format.width = IMG_WIDTH_VGA;
-				fmt.format.height = IMG_HEIGHT_VGA;
-			}
-			fmt.format.colorspace = V4L2_COLORSPACE_SMPTE170M;
-			fmt.format.field = V4L2_FIELD_INTERLACED;
 			ret = ioctl(ov5640_fd, VIDIOC_SUBDEV_S_FMT, &fmt);
 			if(ret < 0) {
 				ALOGE("Failed to set format on ov5640");
+				close(camHandle);
+				close(ccdc_fd);
+				close(ov5640_fd);
+				reset_links(MEDIA_DEVICE);
+				return ret;
+			}
+						
+			strcpy(subdev, "/dev/cam_lamp");
+			led_flasher_fd = open(subdev, O_RDWR);
+			if (led_flasher_fd == -1) {
+				ALOGE("Error opening LED flasher");
 			}
 		}
 
@@ -465,6 +471,17 @@ void V4L2Camera::Close ()
 {
     close(camHandle);
     camHandle = -1;
+    
+    if(led_flasher_fd != -1){
+		close(led_flasher_fd);
+		led_flasher_fd = -1;
+	}
+	
+	if(ov5640_fd != -1){
+		close(ov5640_fd);
+		ov5640_fd = -1;
+	}
+	
 #ifdef _OMAP_RESIZER_
     OMAPResizerClose(videoIn->resizeHandle);
     videoIn->resizeHandle = -1;
@@ -522,6 +539,132 @@ void V4L2Camera::Uninit()
             ALOGE("Uninit: Unmap failed");
 
     return;
+}
+
+int V4L2Camera::EmbeddedAFRelease ()
+{
+	struct v4l2_control control;
+	int ret;
+	
+	memset (&control, 0, sizeof (control));
+	
+	control.id = V4L2_CID_AUTO_FOCUS_STOP;
+	control.value = 0;
+	ret = ioctl(ov5640_fd, VIDIOC_S_CTRL, &control);
+	if(ret < 0) {
+		ALOGE("Failed to set VIDIOC_S_CTRL : id - V4L2_CID_AUTO_FOCUS_STOP");
+	}
+	
+	return ret;
+}
+
+int V4L2Camera::EmbeddedAFStart ()
+{
+	struct v4l2_control control;
+	int ret;
+	
+	memset (&control, 0, sizeof (control));
+	
+	control.id = V4L2_CID_AUTO_FOCUS_START;
+	control.value = 0;
+	ret = ioctl(ov5640_fd, VIDIOC_S_CTRL, &control);
+	if(ret < 0) {
+		ALOGE("Failed to set VIDIOC_S_CTRL : id - V4L2_CID_AUTO_FOCUS_START");
+	}
+	
+	return ret;
+}
+
+int V4L2Camera::GetPreviewParams ()
+{
+	struct v4l2_control control;
+	int ret;
+	
+	memset (&control, 0, sizeof (control));
+	
+	control.id = V4L2_OV5640_GET_PREVIEW_PARAMS;
+	control.value = 0;
+	ret = ioctl(ov5640_fd, VIDIOC_S_CTRL, &control);
+	if(ret < 0) {
+		ALOGE("Failed to set VIDIOC_S_CTRL : id - V4L2_OV5640_GET_PREVIEW_PARAMS");
+	}
+	
+	return ret;
+}
+
+int V4L2Camera::FlashMode (const char * flMode)
+{
+	struct v4l2_control control;
+	int i=0;
+	int szArr = sizeof(flashMode) / sizeof(flashMode[0]);
+	int ret;
+	
+	for(i=0; i<szArr; i++){
+		if(strcmp((const char *)  flashMode[i], (const char *)  flMode) == 0){
+			memset (&control, 0, sizeof (control));
+			
+			control.id = V4L2_OV5640_FLASHER_MODE;
+			control.value = flashModeControl[i];
+			ret = ioctl(ov5640_fd, VIDIOC_S_CTRL, &control);
+			if(ret < 0) {
+				ALOGE("Failed to set VIDIOC_S_CTRL : id - V4L2_OV5640_FLASHER_MODE");
+				return ret;
+			}
+			break;
+		}
+	}
+	
+	if(i==FLASH_MODE_INDEX_TORCH){
+		ret = ioctl(led_flasher_fd, LM3553_TORCH_CONTROL, TORCH_ENABLE);
+		if (ret < 0){
+			ALOGE("Failed to set LM3553_TORCH_CONTROL : TORCH_ENABLE");
+			return ret;
+		}
+	}else if(i==FLASH_MODE_INDEX_OFF){
+		ret = ioctl(led_flasher_fd, LM3553_TORCH_CONTROL, TORCH_DISABLE);
+		if (ret < 0){
+			ALOGE("Failed to set LM3553_TORCH_CONTROL : TORCH_DISABLE");
+		}
+	}
+	
+	if(i>=szArr){
+		ALOGE("Unsupported flasher type");
+		return -EINVAL;
+	}
+	
+	return 0;
+}
+
+int V4L2Camera::FlashStrobe (){
+	struct v4l2_control control;
+	int ret;
+	
+	memset (&control, 0, sizeof (control));
+	
+	control.id = V4L2_CID_FLASH_STROBE;
+	control.value = 0;
+	ret = ioctl(ov5640_fd, VIDIOC_S_CTRL, &control);
+	if(ret < 0) {
+		ALOGE("Failed to set VIDIOC_S_CTRL : id - V4L2_CID_FLASH_STROBE");
+	}
+	
+	return ret;
+}
+
+int V4L2Camera::FlashStrobeStop (){
+	struct v4l2_control control;
+	int ret;
+	
+	memset (&control, 0, sizeof (control));
+	
+	control.id = V4L2_CID_FLASH_STROBE_STOP;
+	control.value = 0;
+	ret = ioctl(ov5640_fd, VIDIOC_S_CTRL, &control);
+	if(ret < 0) {
+		ALOGE("Failed to set VIDIOC_S_CTRL : id - V4L2_CID_FLASH_STROBE_STOP");
+	}
+	
+	return ret;
 }
 
 int V4L2Camera::StartStreaming ()
