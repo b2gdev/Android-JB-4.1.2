@@ -659,8 +659,6 @@ int CameraHardware::pictureThread()
         ALOGE ("\nDSG: Grab JPEG image\n");
         picture = mCamera->GrabJpegFrame(mRequestMemory);
         
-        mCamera->FlashStrobeStop();					//Stop if strobed
-        
         mDataCb(CAMERA_MSG_COMPRESSED_IMAGE,picture,0,NULL ,mCallbackCookie);
     }
 

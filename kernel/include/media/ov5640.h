@@ -76,5 +76,27 @@ struct ov5640_platform_data {
 #define OV5640_AF_IDLE_TRIES	200
 #define OV5640_AF_ACK_TRIES		1000
 
+enum Operations {
+	PREVIEW_OPERATION,
+	CAPTURE_OPERATION
+};
+
+enum ov5640_size {
+	OV5640_SIZE_QVGA,
+	OV5640_SIZE_VGA,
+	OV5640_SIZE_720P,
+	OV5640_SIZE_1080P,
+	OV5640_SIZE_5MP,
+	OV5640_SIZE_LAST,
+};
+
+static const struct v4l2_frmsize_discrete ov5640_frmsizes[OV5640_SIZE_LAST] = {
+	{  320,  240 },
+	{  640,  480 },
+	{ 1280,  720 },
+	{ 1920, 1080 },
+	{ 2592, 1944 },
+};
+
 #endif				/* ifndef _OV5640_H */
 

@@ -831,6 +831,8 @@ camera_memory_t* V4L2Camera::GrabJpegFrame (camera_request_memory mRequestMemory
 			break;
 		}
 		nDequeued++;
+		
+		FlashStrobeStop();					//Stop if strobed
 
 		ALOGV("savePicture");
 		fileSize = savePicture((unsigned char *)videoIn->mem[videoIn->buf.index], "/data/misc/camera/tmp.jpg");
