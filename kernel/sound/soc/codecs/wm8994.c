@@ -4362,6 +4362,18 @@ void aif2_init(struct snd_soc_codec *codec)
 	
 	/* Slave */
 	
+	val = wm8994_read(codec, WM8994_POWER_MANAGEMENT_2);
+	val |= 0x350;
+	wm8994_write(codec, WM8994_POWER_MANAGEMENT_2, val); // set MIXINL & MIXINR Enable, IN1L_ENA & IN1R_ENA
+	
+	//val = wm8994_read(codec, WM8994_RIGHT_LINE_INPUT_1_2_VOLUME);
+	//val &= (~0x100);
+	//wm8994_write(codec, WM8994_RIGHT_LINE_INPUT_1_2_VOLUME, val); // Unmute IN1R
+	
+	//val = wm8994_read(codec, WM8994_LEFT_LINE_INPUT_1_2_VOLUME);
+	//val &= (~0x100);
+	//wm8994_write(codec, WM8994_LEFT_LINE_INPUT_1_2_VOLUME, val); // Unmute IN1L
+	
 	val = wm8994_read(codec, WM8994_AIF2_MASTER_SLAVE);
 	val &= (~WM8994_AIF2_MSTR) ;
 	wm8994_write(codec, WM8994_AIF2_MASTER_SLAVE, val); // set AIF2 slave
@@ -4398,26 +4410,31 @@ void aif2_init(struct snd_soc_codec *codec)
 
 	// Unmute DAC
 	val = wm8994_read(codec, WM8994_DAC2_LEFT_VOLUME);
-	val |= 0xC0; // Unmute DAC 2 (Left)
+	val = 0xC0; // Unmute DAC 2 (Left)
 	wm8994_write(codec, WM8994_DAC2_LEFT_VOLUME, val);
 	
 	val = wm8994_read(codec, WM8994_DAC2_RIGHT_VOLUME);
-	val |= 0xC0; // Unmute DAC 2 (Right)
+	val = 0xC0; // Unmute DAC 2 (Right)
 	wm8994_write(codec, WM8994_DAC2_RIGHT_VOLUME, val);
 	
 	val = wm8994_read(codec, WM8994_AIF2_DAC_FILTERS_1);
 	val = 0x00; // Unmute the AIF2 DAC path
 	wm8994_write(codec, WM8994_AIF2_DAC_FILTERS_1, val);
 	
-	// Mixing 
+	// Mixing - Handle in routing XML
+/*	
 	val = wm8994_read(codec, WM8994_DAC2_MIXER_VOLUMES);
 	val = 0x018C; // Set the volume on the STR & STL to DAC2 mixer paths to 0dB
 	wm8994_write(codec, WM8994_DAC2_MIXER_VOLUMES, val);
 	
+	val = wm8994_read(codec, WM8994_DAC2_LEFT_MIXER_ROUTING);
+	val = 0x0030; // Enable the STR & STL to DAC 2 (Left) mixer path
+	wm8994_write(codec, WM8994_DAC2_LEFT_MIXER_ROUTING, val);
+	
 	val = wm8994_read(codec, WM8994_DAC2_RIGHT_MIXER_ROUTING);
 	val = 0x0030; // Enable the STR & STL to DAC 2 (Right) mixer path
 	wm8994_write(codec, WM8994_DAC2_RIGHT_MIXER_ROUTING, val);
-	
+*/	
 	// Enable clock
 	msleep(50);
 	val = wm8994_read(codec, WM8994_AIF2_CLOCKING_1);
@@ -4449,7 +4466,8 @@ void aif2_init(struct snd_soc_codec *codec)
 	/* Common */
 	
 	val = wm8994_read(codec, WM8994_POWER_MANAGEMENT_5);
-	val |= (WM8994_AIF2DACL_ENA | WM8994_AIF2DACR_ENA | WM8994_DAC2L_ENA | WM8994_DAC2R_ENA);
+	//val |= (WM8994_AIF2DACL_ENA | WM8994_AIF2DACR_ENA | WM8994_DAC2L_ENA | WM8994_DAC2R_ENA);
+	val |= (WM8994_AIF2DACL_ENA | WM8994_AIF2DACR_ENA);
 	wm8994_write(codec, WM8994_POWER_MANAGEMENT_5, val); // enable AIF2 DAC
 	
 	val = wm8994_read(codec, WM8994_POWER_MANAGEMENT_4);

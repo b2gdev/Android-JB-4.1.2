@@ -313,6 +313,7 @@ static int out_standby(struct audio_stream *stream)
 			deselect_all_output_devices(adev);
 			usleep(USLEEP_DESELECT_OUTPUT);
 			
+			/* Never sleep
 			ALOGV("out_standby(%p) closing PCM\n", stream);
 			ret = pcm_close(out->pcm);
 			
@@ -325,7 +326,8 @@ static int out_standby(struct audio_stream *stream)
 			
 			adev->is_pcm_out_active = 0;
 			out->pcm = NULL;
-		
+			*/
+			
 		}else{
 			ALOGV("out_standby(%p) INCALL not deselecting output\n", stream);
 			ALOGV("out_standby(%p) INCALL not closing output\n", stream);
@@ -403,7 +405,10 @@ static ssize_t out_write(struct audio_stream_out *stream, const void* buffer,
 		
 		adev->is_pcm_out_init = 0;
 		adev->is_pcm_out_active = 1;
-    }	
+    }else if(adev->active_devices &  AUDIO_DEVICE_OUT_DEFAULT){
+		// Set audio device if it has been deselected
+		select_devices(adev);
+	}
 	
     pthread_mutex_unlock(&adev->route_lock);
     ret = pcm_mmap_write(out->pcm, buffer, bytes);
@@ -896,12 +901,16 @@ static void select_mode(struct tiny_audio_device *adev, int new_mode)
 		ALOGV("Entering IN_CALL/RingTone state");
 		adev->mode = new_mode;
 							
-		if (!adev->in_call) {                                                          
-			ALOGI("enabling 3G audio!\n");
-			adev->devices |= AUDIO_DEVICE_IN_VOICE_CALL;				
-			select_devices(adev);			            
+		if (!adev->in_call) {                          
             adev->in_call = 1;
         }
+        
+        if(new_mode == AUDIO_MODE_IN_CALL){			                                            
+			ALOGI("enabling 3G audio!\n");
+			adev->devices |= AUDIO_DEVICE_IN_VOICE_CALL;				
+			select_devices(adev);			
+		}
+		
     } else if(new_mode == AUDIO_MODE_NORMAL){
 		adev->mode = new_mode;
 		ALOGV("Entering normal state");
