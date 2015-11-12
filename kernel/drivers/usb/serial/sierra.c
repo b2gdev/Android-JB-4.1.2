@@ -108,6 +108,8 @@ static int is_qmi_gobi_device(struct usb_device *udev)
 {
 	switch (udev->descriptor.idProduct)
 	{
+	    case 0x9041: /* Gobi 5K */
+	    case 0x68C0: /* Gobi 5K */
 	  	case 0x920c: /* Gobi 3000 QDL */
 		case 0x920d: /* Gobi 3000 Composite */
 		case 0x68A2:
@@ -154,6 +156,8 @@ static int sierra_vsc_set_nmea(struct usb_device *udev, __u16 enable)
 	/* exclude QMI and Gobi devices */
 	switch (udev->descriptor.idProduct)
 	{
+	    case 0x9041: /* Gobi 5K */
+	    case 0x68C0: /* Gobi 5K */
 		case 0x920c: /* Gobi 3000 QDL */
 		case 0x920d: /* Gobi 3000 Composite */
 		case 0x68A2:
@@ -296,6 +300,8 @@ static int is_gps_port_qmi_gobi(struct usb_serial_port *   pPort )
 {
 	switch (pPort->serial->dev->descriptor.idProduct)
 	{
+	        case 0x9041:  /* Gobi 5K */
+	        case 0x68C0:  /* Gobi 5K */
 			case 0x68A2:  /* Sierra Wireless QMI */
 				if (pPort->serial->interface->cur_altsetting->desc.bInterfaceNumber == 2)
 					return 1;
@@ -493,6 +499,13 @@ static const struct usb_device_id id_table [] = {
 	{ USB_DEVICE(0x1199, 0x68A2),
 		.driver_info = (kernel_ulong_t)&qmi_interface_blacklist
 	},
+	/* Gobi 5K*/
+	{ USB_DEVICE(0x1199, 0x9041),
+		.driver_info = (kernel_ulong_t)&qmi_interface_blacklist
+	},	
+	{ USB_DEVICE(0x1199, 0x68C0),
+		.driver_info = (kernel_ulong_t)&qmi_interface_blacklist
+	},		
 	/* Sierra Wireless G3K Boot VID/PID */
 	{ USB_DEVICE(0x1199, 0x9010) },
 	/* Sierra Wireless G3K Device Application VID/PID */

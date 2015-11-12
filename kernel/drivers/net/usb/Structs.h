@@ -76,6 +76,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <linux/ethtool.h>
 #include <linux/mii.h>
 #include <linux/usb.h>
+#include <linux/pm_runtime.h>
 #include <linux/version.h>
 #include <linux/cdev.h>
 #include <linux/kthread.h>
@@ -342,6 +343,9 @@ typedef struct sGobiUSBNet
    u8  eth_hdr_tmpl_ipv4[ETH_HLEN];
    /* IPv6 */
    u8  eth_hdr_tmpl_ipv6[ETH_HLEN];
+   /* for backup USB auto suspend delay */
+   ssize_t                autosuspend_delay;   
+   bool                   autosuspend_overrided;
 
 } sGobiUSBNet;
 

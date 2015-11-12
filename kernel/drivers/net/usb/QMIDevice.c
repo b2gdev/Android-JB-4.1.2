@@ -205,6 +205,42 @@ const int i = 1;
                            : CDC_CONNSPD_MASK_LE; \
 }
 
+#define GOBI_MIN_AUTO_SUSPEND_DELAY 1000
+#define GOBI_MAX_AUTO_SUSPEND_DELAY 10000
+void BackupAutoSuspend_Delay(sGobiUSBNet *pDev)
+{
+    struct device *dev = &pDev->mpNetDev->udev->dev;
+    if(pDev->autosuspend_overrided == false)
+    {
+        if(dev->power.runtime_auto == true)
+        {
+            //backup delay set by kernel (default is 2 seconds)
+            pDev->autosuspend_delay = dev->power.autosuspend_delay;
+            DBG("autosuspend = %d \n", pDev->autosuspend_delay);
+            //allow more auto suspend delay for QMI msg req/resp
+            pm_runtime_set_autosuspend_delay(dev,GOBI_MAX_AUTO_SUSPEND_DELAY);    
+            pDev->autosuspend_overrided = true;
+        }
+    }
+}
+
+
+void RestoreAutoSuspend_Delay(sGobiUSBNet *pDev)
+{
+    struct device *dev = &pDev->mpNetDev->udev->dev;
+    if(pDev->autosuspend_overrided == true)
+    {    
+        if(dev->power.runtime_auto == true)
+        {
+            DBG("autosuspend delay restore from %d to %d \n",dev->power.autosuspend_delay, pDev->autosuspend_delay);
+            //small delay may cause issue
+            if(pDev->autosuspend_delay<GOBI_MIN_AUTO_SUSPEND_DELAY) pDev->autosuspend_delay=GOBI_MIN_AUTO_SUSPEND_DELAY;
+            //restore delay set by kernel
+            pm_runtime_set_autosuspend_delay(dev,pDev->autosuspend_delay);
+            pDev->autosuspend_overrided = false;
+        }
+    }
+}
 /*=========================================================================*/
 // UserspaceQMIFops
 //    QMI device's userspace file operations
@@ -1148,6 +1184,9 @@ int ReadSync(
    // End Critical section
    spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );
 
+   //should not call inside atomic context (spinlock)
+   //restore auto suspend delay after read completed
+   RestoreAutoSuspend_Delay(pDev);
    // Success
    *ppOutBuffer = pData;
 
@@ -1320,6 +1359,9 @@ int WriteSync(
    // End critical section while we block
    spin_unlock_irqrestore( &pDev->mQMIDev.mClientMemLock, flags );
 
+   //should not call inside atomic context (spinlock)
+   //use a longer autosuspend delay before waiting for finish, to prevent QMI msg lost 
+   BackupAutoSuspend_Delay(pDev);
    // Wait for write to finish
    if (interruptible != 0)
    {

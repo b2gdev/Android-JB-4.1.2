@@ -1271,6 +1271,15 @@ static const struct driver_info GobiNetInfo_gobi = {
 /*=========================================================================*/
 static const struct usb_device_id GobiVIDPIDTable [] =
 {
+    // Gobi 5K
+   {
+      USB_DEVICE( 0x1199, 0x9041 ),
+      .driver_info = (unsigned long)&GobiNetInfo_qmi,
+   },
+   {
+      USB_DEVICE( 0x1199, 0x68C0 ),
+      .driver_info = (unsigned long)&GobiNetInfo_qmi,
+   },   
    // Sierra Wireless MC7750 QMI Device VID/PID
    {
       USB_DEVICE( 0x1199, 0x68a2 ),
@@ -1465,6 +1474,8 @@ int GobiUSBNetProbe(
    pGobiDev->mDownReason = 0;
    GobiSetDownReason( pGobiDev, NO_NDIS_CONNECTION );
    GobiSetDownReason( pGobiDev, NET_IFACE_STOPPED );
+   //set default value 
+   pGobiDev->autosuspend_overrided = false;
 
    // Register QMI
    status = RegisterQMIDevice( pGobiDev );
