@@ -80,6 +80,10 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
                 mIsMinInfoReady = true;
                 updateOtaspState();
             }
+            //SWISTART
+            cm.getCDMASubscription(obtainMessage(EVENT_POLL_STATE_CDMA_SUBSCRIPTION));
+            if (DBG) log("handleMessage: EVENT_RUIM_RECORDS_LOADED, Send Request getCDMASubscription.");
+            //SWISTOP
             // SID/NID/PRL is loaded. Poll service state
             // again to update to the roaming state with
             // the latest variables.
@@ -375,8 +379,11 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
                     ((CdmaLteUiccRecords)phone.mIccRecords).getCsimSpnDisplayCondition();
                 int iconIndex = ss.getCdmaEriIconIndex();
                 //SWISTART
+                if (DBG)log("pollStateDone:iconIndex = " + iconIndex);
                 if(iconIndex == EriInfo.ROAMING_INDICATOR_ON)
                     ss.setRoaming(true);
+                else if (iconIndex == EriInfo.ROAMING_INDICATOR_OFF)
+                    ss.setRoaming(false);
                 //SWISTOP
                 if (showSpn && (iconIndex == EriInfo.ROAMING_INDICATOR_OFF) &&
                     isInHomeSidNid(ss.getSystemId(), ss.getNetworkId())) {

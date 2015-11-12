@@ -304,18 +304,25 @@ public class SignalStrength implements Parcelable {
                 level = getLteLevel();
             }
         } else {
-            int cdmaLevel = getCdmaLevel();
-            int evdoLevel = getEvdoLevel();
-            if (evdoLevel == SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
-                /* We don't know evdo, use cdma */
-                level = getCdmaLevel();
-            } else if (cdmaLevel == SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
-                /* We don't know cdma, use evdo */
-                level = getEvdoLevel();
-            } else {
-                /* We know both, use the lowest level */
-                level = cdmaLevel < evdoLevel ? cdmaLevel : evdoLevel;
-            }
+            //SWISTART
+            level = getLteLevel();
+            if (level == SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
+            //SWISTOP    
+                int cdmaLevel = getCdmaLevel();
+                int evdoLevel = getEvdoLevel();
+                if (evdoLevel == SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
+                    /* We don't know evdo, use cdma */
+                	level = getCdmaLevel();
+                } else if (cdmaLevel == SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
+                    /* We don't know cdma, use evdo */
+                	level = getEvdoLevel();
+                } else {
+                    /* We know both, use the lowest level */
+                    level = cdmaLevel < evdoLevel ? cdmaLevel : evdoLevel;
+                }
+            //SWISTART
+            } 
+            //SWISTOP    
         }
         if (DBG) log("getLevel=" + level);
         return level;
@@ -338,18 +345,24 @@ public class SignalStrength implements Parcelable {
                 asuLevel = getLteAsuLevel();
             }
         } else {
-            int cdmaAsuLevel = getCdmaAsuLevel();
-            int evdoAsuLevel = getEvdoAsuLevel();
-            if (evdoAsuLevel == 0) {
-                /* We don't know evdo use, cdma */
-                asuLevel = cdmaAsuLevel;
-            } else if (cdmaAsuLevel == 0) {
-                /* We don't know cdma use, evdo */
-                asuLevel = evdoAsuLevel;
+            //SWISTART
+            if (getLteLevel() == SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
+                int cdmaAsuLevel = getCdmaAsuLevel();
+                int evdoAsuLevel = getEvdoAsuLevel();
+                if (evdoAsuLevel == 0) {
+                    /* We don't know evdo use, cdma */
+                    asuLevel = cdmaAsuLevel;
+                } else if (cdmaAsuLevel == 0) {
+                    /* We don't know cdma use, evdo */
+                    asuLevel = evdoAsuLevel;
+                } else {
+                    /* We know both, use the lowest level */
+                    asuLevel = cdmaAsuLevel < evdoAsuLevel ? cdmaAsuLevel : evdoAsuLevel;
+                }
             } else {
-                /* We know both, use the lowest level */
-                asuLevel = cdmaAsuLevel < evdoAsuLevel ? cdmaAsuLevel : evdoAsuLevel;
+                asuLevel = getLteAsuLevel();
             }
+            //SWISTOP
         }
         if (DBG) log("getAsuLevel=" + asuLevel);
         return asuLevel;
@@ -373,7 +386,18 @@ public class SignalStrength implements Parcelable {
                 dBm = getLteDbm();
             }
         } else {
-            dBm = getCdmaDbm();
+            //SWISTART
+            if (getLteLevel() == SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
+                int cdmaDbm = getCdmaDbm();
+                int evdoDbm = getEvdoDbm();
+
+                if (DBG) log("getDbm cdmaDbm:" + cdmaDbm + "evdoDbm: " + evdoDbm);
+                return (evdoDbm == -120) ? cdmaDbm : ((cdmaDbm == -120) ? evdoDbm
+                        : (cdmaDbm < evdoDbm ? cdmaDbm : evdoDbm));
+            } else {
+                dBm = getLteDbm();
+            }
+            //SWISTOP
         }
         if (DBG) log("getDbm=" + dBm);
         return dBm;

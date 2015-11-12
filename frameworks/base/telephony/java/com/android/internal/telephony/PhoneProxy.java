@@ -103,7 +103,11 @@ public class PhoneProxy extends Handler implements Phone {
             if (ar.exception == null) {
                 if ((ar.result != null) && (((int[]) ar.result).length != 0)) {
                     int newVoiceTech = ((int[]) ar.result)[0];
-                    updatePhoneObject(newVoiceTech);
+                    //SWISTART
+                    //SWI_TBD currently these 2 event not supported from RIL. Ignore them for now.
+                    loge("Voice Radio Technology event " + msg.what + " has tech:" + newVoiceTech);
+                    //updatePhoneObject(newVoiceTech);
+                    //SWISTOP
                 } else {
                     loge("Voice Radio Technology event " + msg.what + " has no tech!");
                 }
