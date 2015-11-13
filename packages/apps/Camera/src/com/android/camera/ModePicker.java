@@ -233,6 +233,10 @@ public class ModePicker extends RelativeLayout implements View.OnClickListener,
             mModeSelectionIcon[i].setEnabled(enabled);
             if (mCurrentModeFrame != null) mCurrentModeIcon[i].setEnabled(enabled);
         }
+        mModeSelectionIcon[MODE_VIDEO].setEnabled(false);
+        mModeSelectionIcon[MODE_VIDEO].setVisibility(View.INVISIBLE);
+        if (mCurrentModeFrame != null) mCurrentModeIcon[MODE_VIDEO].setEnabled(false);
+        if (mCurrentModeFrame != null) mCurrentModeIcon[MODE_VIDEO].setVisibility(View.INVISIBLE);
         if (enabled) updateModeState();
     }
 

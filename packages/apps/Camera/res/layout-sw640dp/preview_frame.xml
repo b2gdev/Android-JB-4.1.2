@@ -35,4 +35,5 @@
             android:layout_height="match_parent"
             android:layerType="hardware"
             android:visibility="gone"/>
+    <include layout="@layout/indicator_bar" />
 </RelativeLayout>

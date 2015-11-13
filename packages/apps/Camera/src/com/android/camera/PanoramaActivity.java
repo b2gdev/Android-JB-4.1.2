@@ -693,6 +693,7 @@ public class PanoramaActivity extends ActivityBase implements
         mModePicker.setVisibility(View.VISIBLE);
         mModePicker.setOnModeChangeListener(this);
         mModePicker.setCurrentMode(ModePicker.MODE_PANORAMA);
+        mModePicker.setEnabled(true);
 
         mShutterButton = (ShutterButton) findViewById(R.id.shutter_button);
         mShutterButton.setBackgroundResource(R.drawable.btn_shutter_pan);

@@ -209,7 +209,7 @@ public class SecondLevelIndicatorControlBar extends IndicatorControl implements
 
         if (getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_LANDSCAPE) {
-            int iconSize = mCloseIcon.getMeasuredHeight();
+            int iconSize = (mCloseIcon.getMeasuredHeight())  * 3 / 2;
             int padding = getPaddingTop();
             // The first icon is close button.
             int offset = padding;
@@ -226,7 +226,7 @@ public class SecondLevelIndicatorControlBar extends IndicatorControl implements
                 startY -= decrement;
             }
         } else {
-            int iconSize = mCloseIcon.getMeasuredWidth();
+            int iconSize = (mCloseIcon.getMeasuredWidth()) * 3 / 2;
             int padding = getPaddingLeft();
             // Layout from the last icon up.
             int offset = padding;

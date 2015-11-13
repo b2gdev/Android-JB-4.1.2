@@ -162,6 +162,13 @@ private:
 	static const char supportedPictureSizes[];
 	static const char supportedPreviewSizes[];
 	
+	static const char previewFpsRange [];
+	static const char supportedPreviewFpsRange [];
+	
+	static const char horizontalViewAngle [];
+	static const char verticalViewAngle [];
+
+	
 	static const char supportedFlashModes [];
 	static const char supportedFocusModes [];
 	static const char supportedSceneModes [];

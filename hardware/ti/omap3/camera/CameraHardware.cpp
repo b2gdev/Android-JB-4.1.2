@@ -64,8 +64,14 @@ const char CameraHardware::supportedPreviewSizes [] = "640x480";
 const supported_resolution CameraHardware::supportedPictureRes[] = {{2592, 1944}};
 const supported_resolution CameraHardware::supportedPreviewRes[] = {{640, 480}};
 
+const char CameraHardware::previewFpsRange [] = "15,15";
+const char CameraHardware::supportedPreviewFpsRange [] = "(15,15)";
+
+const char CameraHardware::horizontalViewAngle [] = "67.4";
+const char CameraHardware::verticalViewAngle [] = "67.4";
+
 const char CameraHardware::supportedFlashModes [] = "auto,on,off,torch";
-const char CameraHardware::supportedFocusModes [] = "continuous-picture";
+const char CameraHardware::supportedFocusModes [] = "continuous-picture,infinity";
 const char CameraHardware::supportedSceneModes [] = "auto";
 const char CameraHardware::supportedWhiteBalance [] = "auto";
 
@@ -135,7 +141,17 @@ void CameraHardware::initDefaultParameters()
 	p.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, CameraHardware::supportedPictureSizes);
 	p.set(CameraParameters::KEY_SUPPORTED_PICTURE_FORMATS, CameraParameters::PIXEL_FORMAT_JPEG);
 	p.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, CameraHardware::supportedPreviewSizes);
+	
 	p.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FORMATS, CameraParameters::PIXEL_FORMAT_YUV422SP);
+	p.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, CameraHardware::supportedPreviewFpsRange);
+	p.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, CameraHardware::previewFpsRange);
+	
+	p.set(CameraParameters::KEY_HORIZONTAL_VIEW_ANGLE, CameraHardware::horizontalViewAngle);
+	p.set(CameraParameters::KEY_VERTICAL_VIEW_ANGLE, CameraHardware::verticalViewAngle);
+	
+	p.set(CameraParameters::KEY_SUPPORTED_VIDEO_SIZES, "");
+	p.set(CameraParameters::KEY_PREFERRED_PREVIEW_SIZE_FOR_VIDEO, "");
+	p.set(CameraParameters::KEY_VIDEO_SNAPSHOT_SUPPORTED,"flase");
 	p.set(CameraParameters::KEY_VIDEO_FRAME_FORMAT, CameraParameters::PIXEL_FORMAT_YUV420SP);
 	
 	p.set(CameraParameters::KEY_FLASH_MODE,(const char *) CameraHardware::currentFlashMode);
@@ -475,7 +491,9 @@ status_t CameraHardware::startPreview()
      previewStopped = false;
      mPreviewThread = new PreviewThread(this);
      
-     mCamera->EmbeddedAFStart();
+     if(strcmp((const char *) (CameraParameters::FOCUS_MODE_CONTINUOUS_PICTURE), (const char *)  currentFocusMode) == 0){
+		mCamera->EmbeddedAFStart();
+	}
 
     return NO_ERROR;
 }
@@ -761,6 +779,7 @@ status_t CameraHardware::setParameters(const CameraParameters& params)
 	
 	if((params.get(CameraParameters::KEY_FOCUS_MODE) != NULL) && (CameraHardware::currentFocusMode != NULL)){
 		if(strcmp(params.get(CameraParameters::KEY_FOCUS_MODE), (const char *)  currentFocusMode) != 0){
+			strcpy(CameraHardware::currentFocusMode,params.get(CameraParameters::KEY_FOCUS_MODE));
 			ALOGD("FocusMode Changed : %s", params.get(CameraParameters::KEY_FOCUS_MODE));
 		}
 	}
