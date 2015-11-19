@@ -708,16 +708,22 @@ public class InCallTouchUi extends FrameLayout
             showMoreIndicator = true;
             if (inCallControlState.bluetoothIndicatorOn) {
                 showBluetoothIcon = true;
-            } else if (inCallControlState.speakerOn) {
+            } // Show speaker icon by default
+            /* else if (inCallControlState.speakerOn) {
                 showSpeakerOnIcon = true;
-            } else {
-                showHandsetIcon = true;
+            }*/ 
+            else {
+                //showHandsetIcon = true;
+                showSpeakerOnIcon = true;
                 // TODO: if a wired headset is plugged in, that takes precedence
                 // over the handset earpiece.  If so, maybe we should show some
                 // sort of "wired headset" icon here instead of the "handset
                 // earpiece" icon.  (Still need an asset for that, though.)
             }
-        } else if (inCallControlState.speakerEnabled) {
+        } 
+        // Disable speaker toggle by default
+        /* 
+        else if (inCallControlState.speakerEnabled) {
             if (DBG) log("- updateAudioButton: 'speaker toggle' mode...");
 
             mAudioButton.setEnabled(true);
@@ -731,7 +737,8 @@ public class InCallTouchUi extends FrameLayout
 
             showSpeakerOnIcon = inCallControlState.speakerOn;
             showSpeakerOffIcon = !inCallControlState.speakerOn;
-        } else {
+        }*/ 
+        else {
             if (DBG) log("- updateAudioButton: disabled...");
 
             // The audio button is a toggle in this state, but that's mostly
@@ -784,10 +791,12 @@ public class InCallTouchUi extends FrameLayout
         if (inCallControlState.bluetoothEnabled) {
             if (DBG) log("- handleAudioButtonClick: 'popup menu' mode...");
             showAudioModePopup();
-        } else {
-            if (DBG) log("- handleAudioButtonClick: 'speaker toggle' mode...");
-            mInCallScreen.toggleSpeaker();
-        }
+        } 
+        // Disable speaker mode toggle
+        //else {
+        //    if (DBG) log("- handleAudioButtonClick: 'speaker toggle' mode...");
+        //    mInCallScreen.toggleSpeaker();
+        //}
     }
 
     /**
