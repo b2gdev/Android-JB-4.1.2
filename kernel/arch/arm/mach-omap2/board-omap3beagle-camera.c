@@ -38,7 +38,8 @@
 #include "devices.h"
 
 #define CAM_USE_XCLKA			0
-#define LEOPARD_RESET_GPIO		98
+#define RESETB_GPIO				98
+#define CAM_PWR_EN				152
 
 static struct regulator *beagle_1v8;
 static struct regulator *beagle_2v8;
@@ -63,7 +64,7 @@ static int beagle_mt9v113_s_power(struct v4l2_subdev *subdev, int on)
 		 * Power Up Sequence
 		 */
 		/* Set RESET_BAR to 0 */
-		gpio_set_value(LEOPARD_RESET_GPIO, 0);
+		gpio_set_value(RESETB_GPIO, 0);
 		/* Turn on VDD */
 		regulator_enable(beagle_1v8);
 		mdelay(1);
@@ -79,7 +80,7 @@ static int beagle_mt9v113_s_power(struct v4l2_subdev *subdev, int on)
 		 */
 		udelay(3);
 		/* Set RESET_BAR to 1 */
-		gpio_set_value(LEOPARD_RESET_GPIO, 1);
+		gpio_set_value(RESETB_GPIO, 1);
 		/*
 		 * Wait at least 100 CLK cycles (w/EXTCLK = 24MHz):
 		 * ((1000000 * 100) / 24000000) = aprox 5 us.
@@ -119,7 +120,7 @@ static int beagle_ov5640_s_power(struct v4l2_subdev *subdev, int on)
 		/* Set POWER_DOWN to 1 */
 		gpio_set_value(POWER_DOWN_GPIO, 1);
 		/* Set RESET_BAR to 0 */
-		gpio_set_value(LEOPARD_RESET_GPIO, 0);		
+		gpio_set_value(RESETB_GPIO, 0);		
  
 		mdelay(50);
 		/* Enable EXTCLK */
@@ -130,10 +131,14 @@ static int beagle_ov5640_s_power(struct v4l2_subdev *subdev, int on)
 		 * ((1000000 * 70) / 24000000) = aprox 3 us.
 		 */
 		udelay(3);
-		/* Set RESET_BAR to 1 */
-		gpio_set_value(LEOPARD_RESET_GPIO, 1);
 		/* Set POWER_DOWN to 0 */
 		gpio_set_value(POWER_DOWN_GPIO, 0);
+		/*
+		 * Wait more than 1ms - sensor power up stable to RESETB pull up
+		 */
+		mdelay(2);
+		/* Set RESET_BAR to 1 */
+		gpio_set_value(RESETB_GPIO, 1);
 		/*
 		 * Wait at least 100 CLK cycles (w/EXTCLK = 24MHz):
 		 * ((1000000 * 100) / 24000000) = aprox 5 us.
@@ -143,12 +148,70 @@ static int beagle_ov5640_s_power(struct v4l2_subdev *subdev, int on)
 		 * Wait 20ms before initializaion of the sensor
 		 */
 		mdelay(20);
-	} else {		
+	} else {
+		/* Set RESET_BAR to 0 */
+		gpio_set_value(RESETB_GPIO, 0);
+		
 		if (isp->platform_cb.set_xclk)
 			isp->platform_cb.set_xclk(isp, 0, CAM_USE_XCLKA);
+		
+		/* Set POWER_DOWN to 1 */
+		gpio_set_value(POWER_DOWN_GPIO, 1);
 	}
 	printk(KERN_INFO "%s() EXIT\n", __func__);
 	return 0;
+}
+
+static int beagle_ov5640_s_suspend(struct v4l2_subdev *subdev){
+	struct isp_device *isp = v4l2_dev_to_isp_device(subdev->v4l2_dev);
+	printk(KERN_INFO "%s() ENTER\n", __func__);
+	
+	if (isp->platform_cb.set_xclk)
+		isp->platform_cb.set_xclk(isp, 0, CAM_USE_XCLKA);
+		
+	/* Set POWER_DOWN to 1 */
+	gpio_set_value(POWER_DOWN_GPIO, 1);
+	
+	printk(KERN_INFO "%s() EXIT\n", __func__);
+	return 0;
+}
+
+static int beagle_ov5640_s_resume(struct v4l2_subdev *subdev){
+	struct isp_device *isp = v4l2_dev_to_isp_device(subdev->v4l2_dev);
+	printk(KERN_INFO "%s() ENTER\n", __func__);
+	
+	/* Enable EXTCLK */
+	if (isp->platform_cb.set_xclk)
+		isp->platform_cb.set_xclk(isp, 24000000, CAM_USE_XCLKA);
+	/*
+	 * Wait at least 70 CLK cycles (w/EXTCLK = 24MHz):
+	 * ((1000000 * 70) / 24000000) = aprox 3 us.
+	 */
+	udelay(3);
+	/* Set POWER_DOWN to 0 */
+	gpio_set_value(POWER_DOWN_GPIO, 0);
+	
+	printk(KERN_INFO "%s() EXIT\n", __func__);
+	return 0;
+}
+
+static void beagle_ov5640_s_shutdown(struct v4l2_subdev *subdev){
+	struct isp_device *isp = v4l2_dev_to_isp_device(subdev->v4l2_dev);
+	printk(KERN_INFO "%s() ENTER\n", __func__);
+	
+	/* Set RESET_BAR to 0 */
+	gpio_set_value(RESETB_GPIO, 0);
+	
+	if (isp->platform_cb.set_xclk)
+		isp->platform_cb.set_xclk(isp, 0, CAM_USE_XCLKA);
+	
+	/* Set POWER_DOWN to 1 */
+	gpio_set_value(POWER_DOWN_GPIO, 1);
+	
+	/* Turn off Camera power supply */
+	gpio_set_value(CAM_PWR_EN, 0);
+	
+	printk(KERN_INFO "%s() EXIT\n", __func__);
 }
 #endif
 
@@ -187,6 +250,9 @@ static struct mt9v113_platform_data beagle_mt9v113_platform_data = {
 #ifdef CONFIG_VIDEO_OV5640
 static struct ov5640_platform_data beagle_ov5640_platform_data = {
 	.s_power		= beagle_ov5640_s_power,
+	.s_suspend		= beagle_ov5640_s_suspend,
+	.s_resume		= beagle_ov5640_s_resume,
+	.s_shutdown		= beagle_ov5640_s_shutdown,
 	.configure_interface	= beagle_ov5640_configure_interface,
 };
 #endif
@@ -276,23 +342,23 @@ static struct isp_platform_data beagle_isp_platform_data = {
 static int __init beagle_cam_init(void)
 {	
 	printk( KERN_INFO "%s() ENTER\n", __func__);
-	gpio_request(152, "CAM_PWR_EN");			/* {PS} : CAM_PWR_EN		*/
-	gpio_direction_output(152, 0);				/* {PS} : CAM_PWR_EN		- LOW	- Turn off Camera power supply */
-	gpio_set_value(152, 1);						/* {PS} : CAM_PWR_EN		- HIGH	- Turn on Camera power supply */
+	gpio_request(CAM_PWR_EN, "CAM_PWR_EN");			/* {PS} : CAM_PWR_EN		*/
+	gpio_direction_output(CAM_PWR_EN, 0);			/* {PS} : CAM_PWR_EN		- LOW	- Turn off Camera power supply */
+	gpio_set_value(CAM_PWR_EN, 1);					/* {PS} : CAM_PWR_EN		- HIGH	- Turn on Camera power supply */
 	
 	/*
 	 * Sensor reset GPIO
 	 */
-	if (gpio_request(LEOPARD_RESET_GPIO,  "CAM_nRST") != 0) {  	/* {PS} : CAM_nRST		*/
+	if (gpio_request(RESETB_GPIO,  "CAM_nRST") != 0) {  	/* {PS} : CAM_nRST		*/
 		printk(KERN_ERR "beagle-cam: Could not request GPIO %d\n",
-				LEOPARD_RESET_GPIO);
+				RESETB_GPIO);
 		regulator_put(beagle_1v8);
 		regulator_put(beagle_2v8);
 		return -ENODEV;
 	}
 	/* set to output mode */
-	gpio_direction_output(LEOPARD_RESET_GPIO, 0);	/* {PS} : CAM_nRST			- LOW	- Reset Camera */
-	gpio_set_value(LEOPARD_RESET_GPIO, 0);			/* {PS} : CAM_nRST			- LOW	- Reset Camera */
+	gpio_direction_output(RESETB_GPIO, 0);	/* {PS} : CAM_nRST			- LOW	- Reset Camera */
+	gpio_set_value(RESETB_GPIO, 0);			/* {PS} : CAM_nRST			- LOW	- Reset Camera */
 
 	omap3_init_camera(&beagle_isp_platform_data);
 
@@ -303,7 +369,7 @@ static int __init beagle_cam_init(void)
 static void __exit beagle_cam_exit(void)
 {
 	printk(KERN_INFO "%s() ENTER\n", __func__);
- 	gpio_free(LEOPARD_RESET_GPIO);
+ 	gpio_free(RESETB_GPIO);
 	printk(KERN_INFO "%s() EXIT\n", __func__);
 }
 

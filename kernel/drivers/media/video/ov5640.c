@@ -177,7 +177,7 @@ static int ov5640_write_reg(struct i2c_client *client, unsigned short reg,
 		err = i2c_transfer(client->adapter, msg, 1);
 	}
 	if (err < 0){
-		debug_print( "\n KERN_INFO I2C write failed");
+		debug_print( "I2C write failed - [%d] - %d\n",reg,val);
 	}
 
 	if (err==1) err=0;
@@ -212,6 +212,7 @@ static int ov5640_write_regs(struct i2c_client *client,
 	for (; next->reg != 0; next++) {
 		err = ov5640_write_reg(client, next->reg, next->val);
 		if (err < 0) {
+			debug_print( "Reglist write failed\n");
 			v4l_err(client, "Write failed. Err[%d]\n", err);
 			return err;
 		}
@@ -454,12 +455,18 @@ static int ov5640_conf_back_vga(struct v4l2_subdev *subdev)
 static int ov5640_def_config(struct v4l2_subdev *subdev)
 {
 	struct i2c_client *client;
+	int ret;
 	debug_print( "%s() ENTER\n", __func__);
 	client = v4l2_get_subdevdata(subdev);
+	
+	ret = ov5640_write_regs(client, ov5640_new_reg_list);
+	if (ret) {
+		debug_print("%s() write ov5640_new_reg_list failed\n", __func__);
+	}
 
 	/* common register initialization */
 	debug_print( "%s() EXIT\n", __func__);
-	return ov5640_write_regs(client, ov5640_new_reg_list);
+	return ret;
 }
 
 /*
@@ -634,6 +641,17 @@ static int ov5640_s_power(struct v4l2_subdev *subdev, int on)
 		if (rval)
 			goto out;
 		rval = ov5640_def_config(subdev);
+		if (rval) {
+			decoder->pdata->s_power(subdev, 0);
+			goto out;
+		}
+		rval = ov5640_af_def_config(subdev);
+		if (rval) {
+			decoder->pdata->s_power(subdev, 0);
+			goto out;
+		}
+		
+		rval = ov5640_def_config(subdev);								//Double initializations will avoid the colour balance issue
 		if (rval) {
 			decoder->pdata->s_power(subdev, 0);
 			goto out;
@@ -1222,6 +1240,68 @@ static int ov5640_probe(struct i2c_client *client,
 }
 
 /*
+ * ov5640_i2c_suspend - Called when the device goes to suspend
+ * @client: i2c driver client device structure
+ *
+ * Power down from POWER_DOWN_GPIO and stop isp clock
+ */
+static int ov5640_i2c_suspend(struct i2c_client *client, pm_message_t mesg)
+{
+	struct ov5640 *decoder;
+	struct v4l2_subdev *subdev;
+	int ret;
+	
+	debug_print( "%s() ENTER\n", __func__);
+	
+	subdev = i2c_get_clientdata(client);
+	decoder = to_ov5640(subdev);
+	ret = decoder->pdata->s_suspend(subdev);
+	debug_print( "%s() EXIT\n", __func__);
+	return ret;
+}
+
+/*
+ * ov5640_i2c_resume - Called when the device comes back on resume
+ * @client: i2c driver client device structure
+ *
+ * Power up from POWER_DOWN_GPIO and start isp clock
+ */
+static int ov5640_i2c_resume(struct i2c_client *client)
+{
+	struct ov5640 *decoder;
+	struct v4l2_subdev *subdev;
+	int ret;
+	
+	debug_print( "%s() ENTER\n", __func__);
+	
+	subdev = i2c_get_clientdata(client);
+	decoder = to_ov5640(subdev);
+	ret = decoder->pdata->s_resume(subdev);
+	debug_print( "%s() EXIT\n", __func__);
+	return ret;
+}
+
+/*
+ * ov5640_i2c_shutdown - Called when the device is shutting down
+ * @client: i2c driver client device structure
+ *
+ * Shut down power ICs
+ */
+void ov5640_i2c_shutdown(struct i2c_client *client)
+{
+	struct ov5640 *decoder;
+	struct v4l2_subdev *subdev;
+	
+	debug_print( "%s() ENTER\n", __func__);
+	
+	subdev = i2c_get_clientdata(client);
+	decoder = to_ov5640(subdev);
+	decoder->pdata->s_shutdown(subdev);
+	
+	debug_print( "%s() EXIT\n", __func__);
+}
+
+/*
  * ov5640_remove - Sensor driver i2c remove handler
  * @client: i2c driver client device structure
  *
@@ -1258,6 +1338,9 @@ static struct i2c_driver ov5640_i2c_driver = {
 	},
 	.probe = ov5640_probe,
 	.remove = __exit_p(ov5640_remove),
+	.suspend = ov5640_i2c_suspend,
+	.resume = ov5640_i2c_resume,
+	.shutdown = ov5640_i2c_shutdown,
 	.id_table = ov5640_id,
 };
 

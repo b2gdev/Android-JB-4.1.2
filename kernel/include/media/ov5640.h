@@ -43,6 +43,9 @@
 
 struct ov5640_platform_data {
 	int (*s_power)(struct v4l2_subdev *subdev, int on);
+	int (*s_suspend)(struct v4l2_subdev *subdev);
+	int (*s_resume)(struct v4l2_subdev *subdev);
+	void (*s_shutdown)(struct v4l2_subdev *subdev);
 	int (*set_xclk)(struct v4l2_subdev *subdev, int hz);
 	int (*configure_interface)(struct v4l2_subdev *subdev, u32 pixclk);
 };
