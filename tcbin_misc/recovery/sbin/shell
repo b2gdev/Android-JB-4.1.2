@@ -245,6 +245,18 @@ performAction_boot() {
   withoutBraille reboot -f
 }
 
+addAction off "power down device"
+performAction_off() {
+  eval "${noMoreParameters}"
+
+  confirmAction "power down" || {
+    programMessage "power down cancelled"
+    return "${operationCancelled}"
+  }
+
+  withoutBraille poweroff -f
+}
+
 addAction clear "wipe cache partition"
 performAction_clear() {
   eval "${noMoreParameters}"
@@ -476,6 +488,8 @@ chooseFile() {
           ! "${done}" && continue
           return 1
         }
+        
+        problem="not selectable"
       };;
 
       *) {
@@ -501,7 +515,7 @@ findFile() {
   while [ "${count}" -gt 0 ]
   do
     local path="${1}"
-    [ ! -d "${path}" ] || set -- "${@}" "${path#/}"
+    [ ! -d "${path}" -a ! -h "${path}" ] || set -- "${@}" "${path#/}"
 
     shift 1
     let "count -= 1" || :
