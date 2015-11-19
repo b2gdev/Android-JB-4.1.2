@@ -26,16 +26,21 @@ PRODUCT_COPY_FILES := \
 	device/ti/beagleboard/audio_policy.conf:system/etc/audio_policy.conf \
 	device/ti/beagleboard/sierra_binaries/system/bin/init.dhcpcd:system/bin/init.dhcpcd \
 	device/ti/beagleboard/sierra_binaries/system/bin/init.ril-daemon:system/bin/init.ril-daemon \
+	device/ti/beagleboard/sierra_binaries/system/bin/init.dhcpcd-at:system/bin/init.dhcpcd-at \
+	device/ti/beagleboard/sierra_binaries/system/bin/init.ril-daemon-at:system/bin/init.ril-daemon-at \
+	device/ti/beagleboard/sierra_binaries/system/bin/init.dhcpcd-qmi:system/bin/init.dhcpcd-qmi \
+	device/ti/beagleboard/sierra_binaries/system/bin/init.ril-daemon-qmi:system/bin/init.ril-daemon-qmi \
 	device/ti/beagleboard/sierra_binaries/system/bin/ash:system/bin/ash \
 	device/ti/beagleboard/sierra_binaries/system/bin/SierraDMLog:system/bin/SierraDMLog \
-	device/ti/beagleboard/sierra_binaries/system/bin/SierraFwDl77xx:system/bin/SierraFwDl77xx \
-	device/ti/beagleboard/sierra_binaries/system/bin/SierraSARTool:system/bin/SierraSARTool \
-	device/ti/beagleboard/sierra_binaries/system/bin/SierraImgMgr:system/bin/SierraImgMgr \
 	device/ti/beagleboard/sierra_binaries/system/bin/slqssdk:system/bin/slqssdk \
+	device/ti/beagleboard/sierra_binaries/system/bin/swisdk:system/bin/swisdk \
 	device/ti/beagleboard/sierra_binaries/system/lib/libswiqmiapi.so:system/lib/libswiqmiapi.so \
 	device/ti/beagleboard/sierra_binaries/system/lib/libswigpsqmi.so:system/lib/libswigpsqmi.so \
+	device/ti/beagleboard/sierra_binaries/system/lib/libswigpsat.so:system/lib/libswigpsat.so \
 	device/ti/beagleboard/sierra_binaries/system/lib/libsierra-ril.so:system/lib/libsierra-ril.so \
-	device/ti/beagleboard/sierra_binaries/system/lib/libswims.so:system/lib/libswims.so
+	device/ti/beagleboard/sierra_binaries/system/lib/libsierraat-ril.so:system/lib/libsierraat-ril.so \
+	device/ti/beagleboard/sierra_binaries/system/lib/libswims.so:system/lib/libswims.so \
+	device/ti/beagleboard/sierra_binaries/system/lib/libswisdkapi.so:system/lib/libswisdkapi.so
 	
 
 PRODUCT_COPY_FILES += \

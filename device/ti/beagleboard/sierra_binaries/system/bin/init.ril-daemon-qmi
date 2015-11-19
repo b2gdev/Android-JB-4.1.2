@@ -1,0 +1,4 @@
+#!/system/bin/ash
+
+# start rild
+/system/bin/rild -l /system/lib/libsierra-ril.so -- -a -i usb0
