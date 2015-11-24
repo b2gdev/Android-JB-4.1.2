@@ -130,7 +130,7 @@ int misc_init_r(void)
 	char *ecc[3]     = { "nandecc", "sw", NULL, };
 	char addr[32];
 	char *read[6] = { "nand", "read", NULL,
-				"0xF80000", "0x1000", NULL, };
+				"0x1A80000", "0x1000", NULL, };
 	unsigned char buf[4096];				
 				
 	/*
