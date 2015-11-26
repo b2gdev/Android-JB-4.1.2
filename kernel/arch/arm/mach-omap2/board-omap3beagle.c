@@ -1424,8 +1424,8 @@ static void __init omap3_tcbin_gpio_init(void)
 
 	
 	/* {PS} : Set output value */
-/*	gpio_set_value(98, 0);		/* {KW} : Added in board-omap3beagle-camera.c */
-/*	gpio_set_value(167, 1);		/* {KW} : Added in board-omap3beagle-camera.c */
+//	gpio_set_value(98, 0);		/* {KW} : Added in board-omap3beagle-camera.c */
+//	gpio_set_value(167, 1);		/* {KW} : Added in board-omap3beagle-camera.c */
 	gpio_set_value(11, 1);		/* {RD} : 3GM_SEC_PWR_EN	- HIGH	- Enable power*/
 
 	gpio_set_value(157, 1);		/* {PS} : CAM_LED_nRST		- HIGH 	- Not reset Camera LED driver */

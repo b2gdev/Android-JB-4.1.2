@@ -189,21 +189,33 @@ int RecoveryUI::WaitKey()
 
 // Return true if USB is connected.
 bool RecoveryUI::usb_connected() {
-    int fd = open("/sys/class/android_usb/android0/state", O_RDONLY);
-    if (fd < 0) {
-        printf("failed to open /sys/class/android_usb/android0/state: %s\n",
+    int fd1 = open("/sys/devices/virtual/switch/usb_connected/state", O_RDONLY);
+    if (fd1 < 0) {
+        printf("failed to open /sys/devices/virtual/switch/usb_connected/state: %s\n",
+               strerror(errno));
+        return 0;
+    }
+    
+    int fd2 = open("/sys/devices/virtual/switch/usb_configuration/state", O_RDONLY);
+    if (fd2 < 0) {
+        printf("failed to open /sys/devices/virtual/switch/usb_configuration/state: %s\n",
                strerror(errno));
         return 0;
     }
 
     char buf;
     /* USB is connected if android_usb state is CONNECTED or CONFIGURED */
-    int connected = (read(fd, &buf, 1) == 1) && (buf == 'C');
-    if (close(fd) < 0) {
-        printf("failed to close /sys/class/android_usb/android0/state: %s\n",
+    bool connected = (read(fd1, &buf, 1) == 1) && (buf == '1');
+    bool configured = (read(fd2, &buf, 1) == 1) && (buf == '1');
+    if (close(fd1) < 0) {
+        printf("failed to close /sys/devices/virtual/switch/usb_connected/state: %s\n",
                strerror(errno));
     }
-    return connected;
+    if (close(fd2) < 0) {
+        printf("failed to close /sys/devices/virtual/switch/usb_configuration/state: %s\n",
+               strerror(errno));
+    }
+    return connected || configured;
 }
 
 bool RecoveryUI::IsKeyPressed(int key)
