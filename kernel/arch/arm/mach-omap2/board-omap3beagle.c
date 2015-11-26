@@ -93,7 +93,14 @@
 #define REBOOT_MODE_RECOVERY		4
 #define REBOOT_MODE_FAST_BOOT		5
 
+#define OMAP_DIE_ID_0		0x4830A218
+#define OMAP_DIE_ID_1		0x4830A21C
+
 int is_bt_on = 0; /* {RD} */
+
+#define MAX_USB_SERIAL_NUM	17
+
+static char device_serial[MAX_USB_SERIAL_NUM] = "0123456789ABCDEF";
 
 static int tcbin_notifier_call(struct notifier_block *this,
 					unsigned long code, void *_cmd)
@@ -177,7 +184,7 @@ static struct android_usb_platform_data android_usb_pdata = {
 	.version	= 0x0100,
 	.product_name	= "Team_CBI_Notetaker",
 	.manufacturer_name	= "Zone24x7.Inc.",
-	.serial_number	= "0042",
+	.serial_number	= device_serial,
 	.num_functions	= ARRAY_SIZE(usb_functions_all),
 };
 
@@ -275,6 +282,11 @@ static void __init omap3_beagle_init_rev(void)
 	omap3_beagle_version = OMAP3BEAGLE_BOARD_C4;
 /* {PS} END: */
 	
+	system_serial_high = omap_readl(OMAP_DIE_ID_1);
+	system_serial_low = omap_readl(OMAP_DIE_ID_0);
+	sprintf(device_serial, "%08X%08X", system_serial_high,
+			system_serial_low);
+			
 	return;
 }
 
