@@ -31,8 +31,11 @@ make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- clean
 # Build SD card kernel
 make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- omap3_tcbin_android_sdcard_defconfig
 
-# Build file system
+# Build file system (engineering debug build)
 make TARGET_PRODUCT=beagleboard OMAPES=5.x -j8
+
+# Build file system (user build)
+# make TARGET_PRODUCT=beagleboard TARGET_BUILD_VARIANT=user OMAPES=5.x -j8
 
 # Build modules
 make -C kernel/ ARCH=arm CROSS_COMPILE=arm-eabi- modules

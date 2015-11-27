@@ -59,7 +59,6 @@ service console /usr/bin/sh
     group log    
     
 service recovery /sbin/recovery
-	disabled
 
 service adbd /sbin/adbd recovery
     disabled
@@ -72,7 +71,6 @@ on property:ro.debuggable=1
     write /sys/class/android_usb/android0/enable 1        
     start adbd
     start console
-    start recovery
 
 # Restart adbd so it can run as root
 on property:service.adb.root=1

@@ -95,6 +95,7 @@ PRODUCT_PACKAGES += \
         tinycap \
         tinymix \
         tinyplay \
+        uim-sysfs \
 	media-ctl
 
 PRODUCT_PACKAGES += \
