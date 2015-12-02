@@ -114,14 +114,15 @@ readonly noMoreParameters='
 performAction_start() {
   eval "${noMoreParameters}"
 
-  startInteractiveShell
   makeDirectories
+  startInteractiveShell
   setBrailleParameters
 
   if checkProcess "${BRLTTY_PID_FILE}"
   then
     programMessage "${packageName} already running"
   else
+    cfg-sound -q
     brltty -E -q
     programMessage "${packageName} started"
   fi
