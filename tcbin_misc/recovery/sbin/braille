@@ -1,4 +1,5 @@
 #!/usr/bin/sh
+. "$(dirname "${0}")/prologue.sh"
 
 vtNumber=2
 
@@ -11,26 +12,6 @@ packageName="brltty"
 systemDirectory="/etc/${packageName}"
 persistentDirectory="/cache/${packageName}"
 temporaryDirectory="/tmp/${packageName}"
-
-programMessage() {
-  local message="${1}"
-  
-  echo >&2 "${0##*/}: ${message}"
-}
-
-syntaxError() {
-  local message="${1}"
-  
-  programMessage "${message}"
-  exit 2
-}
-
-semanticError() {
-  local message="${1}"
-  
-  programMessage "${message}"
-  exit 3
-}
 
 checkProcess() {
   local file="${1}"
@@ -106,10 +87,6 @@ setBrailleParameters() {
   export BRLTTY_SCREEN_DRIVER="lx"
   export BRLTTY_SCREEN_PARAMETERS="lx:vt=${vtNumber}"
 }
-
-readonly noMoreParameters='
-  [ "${#}" -eq 0 ] || syntaxError "too many parameters"
-'
 
 performAction_start() {
   eval "${noMoreParameters}"
