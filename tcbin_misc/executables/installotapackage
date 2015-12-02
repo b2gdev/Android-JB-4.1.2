@@ -4,7 +4,7 @@ set -e
 programName=`basename "${0}"`
 
 otaExtension="zip"
-otaDefault="/data/update.${otaExtension}"
+otaDefault="/cache/update.${otaExtension}"
 
 programMessage() {
   local message="${1}"

@@ -1,7 +1,8 @@
 #!/system/bin/sh
 for z in /dev/block/platform/mmci-omap-hs.1/mmc*; do
 	echo "formatting $z"
-	echo -e "o\nn\np\n1\n256\n\nw" | fdisk -u $z
+	echo -e "o\nn\np\n1\n256\n14303230\nn\np\n2\n14303231\n\nw" | fdisk -u $z
 	break
 done
 echo -e "y" | mkfs.ext4 /dev/block/platform/mmci-omap-hs.1/by-num/p1
+echo -e "y" | mkfs.ext4 /dev/block/platform/mmci-omap-hs.1/by-num/p2

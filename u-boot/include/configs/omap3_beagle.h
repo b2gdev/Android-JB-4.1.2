@@ -154,7 +154,7 @@
 #define MTDPARTS_DEFAULT		"mtdparts=nand:512k(x-loader),"\
 					"1920k(u-boot),128k(u-boot-env),"\
 					"8m(kernel),16m(recovery),1m(misc),"\
-					"196m(cache),-(system)"
+					"-(system)"
 
 #define CONFIG_CMD_I2C		/* I2C serial bus support	*/
 #define CONFIG_CMD_MMC		/* MMC support			*/
@@ -219,9 +219,8 @@
 	"recoverycmd=run nandargs ; nandecc sw ; nand read 0x82000000 0xA80000 0x1000000 ; bootm 0x82000000\0" \
 	"cpuimage=nandecc sw ; fatload mmc 0:3 0x82000000 norm_uImage ; nand erase 0x280000 0x800000 ; nand write 0x82000000 0x280000 0x800000\0" \
 	"cpbkuimage=nandecc sw ; fatload mmc 0:3 0x82000000 bk_uImage ; nand erase 0xA80000 0x1000000 ; nand write 0x82000000 0xA80000 0x900000\0" \
-	"cpcache=nandecc sw ; fatload mmc 0:3 0x82000000 ubi_cache.img ; nand erase 0x1B80000 0xC000000 ; nand write 0x82000000 0x1B80000 0x200000\0" \
-	"cpsys=nandecc sw ; fatload mmc 0:3 0x82000000 ubi_system.img ; nand erase 0xDF80000; nand write 0x82000000 0xDF80000 0xE000000\0" \
-	"cpall=run cpxl ; run cpub ; run cpuimage ; run cpbkuimage ; run cpcache ; run cpsys\0" \
+	"cpsys=nandecc sw ; fatload mmc 0:3 0x82000000 ubi_system.img ; nand erase 0x1B80000; nand write 0x82000000 0x1B80000 0xF000000\0" \
+	"cpall=run cpxl ; run cpub ; run cpuimage ; run cpbkuimage ; run cpsys\0" \
 	"cpkernelsys=run cpuimage ; run cpcache ; run cpsys\0" \
 	"mmcargs=setenv bootargs console=${console} " \
 		"androidboot.console=ttyO2 mem=512M" \
@@ -234,7 +233,7 @@
 		"rootfstype=${mmcrootfstype}\0" \
 	"nandargs=setenv bootargs console=${console} " \
 		"init=/init noinitrd ip=off androidboot.console=ttyO2 rootwait mem=512M " \
-		"omap_vout.vid1_static_vrfb_alloc=y rw ubi.mtd=system,2048 ubi.mtd=cache,2048 rootwait no_console_suspend=1 " \
+		"omap_vout.vid1_static_vrfb_alloc=y rw ubi.mtd=system,2048 rootwait no_console_suspend=1 " \
 		"omapfb.vram=0:8M " \
 		"vram=${vram} " \
 		"omapfb.mode=tv:${tvmode} " \

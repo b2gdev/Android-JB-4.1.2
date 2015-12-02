@@ -1,7 +1,7 @@
 # mount point	fstype		device
 
 /system		ubifs		ubi0:system	/dev/ubi0_0
-/cache		ubifs		ubi1:cache	/dev/ubi1_0
+/cache		ext4		/dev/block/platform/mmci-omap-hs.1/by-num/p2
 /data		ext4		/dev/block/platform/mmci-omap-hs.1/by-num/p1
 /storage/sdcard1	vfat		/dev/block/platform/mmci-omap-hs.0/by-num/p1
 /storage/usb1	vfat		/dev/block/platform/ehci-omap.0/by-num/p1

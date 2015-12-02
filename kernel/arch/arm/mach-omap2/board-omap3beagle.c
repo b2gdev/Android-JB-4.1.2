@@ -329,13 +329,8 @@ static struct mtd_partition omap3beagle_nand_partitions[] = {
 		.size		= 8 * NAND_BLOCK_SIZE,
 	},
 	{
-		.name		= "cache",
-		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x1B80000 */
-		.size		= 1568 * NAND_BLOCK_SIZE,
-	},
-	{
 		.name		= "system",
-		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0xDF80000 */
+		.offset		= MTDPART_OFS_APPEND,	/* Offset = 0x1B80000 */
 		.size		= MTDPART_SIZ_FULL
 	},
 };
