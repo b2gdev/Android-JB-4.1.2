@@ -33,6 +33,7 @@ cp ../../../../tcbin_misc/apks/MarineCompass.apk system/app/
 cp ../../../../tcbin_misc/apks/Easy_Voice_Recorder.apk system/app/
 cp ../../../../tcbin_misc/apks/TalkBack.apk system/app/
 cp ../../../../tcbin_misc/apks/ESFileExplorer.apk system/app/
+cp ../../../../tcbin_misc/apks/b2g-updater.apk system/app/
 cp ../../../../device/ti/beagleboard/sierra_binaries/system/app/com.sierra.logs.apk system/app/
 
 # Copy b2g-ui
