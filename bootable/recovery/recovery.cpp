@@ -282,7 +282,9 @@ finish_recovery(const char *send_intent) {
     copy_log_file(TEMPORARY_INSTALL_FILE, LAST_INSTALL_FILE, false);
     chmod(LOG_FILE, 0600);
     chown(LOG_FILE, 1000, 1000);   // system user
+    chown(LAST_LOG_FILE, 1000, 2001);   // system user, cache group
     chmod(LAST_LOG_FILE, 0640);
+    chown(LAST_INSTALL_FILE, 1000, 2001);   // system user, cache group
     chmod(LAST_INSTALL_FILE, 0644);
 
     // Reset to normal system boot so recovery won't cycle indefinitely.
