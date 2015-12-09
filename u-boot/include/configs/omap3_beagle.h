@@ -214,7 +214,7 @@
 	"defaultdisplay=tv\0" \
 	"mmcroot=/dev/mmcblk0p2 rw\0" \
 	"mmcrootfstype=ext3 rootwait\0" \
-	"cpxl=nandecc hw 2 ; fatload mmc 0:3 82000000 MLO ; nand erase 0 80000 ; nand write 82000000 0 6000\0" \
+	"cpxl=nandecc hw 2 ; fatload mmc 0:3 82000000 MLO ; nand erase 0 80000 ; nand write 82000000 0 20000; nand write 82000000 20000 20000; nand write 82000000 40000 20000; nand write 82000000 60000 20000\0" \
 	"cpub=nandecc sw ; fatload mmc 0:3 0x82000000 u-boot.bin ; nand erase 0x80000 0x1E0000 ; nand write 0x82000000 0x80000 0x34800\0" \
 	"recoverycmd=run nandargs ; nandecc sw ; nand read 0x82000000 0xA80000 0x1000000 ; bootm 0x82000000\0" \
 	"cpuimage=nandecc sw ; fatload mmc 0:3 0x82000000 norm_uImage ; nand erase 0x280000 0x800000 ; nand write 0x82000000 0x280000 0x800000\0" \
