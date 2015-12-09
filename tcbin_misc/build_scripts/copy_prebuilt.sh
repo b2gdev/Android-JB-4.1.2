@@ -28,18 +28,22 @@ cp ../../../../kernel/drivers/net/usb/GobiNet.ko ./system/usr/modules/
 cp ../../../../kernel/drivers/misc/lm3553/lm3553.ko ./system/usr/modules/
 
 # other bundled apps
-cp ../../../../tcbin_misc/apks/AndroSensor_1.9.4.4a.apk system/app/
+cp ../../../../tcbin_misc/apks/AndroSensor.apk system/app/
 cp ../../../../tcbin_misc/apks/MarineCompass.apk system/app/
-cp ../../../../tcbin_misc/apks/Easy_Voice_Recorder.apk system/app/
-cp ../../../../tcbin_misc/apks/TalkBack.apk system/app/
-cp ../../../../tcbin_misc/apks/ESFileExplorer.apk system/app/
-cp ../../../../tcbin_misc/apks/b2g-updater.apk system/app/
-cp ../../../../device/ti/beagleboard/sierra_binaries/system/app/com.sierra.logs.apk system/app/
+cp ../../../../tcbin_misc/apks/EasyVoiceRecorder.apk system/app/
+cp ../../../../tcbin_misc/apks/ES_FileExplorer.apk system/app/
+cp ../../../../tcbin_misc/apks/B2G_Updater.apk system/app/
+cp ../../../../tcbin_misc/apks/B2G_Editor.apk system/app/
 
 # Copy b2g-ui
-cp ../../../../tcbin_misc/apks/b2g_ui.apk system/app/
-unzip -j -o ../../../../tcbin_misc/apks/b2g_ui.apk lib/armeabi/libb2g_ui.so -d system/lib/
+cp ../../../../tcbin_misc/apks/B2G_UI.apk system/app/
+unzip -j -o ../../../../tcbin_misc/apks/B2G_UI.apk lib/armeabi/libb2g_ui.so -d system/lib/
 chmod 755 system/lib/libb2g_ui.so
+
+# Copy OI_FileManager
+cp ../../../../tcbin_misc/apks/OI_FileManager.apk system/app/
+unzip -j -o ../../../../tcbin_misc/apks/OI_FileManager.apk lib/armeabi/libaccess.so -d system/lib/
+chmod 755 system/lib/libaccess.so
 
 rm -rf data/nativebenchmark/
 rm -rf data/nativetest/
