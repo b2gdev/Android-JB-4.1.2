@@ -9,10 +9,6 @@ readonly programName="rsh"
 readonly recoveryLog="/tmp/recovery/recovery.log"
 readonly nl=$'\n'
 
-readonly syntaxError=2
-readonly operationCancelled=3
-readonly operationFailed=4
-
 viewFile() {
   local file="${1}"
 
@@ -290,7 +286,7 @@ mountVolume() {
   elif ! isNotMounted "${location}"
   then
     mountProblem="already mounted: ${location}"
-  elif mount -t "${mountType}" "${mountVolume}" "${location}"
+  elif mount -r -t "${mountType}" "${mountVolume}" "${location}"
   then
     return 0
   fi
@@ -482,7 +478,7 @@ findFile() {
   [ -z "${file}" ] || echo "${file}"
 }
 
-addAction update "apply OTA update"
+addAction update "apply system update"
 performAction_update() {
   eval "${noMoreParameters}"
 
@@ -503,28 +499,52 @@ performAction_update() {
   withoutBraille recovery "--update_package=${file}"
 }
 
+addAction details "display build details"
+performAction_details() {
+  eval "${noMoreParameters}"
+
+  set -- engineering user
+  isEngineeringBuild || shift 1
+  echo "Type: ${1}"
+
+  echo "Build: $(getProperty ro.build.id)"
+  echo "Kernel: $(uname -r)"
+  echo "Firmware: $(getMSP430Version)"
+  echo "Hardware: $(uname -m)"
+}
+
+addAction time "display date and time"
+performAction_time() {
+  eval "${noMoreParameters}"
+
+  date +"%Y-%m-%d@%H:%M:%S"
+}
+
 if [ "${#}" -eq 0 ]
 then
-  addAction exit "exit this menu"
-  performAction_exit() {
-    eval "${noMoreParameters}"
+  if isEngineeringBuild
+  then
+    addAction exit "exit this menu"
+    performAction_exit() {
+      eval "${noMoreParameters}"
 
-    confirmAction "exit menu" || {
-      programMessage "exit cancelled"
-      return "${operationCancelled}"
+      confirmAction "exit menu" || {
+        programMessage "exit cancelled"
+        return "${operationCancelled}"
+      }
+
+      programMessage "menu exited"
+      stopBraille
+      exit 0
     }
 
-    programMessage "menu exited"
-    stopBraille
-    exit 0
-  }
+    addAction shell "start interactive shell"
+    performAction_shell() {
+      eval "${noMoreParameters}"
 
-  addAction shell "start interactive shell"
-  performAction_shell() {
-    eval "${noMoreParameters}"
-
-    PS1="${programName}:\W# " /usr/bin/sh || :
-  }
+      PS1="${programName}:\W# " /usr/bin/sh || :
+    }
+  fi
 
   handleRecoveryLogLine() {
     local line="${1}"
@@ -560,8 +580,8 @@ then
   listActions
   performActions
 else
-  addAction actions "show action list"
-  performAction_actions() {
+  addAction help "show action list"
+  performAction_help() {
     eval "${noMoreParameters}"
 
     listActions
