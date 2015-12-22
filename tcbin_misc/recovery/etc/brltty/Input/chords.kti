@@ -95,29 +95,15 @@ bind \{chord}Dot2+Dot5+Dot6 KEY_DELETE
 bind \{chord}Dot2+Dot6 KEY_ESCAPE
 bind \{chord}Dot3+Dot5 KEY_INSERT
 
-bind Dot7 KEY_BACKSPACE
-bind Dot8 KEY_ENTER
+ifNotVar noUnchorded
+assignDefault commandDot7 KEY_BACKSPACE
+assignDefault commandDot8 KEY_ENTER
+
+bind Dot7 \{commandDot7}
+bind Dot8 \{commandDot8}
 
 bind \{chord}Dot7 PASSDOTS+dot7
 bind \{chord}Dot8 PASSDOTS+dot8
 
-
-#################
-# Menu Bindings #
-#################
-
-context menu
-
-bind Dot1 MENU_PREV_ITEM
-bind Dot4 MENU_NEXT_ITEM
-
-bind Dot2 MENU_FIRST_ITEM
-bind Dot5 MENU_LAST_ITEM
-
-bind Dot3 MENU_PREV_SETTING
-bind Dot6 MENU_NEXT_SETTING
-
-bind Dot7 MENU_PREV_LEVEL
-bind Dot8 PREFMENU
-
-
+include menu.kti
+endIf
