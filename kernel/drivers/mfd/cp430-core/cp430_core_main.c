@@ -26,6 +26,7 @@
 #include "cp430_ioctl.h"
 #include "debug.h"
 #include "cp430.h"	        /* {KW} */
+#include "cp430_core_fw_update.h"
 #include <linux/earlysuspend.h> /* {RD} */
 
 MODULE_AUTHOR("Prasad Samaraweera");
@@ -65,8 +66,10 @@ static unsigned int rx_event_handler_flag = SYS_NOFLAG;
 
 unsigned short masked_flag = SYS_NOFLAG; /*{KW}: separate flag from rx event arg */
 
-unsigned char  fw_version_major;
-unsigned char  fw_version_minor;
+unsigned char  fw_version_major = 0;
+unsigned char  fw_version_minor = 0;
+unsigned char  other_fw_major = 0;
+unsigned char  other_fw_minor = 0;
 
 /** {KW}:
  * Called by cp430_core driver on data reception for this device.
@@ -98,14 +101,41 @@ int cp430_dev_receive_event_handler(unsigned int arg)
 						if( (0x00 == buffer[CP430_LENGTH_H]) && (0x04 == buffer[CP430_LENGTH_L]) ) {
 							fw_version_major = buffer[CP430_DATA + 0];
 							fw_version_minor = buffer[CP430_DATA + 1];
+							other_fw_major   = buffer[CP430_DATA + 2];
+							other_fw_minor   = buffer[CP430_DATA + 3];
 
 							printk(KERN_INFO "MSP430 - Firmware version: %d:%d\r\n",fw_version_major,fw_version_minor);
+							printk(KERN_INFO "MSP430 - Other Code - Firmware version: %d:%d\r\n",other_fw_major,other_fw_minor);
 
 							command_response_received_flag = 1;
 							wake_up(&command_response_received_wq);
 						}
 						else {
 							PDEBUG("cp430_dev: CMD_CP430_CORE_GET_STATUS invalid data length\r\n");
+
+							command_response_received_flag = -1;
+							wake_up(&command_response_received_wq);
+						}
+						break;
+					case CMD_CP430_CORE_SEND_SEGMENT:
+						if(0x00 == buffer[CP430_DATA]) {
+							command_response_received_flag = 1;
+							wake_up(&command_response_received_wq);
+						}
+						else {
+							PDEBUG("cp430_dev: CMD_CP430_CORE_SEND_SEGMENT - ack failed\r\n");
+
+							command_response_received_flag = -1;
+							wake_up(&command_response_received_wq);
+						}
+						break;
+					case CMD_CP430_CORE_SEND_METADATA:
+						if(0x00 == buffer[CP430_DATA]) {
+							command_response_received_flag = 1;
+							wake_up(&command_response_received_wq);
+						}
+						else {
+							PDEBUG("cp430_dev: CMD_CP430_CORE_SEND_METADATA - ack failed\r\n");
 
 							command_response_received_flag = -1;
 							wake_up(&command_response_received_wq);
@@ -358,7 +388,7 @@ unsigned short get_data_length(void) {
 	unsigned char active_rx_command = active_rx_packet_head[RX_STATE_COMMAND];
 	unsigned short packetType = ((active_rx_device << 8) + active_rx_command);
 
-	if ((packetType == PKT_TYP_UPDATE_CC_PWR_STATUS) || (packetType ==  PKT_TYP_DISPLAY_WRITE) || (packetType ==  PKT_TYP_DISPLAY_ON_OFF)){
+	if ((packetType == PKT_TYP_CP430_SEND_SEGMENT) || (packetType == PKT_TYP_CP430_SEND_METADATA) || (packetType == PKT_TYP_UPDATE_CC_PWR_STATUS) || (packetType ==  PKT_TYP_DISPLAY_WRITE) || (packetType ==  PKT_TYP_DISPLAY_ON_OFF)){
 		return RCVD_DATA_LEN_CMD_RESP;
 	}else if (packetType == PKT_TYP_CP430_GET_STATUS){
 		return RCVD_DATA_LEN_CP430_VER;
@@ -918,8 +948,9 @@ long cp430_core_ioctl(struct file *filp,
 	int err = 0;
 	int retval = 0;
 	int ret = 0;
-	char fw_ver[2];
-	const char * fw_version;
+	char fw_ver[4] = {fw_version_major, fw_version_minor, other_fw_major, other_fw_minor};
+	const char * fw_version = fw_ver;
+	unsigned char packet[SEGMENT_DATA_SIZE + 8];
 
 	PDEBUG("> : %s\r\n",__FUNCTION__);
 	
@@ -937,13 +968,80 @@ long cp430_core_ioctl(struct file *filp,
 	  case CP430_CORE_GET_DRIVER_VERSION:
 		break;
 	  case CP430_CORE_GET_STATUS:
-		fw_ver[0]= fw_version_major;
-		fw_ver[1]= fw_version_minor;
-		fw_version = fw_ver;
-		
 		ret = copy_to_user((void *)arg, (const void *)(fw_version), 2) ? -EFAULT : 0;
-			if (ret) 
-				PDEBUG("cp430_core: copy_to_user failed\n");
+		if (ret){ 
+			PDEBUG("cp430_core: copy_to_user failed\n");
+			return ret;
+		}
+		
+		retval=0;
+		break;
+	  case CP430_CORE_SEND_SEGMENT:
+		ret = copy_from_user((void *)(packet+CP430_DATA), (const void *)arg, SEGMENT_DATA_SIZE) ? -EFAULT : 0;
+		if (ret){ 
+			PDEBUG("cp430_core: copy_from_user failed\n");
+			return ret;
+		}
+		
+		cp430_create_packet(CP430_CORE, CMD_CP430_CORE_SEND_SEGMENT, SEGMENT_DATA_SIZE, (packet+CP430_DATA), packet);
+		ret = cp430_core_write(CP430_CORE, packet, sizeof(packet));
+		if (ret < 0) {
+			PDEBUG("cp430_dev : error cp430_core_write\r\n");
+			return -EFAULT;
+		}
+		
+		command_response_received_flag = 0;
+		wait_event_timeout(command_response_received_wq, command_response_received_flag != 0, (2 * HZ));
+		if(command_response_received_flag){
+			if(command_response_received_flag < 0){
+				PDEBUG("cp430_dev : send_segment failed\r\n");
+				return -ESPIPE;
+			}
+		}
+		else{
+			PDEBUG("cp430_dev : time out\r\n");
+			return -EBUSY;
+		}
+		
+		retval=0;
+		break;
+	  case CP430_CORE_SEND_METADATA:
+		ret = copy_from_user((void *)(packet+CP430_DATA), (const void *)arg, SIZE_OF_METADATA) ? -EFAULT : 0;
+		if (ret){ 
+			PDEBUG("cp430_core: copy_from_user failed\n");
+			return ret;
+		}
+		
+		cp430_create_packet(CP430_CORE, CMD_CP430_CORE_SEND_METADATA, SIZE_OF_METADATA, (packet+CP430_DATA), packet);
+		ret = cp430_core_write(CP430_CORE, packet, SIZE_OF_METADATA + 8);
+		if (ret < 0) {
+			PDEBUG("cp430_dev : error cp430_core_write\r\n");
+			return -EFAULT;
+		}
+		
+		command_response_received_flag = 0;
+		wait_event_timeout(command_response_received_wq, command_response_received_flag != 0, (1 * HZ));
+		if(command_response_received_flag){
+			if(command_response_received_flag < 0){
+				PDEBUG("cp430_dev : send_metadata failed\r\n");
+				return -ESPIPE;
+			}
+		}
+		else{
+			PDEBUG("cp430_dev : time out\r\n");
+			return -EBUSY;
+		}
+		
+		retval=0;
+		break;
+	  case CP430_CORE_GET_ALL_FW_VERSIONS:
+		ret = copy_to_user((void *)arg, (const void *)(fw_version), 4) ? -EFAULT : 0;
+		if (ret){ 
+			PDEBUG("cp430_core: copy_to_user failed\n");
+			return ret;
+		}
+		
+		retval=0;
 		break;
 	
 	/* .. */

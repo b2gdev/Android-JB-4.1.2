@@ -123,7 +123,8 @@ const unsigned int tx_fifo_sizes[] = {
 
 /* cp430_core commands */
 #define	CMD_CP430_CORE_GET_STATUS		0x01
-
+#define	CMD_CP430_CORE_SEND_SEGMENT		0x02
+#define CMD_CP430_CORE_SEND_METADATA	0x03
 
 
 #endif /* _CP430_CORE_H_ */

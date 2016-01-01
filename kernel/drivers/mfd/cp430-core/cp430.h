@@ -37,6 +37,8 @@
 
 /* received packet types */
 #define PKT_TYP_CP430_GET_STATUS    	((CP430_CORE   << 8) + 0x01)
+#define	PKT_TYP_CP430_SEND_SEGMENT		((CP430_CORE   << 8) + 0x02)
+#define PKT_TYP_CP430_SEND_METADATA		((CP430_CORE   << 8) + 0x03)
 #define PKT_TYP_KEYPAD_GET_STATUS   	((CP430_DEV_KEYPAD  << 8) + 0x01)
 #define PKT_TYP_DISPLAY_ON_OFF      	((CP430_DEV_DISPLAY << 8) + 0x01)
 #define PKT_TYP_DISPLAY_WRITE       	((CP430_DEV_DISPLAY << 8) + 0x02)
