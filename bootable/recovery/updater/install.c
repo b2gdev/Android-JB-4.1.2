@@ -271,6 +271,20 @@ Value* FormatFn(const char* name, State* state, int argc, Expr* argv[]) {
         }
         result = location;
 #endif
+    } else if (strcmp(fs_type, "ubifs") == 0) {
+		
+		char cmd[1024];
+		int ret;
+		/* UBIFS use ubiupdatevol to format volume */
+		sprintf(cmd, "ubiupdatevol %s -t", location);		
+		ret = system(cmd);
+		if (ret != 0){
+			fprintf(stderr, "cmd:%s failed with %d\n", cmd, ret);
+			result = strdup("");
+			goto done;
+		}
+		result = location;
+		
     } else {
         fprintf(stderr, "%s: unsupported fs_type \"%s\" partition_type \"%s\"",
                 name, fs_type, partition_type);
