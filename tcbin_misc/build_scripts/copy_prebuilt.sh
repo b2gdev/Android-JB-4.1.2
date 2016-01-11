@@ -39,7 +39,9 @@ cp ../../../../tcbin_misc/apks/B2G_Editor.apk system/app/
 # Copy b2g-ui
 cp ../../../../tcbin_misc/apks/B2G_UI.apk system/app/
 unzip -j -o ../../../../tcbin_misc/apks/B2G_UI.apk lib/armeabi/libb2g_ui.so -d system/lib/
+unzip -j -o ../../../../tcbin_misc/apks/B2G_UI.apk lib/armeabi/liblouis.so -d system/lib/
 chmod 755 system/lib/libb2g_ui.so
+chmod 755 system/lib/liblouis.so
 
 # Copy OI_FileManager
 cp ../../../../tcbin_misc/apks/OI_FileManager.apk system/app/
