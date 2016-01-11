@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addr-root>
+	<major major_num="128">
+		<minor minor_num="0" reset_addr="13822"/>						<!-- v128.0 - 0x35FE -->
+		<minor minor_num="1" reset_addr="12964"/>						<!-- v128.1 - 0x32A4 -->
+		<minor minor_num="2" reset_addr="13762"/>						<!-- v128.2 - 0x35C2 -->
+		<minor minor_num="3" reset_addr="12964"/>						<!-- v128.3 - 0x32A4 -->
+	</major>
+</addr-root>
+
+<!-- Major numbers, minor numbers and reset addresses should be in decimal -->
