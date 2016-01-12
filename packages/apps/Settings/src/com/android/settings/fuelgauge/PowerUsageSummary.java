@@ -381,10 +381,10 @@ public class PowerUsageSummary extends PreferenceFragment implements Runnable {
         hist.setOrder(-1);
         mAppListGroup.addPreference(hist);
         
-        if (mPowerProfile.getAveragePower(PowerProfile.POWER_SCREEN_FULL) < 10) {
+        /*if (mPowerProfile.getAveragePower(PowerProfile.POWER_SCREEN_FULL) < 10) {
             addNotAvailableMessage();
             return;
-        }
+        }*/
         processAppUsage();
         processMiscUsage();
 
@@ -750,9 +750,9 @@ public class PowerUsageSummary extends PreferenceFragment implements Runnable {
         addBluetoothUsage(uSecNow);
         addIdleUsage(uSecNow); // Not including cellular idle power
         // Don't compute radio usage if it's a wifi-only device
-        if (!com.android.settings.Utils.isWifiOnly(getActivity())) {
+        //if (!com.android.settings.Utils.isWifiOnly(getActivity())) {
             addRadioUsage(uSecNow);
-        }
+        //}
     }
 
     private BatterySipper addEntry(String label, DrainType drainType, long time, int iconId,
