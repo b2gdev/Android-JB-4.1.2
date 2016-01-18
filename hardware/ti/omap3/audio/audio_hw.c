@@ -569,12 +569,21 @@ static int get_next_buffer(struct resampler_buffer_provider *buffer_provider,
             return in->read_status;
         }
         in->frames_in = in->config.period_size;
+        
+         /*if ((in->common.channel_count == 1) && (in->hw_channel_count == 2)) {
+            unsigned int i;
+
+            // Discard right channel
+            for (i = 1; i < in->frames_in ; i++) {
+                in->buffer[i] = in->buffer[i * 2];
+            }
+        }*/
     }
 
     buffer->frame_count = (buffer->frame_count > in->frames_in) ?
                                 in->frames_in : buffer->frame_count;
-    buffer->i16 = in->buffer + (in->config.period_size - in->frames_in) *
-                                                in->config.channels;
+    buffer->i16 = (int16_t*)in->buffer + ((in->config.period_size - in->frames_in)*
+                                                in->config.channels);
 
     return in->read_status;
 
@@ -1067,7 +1076,7 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
 
 	   ret = create_resampler(in->config.rate,                               
 						   in->requested_rate,
-						   2,
+						   channel_count, //1,//2,
 						   RESAMPLER_QUALITY_DEFAULT,
 						   &in->buf_provider,
 						   &in->resampler);
