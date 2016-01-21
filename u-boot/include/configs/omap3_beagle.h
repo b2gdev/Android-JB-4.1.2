@@ -237,7 +237,7 @@
 		"omapfb.vram=0:8M " \
 		"vram=${vram} " \
 		"omapfb.mode=tv:${tvmode} " \
-		"omapdss.def_disp=${defaultdisplay} " \
+		"omapdss.def_disp=${defaultdisplay} \0" \
 	"loaduimage=fatload mmc 0 ${loadaddr} uImage\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
