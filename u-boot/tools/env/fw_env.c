@@ -124,7 +124,7 @@ static unsigned char obsolete_flag = 0;
 #define MK_STR(x)	XMK_STR(x)
 
 static char default_environment[] = {
-#if defined(CONFIG_BOOTARGS)
+/*#if defined(CONFIG_BOOTARGS)
 	"bootargs=" CONFIG_BOOTARGS "\0"
 #endif
 #if defined(CONFIG_BOOTCOMMAND)
@@ -204,7 +204,7 @@ static char default_environment[] = {
 #endif
 #ifdef  CONFIG_EXTRA_ENV_SETTINGS
 	CONFIG_EXTRA_ENV_SETTINGS
-#endif
+#endif*/
 	"\0"		/* Termimate struct environment data with 2 NULs */
 };
 

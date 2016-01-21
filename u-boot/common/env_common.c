@@ -205,6 +205,32 @@ uchar *env_get_addr (int index)
 	}
 }
 
+void set_combined_env(void){
+	int len_nand_env=1;
+	uchar prev = ( *((uchar *)(env_ptr->data + (len_nand_env-1))) );
+	uchar curr = ( *((uchar *)(env_ptr->data + len_nand_env)) );
+	
+	for(;!((prev=='\0') && (curr=='\0'));){
+		len_nand_env++;
+		prev = ( *((uchar *)(env_ptr->data + (len_nand_env-1))) );
+		curr = ( *((uchar *)(env_ptr->data + len_nand_env)) );
+	}
+	
+	if ((sizeof(default_environment) + len_nand_env) > ENV_SIZE) {
+		puts ("*** Error - default environment is too large\n\n");
+		return;
+	}
+
+	
+	memcpy((uchar *)(env_ptr->data + len_nand_env), default_environment,
+	       sizeof(default_environment));
+#ifdef CONFIG_SYS_REDUNDAND_ENVIRONMENT
+	env_ptr->flags = 0xFF;
+#endif
+	env_crc_update ();
+	gd->env_valid = 1;
+}
+
 void set_default_env(void)
 {
 	if (sizeof(default_environment) > ENV_SIZE) {

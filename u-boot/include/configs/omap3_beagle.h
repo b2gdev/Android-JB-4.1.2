@@ -230,6 +230,7 @@
 		"omapfb.mode=tv:${tvmode} " \
 		"omapdss.def_disp=${defaultdisplay} " \
 		"root=${mmcroot} " \
+		"androidboot.serialno=${serial} " \
 		"rootfstype=${mmcrootfstype}\0" \
 	"nandargs=setenv bootargs console=${console} " \
 		"init=/init noinitrd ip=off androidboot.console=ttyO2 rootwait mem=512M " \
@@ -237,6 +238,7 @@
 		"omapfb.vram=0:8M " \
 		"vram=${vram} " \
 		"omapfb.mode=tv:${tvmode} " \
+		"androidboot.serialno=${serial} " \
 		"omapdss.def_disp=${defaultdisplay} \0" \
 	"loaduimage=fatload mmc 0 ${loadaddr} uImage\0" \
 	"mmcboot=echo Booting from mmc ...; " \

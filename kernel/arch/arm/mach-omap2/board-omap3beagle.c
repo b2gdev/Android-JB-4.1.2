@@ -102,6 +102,16 @@ int is_bt_on = 0; /* {RD} */
 
 static char device_serial[MAX_USB_SERIAL_NUM] = "0123456789ABCDEF";
 
+int u_boot_serial_number = 0;
+
+static int __init set_device_serial_number(char *str)
+{
+ get_option(&str, &u_boot_serial_number);
+    return 1;
+}
+
+__setup("androidboot.serialno=", set_device_serial_number);
+
 static int tcbin_notifier_call(struct notifier_block *this,
 					unsigned long code, void *_cmd)
 {
@@ -282,10 +292,16 @@ static void __init omap3_beagle_init_rev(void)
 	omap3_beagle_version = OMAP3BEAGLE_BOARD_C4;
 /* {PS} END: */
 	
-	system_serial_high = omap_readl(OMAP_DIE_ID_1);
-	system_serial_low = omap_readl(OMAP_DIE_ID_0);
-	sprintf(device_serial, "%08X%08X", system_serial_high,
-			system_serial_low);
+	if(u_boot_serial_number == 0){
+		system_serial_high = omap_readl(OMAP_DIE_ID_1);
+		system_serial_low = omap_readl(OMAP_DIE_ID_0);
+		sprintf(device_serial, "%08X%08X", system_serial_high,
+				system_serial_low);
+	}else{
+		system_serial_high = 0;
+		system_serial_low = u_boot_serial_number & 0xFFFFFFFF;
+		sprintf(device_serial, "%u", u_boot_serial_number);		
+	}
 			
 	return;
 }

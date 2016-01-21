@@ -385,9 +385,9 @@ int board_nand_init(struct nand_chip *nand)
 
 	nand->ecc.mode = NAND_ECC_4BIT_SOFT;
 
-	/* Making 1-bit hw ecc (kernel/FS layout) as default ecc scheme */
+	/* AH :- Making sw ecc as default ecc scheme */
 	nand_curr_device = 0;
-	omap_nand_switch_ecc(NAND_ECC_HW, 1);
+	omap_nand_switch_ecc(NAND_ECC_SOFT, 0);
 
 	return 0;
 }

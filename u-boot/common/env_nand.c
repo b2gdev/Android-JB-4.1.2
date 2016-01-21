@@ -369,6 +369,9 @@ void env_relocate_spec (void)
 
 	if (crc32(0, env_ptr->data, ENV_SIZE) != env_ptr->crc)
 		return use_default();
+	
+	/* When 'U-Boot' Env partition is not empty combine 'U-Boot Env' with default environment */
+	set_combined_env();
 #endif /* ! ENV_IS_EMBEDDED */
 }
 #endif /* CONFIG_ENV_OFFSET_REDUND */
