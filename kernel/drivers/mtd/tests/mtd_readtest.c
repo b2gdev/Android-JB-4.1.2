@@ -27,11 +27,7 @@
 #include <linux/slab.h>
 #include <linux/sched.h>
 
-#define PRINT_PREF KERN_INFO "mtd_readtest: "
-
-static int dev;
-module_param(dev, int, S_IRUGO);
-MODULE_PARM_DESC(dev, "MTD device number to use");
+#define PRINT_PREF KERN_INFO "nand_non-destructive_test: "
 
 static struct mtd_info *mtd;
 static unsigned char *iobuf;
@@ -165,83 +161,118 @@ static int scan_for_bad_eraseblocks(void)
 static int __init mtd_readtest_init(void)
 {
 	uint64_t tmp;
-	int err, i;
+	int err, i, j;
 
 	printk(KERN_INFO "\n");
 	printk(KERN_INFO "=================================================\n");
-	printk(PRINT_PREF "MTD device: %d\n", dev);
-
-	mtd = get_mtd_device(NULL, dev);
-	if (IS_ERR(mtd)) {
-		err = PTR_ERR(mtd);
-		printk(PRINT_PREF "error: Cannot get MTD device\n");
-		return err;
-	}
-
-	if (mtd->writesize == 1) {
-		printk(PRINT_PREF "not NAND flash, assume page size is 512 "
-		       "bytes.\n");
-		pgsize = 512;
-	} else
-		pgsize = mtd->writesize;
-
-	tmp = mtd->size;
-	do_div(tmp, mtd->erasesize);
-	ebcnt = tmp;
-	pgcnt = mtd->erasesize / pgsize;
-
-	printk(PRINT_PREF "MTD device size %llu, eraseblock size %u, "
-	       "page size %u, count of eraseblocks %u, pages per "
-	       "eraseblock %u, OOB size %u\n",
-	       (unsigned long long)mtd->size, mtd->erasesize,
-	       pgsize, ebcnt, pgcnt, mtd->oobsize);
-
-	err = -ENOMEM;
-	iobuf = kmalloc(mtd->erasesize, GFP_KERNEL);
-	if (!iobuf) {
-		printk(PRINT_PREF "error: cannot allocate memory\n");
-		goto out;
-	}
-	iobuf1 = kmalloc(mtd->erasesize, GFP_KERNEL);
-	if (!iobuf1) {
-		printk(PRINT_PREF "error: cannot allocate memory\n");
-		goto out;
-	}
-
-	err = scan_for_bad_eraseblocks();
-	if (err)
-		goto out;
-
-	/* Read all eraseblocks 1 page at a time */
-	printk(PRINT_PREF "testing page read\n");
-	for (i = 0; i < ebcnt; ++i) {
-		int ret;
-
-		if (bbt[i])
-			continue;
-		ret = read_eraseblock_by_page(i);
-		if (ret) {
-			dump_eraseblock(i);
-			if (!err)
-				err = ret;
+	
+	// Iterate for all MTD blocks
+	for(j = 0; j < 8; j++){
+		switch(j){
+			case 0:
+				printk(PRINT_PREF "NAND Partition: x-loader\n");
+				break;
+			case 1:
+				printk(PRINT_PREF "NAND Partition: U-Boot\n");
+				break;
+			case 2:
+				printk(PRINT_PREF "NAND Partition: U-Boot Env\n");
+				break;
+			case 3:
+				printk(PRINT_PREF "NAND Partition: Kernel\n");
+				break;
+			case 4:
+				printk(PRINT_PREF "NAND Partition: Recovery\n");
+				break;
+			case 5:
+				printk(PRINT_PREF "NAND Partition: misc\n");
+				break;
+			case 6:
+				printk(PRINT_PREF "NAND Partition: Cache\n");
+				break;
+			case 7:
+				printk(PRINT_PREF "NAND Partition: System\n");
+				break;
+			default:
+				break;
 		}
-		cond_resched();
+		
+
+		mtd = get_mtd_device(NULL, j);
+		if (IS_ERR(mtd)) {
+			err = PTR_ERR(mtd);
+			printk(PRINT_PREF "error: Cannot get MTD device\n");
+			return err;
+		}
+
+		if (mtd->writesize == 1) {
+			printk(PRINT_PREF "not NAND flash, assume page size is 512 "
+				   "bytes.\n");
+			pgsize = 512;
+		} else
+			pgsize = mtd->writesize;
+
+		tmp = mtd->size;
+		do_div(tmp, mtd->erasesize);
+		ebcnt = tmp;
+		pgcnt = mtd->erasesize / pgsize;
+
+		printk(PRINT_PREF "MTD device size %llu, eraseblock size %u, "
+			   "page size %u, count of eraseblocks %u, pages per "
+			   "eraseblock %u, OOB size %u\n",
+			   (unsigned long long)mtd->size, mtd->erasesize,
+			   pgsize, ebcnt, pgcnt, mtd->oobsize);
+
+		err = -ENOMEM;
+		iobuf = kmalloc(mtd->erasesize, GFP_KERNEL);
+		if (!iobuf) {
+			printk(PRINT_PREF "error: cannot allocate memory\n");
+			goto out;
+		}
+		iobuf1 = kmalloc(mtd->erasesize, GFP_KERNEL);
+		if (!iobuf1) {
+			printk(PRINT_PREF "error: cannot allocate memory\n");
+			goto out;
+		}
+
+		err = scan_for_bad_eraseblocks();
+		if (err)
+			goto out;
+
+		/* Read all eraseblocks 1 page at a time */
+		printk(PRINT_PREF "testing page read\n");
+		for (i = 0; i < ebcnt; ++i) {
+			int ret;
+
+			if (bbt[i])
+				continue;
+			ret = read_eraseblock_by_page(i);
+			if (ret) {
+				dump_eraseblock(i);
+				if (!err)
+					err = ret;
+			}
+			cond_resched();
+		}
+
+		if (err)
+			printk(PRINT_PREF "finished checking partition with errors\n");
+		else
+			printk(PRINT_PREF "finished checking partition \n");
+
+	out:
+
+		kfree(iobuf);
+		kfree(iobuf1);
+		kfree(bbt);
+		put_mtd_device(mtd);
+		if (err){
+			printk(PRINT_PREF "error %d occurred\n", err);
+			break;
+		}
+		printk(KERN_INFO "=================================================\n");
 	}
 
-	if (err)
-		printk(PRINT_PREF "finished with errors\n");
-	else
-		printk(PRINT_PREF "finished\n");
-
-out:
-
-	kfree(iobuf);
-	kfree(iobuf1);
-	kfree(bbt);
-	put_mtd_device(mtd);
-	if (err)
-		printk(PRINT_PREF "error %d occurred\n", err);
-	printk(KERN_INFO "=================================================\n");
 	return err;
 }
 module_init(mtd_readtest_init);
