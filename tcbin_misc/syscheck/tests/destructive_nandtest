@@ -1,0 +1,6 @@
+#!/system/bin/sh
+
+printf "\n******  Starting destructive NAND test  *******\n*** WARNING: All data on NAND will be lost  ***\n\n"
+
+insmod /usr/modules/mtd_subpagetest.ko
+rmmod mtd_subpagetest

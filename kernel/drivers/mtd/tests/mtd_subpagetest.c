@@ -27,11 +27,7 @@
 #include <linux/slab.h>
 #include <linux/sched.h>
 
-#define PRINT_PREF KERN_INFO "mtd_subpagetest: "
-
-static int dev;
-module_param(dev, int, S_IRUGO);
-MODULE_PARM_DESC(dev, "MTD device number to use");
+#define PRINT_PREF KERN_INFO "nand_destructive_test: "
 
 static struct mtd_info *mtd;
 static unsigned char *writebuf;
@@ -374,142 +370,174 @@ static int scan_for_bad_eraseblocks(void)
 static int __init mtd_subpagetest_init(void)
 {
 	int err = 0;
-	uint32_t i;
+	uint32_t i,j;
 	uint64_t tmp;
 
 	printk(KERN_INFO "\n");
 	printk(KERN_INFO "=================================================\n");
-	printk(PRINT_PREF "MTD device: %d\n", dev);
 
-	mtd = get_mtd_device(NULL, dev);
-	if (IS_ERR(mtd)) {
-		err = PTR_ERR(mtd);
-		printk(PRINT_PREF "error: cannot get MTD device\n");
-		return err;
-	}
+	// Iterate for all MTD blocks
+	for(j = 0; j < 8; j++){
+		switch(j){
+			case 0:
+				printk(PRINT_PREF "NAND Partition: x-loader\n");
+				break;
+			case 1:
+				printk(PRINT_PREF "NAND Partition: U-Boot\n");
+				break;
+			case 2:
+				printk(PRINT_PREF "NAND Partition: U-Boot Env\n");
+				break;
+			case 3:
+				printk(PRINT_PREF "NAND Partition: Kernel\n");
+				break;
+			case 4:
+				printk(PRINT_PREF "NAND Partition: Recovery\n");
+				break;
+			case 5:
+				printk(PRINT_PREF "NAND Partition: misc\n");
+				break;
+			case 6:
+				printk(PRINT_PREF "NAND Partition: Cache\n");
+				break;
+			case 7:
+				printk(PRINT_PREF "NAND Partition: System\n");
+				break;
+			default:
+				break;
+		}
+		mtd = get_mtd_device(NULL, j);
+		if (IS_ERR(mtd)) {
+			err = PTR_ERR(mtd);
+			printk(PRINT_PREF "error: cannot get MTD device\n");
+			return err;
+		}
 
-	if (mtd->type != MTD_NANDFLASH) {
-		printk(PRINT_PREF "this test requires NAND flash\n");
-		goto out;
-	}
-
-	subpgsize = mtd->writesize >> mtd->subpage_sft;
-	printk(PRINT_PREF "MTD device size %llu, eraseblock size %u, "
-	       "page size %u, subpage size %u, count of eraseblocks %u, "
-	       "pages per eraseblock %u, OOB size %u\n",
-	       (unsigned long long)mtd->size, mtd->erasesize,
-	       mtd->writesize, subpgsize, ebcnt, pgcnt, mtd->oobsize);
-
-	err = -ENOMEM;
-	bufsize = subpgsize * 32;
-	writebuf = kmalloc(bufsize, GFP_KERNEL);
-	if (!writebuf) {
-		printk(PRINT_PREF "error: cannot allocate memory\n");
-		goto out;
-	}
-	readbuf = kmalloc(bufsize, GFP_KERNEL);
-	if (!readbuf) {
-		printk(PRINT_PREF "error: cannot allocate memory\n");
-		goto out;
-	}
-
-	tmp = mtd->size;
-	do_div(tmp, mtd->erasesize);
-	ebcnt = tmp;
-	pgcnt = mtd->erasesize / mtd->writesize;
-
-	err = scan_for_bad_eraseblocks();
-	if (err)
-		goto out;
-
-	err = erase_whole_device();
-	if (err)
-		goto out;
-
-	printk(PRINT_PREF "writing whole device\n");
-	simple_srand(1);
-	for (i = 0; i < ebcnt; ++i) {
-		if (bbt[i])
-			continue;
-		err = write_eraseblock(i);
-		if (unlikely(err))
+		if (mtd->type != MTD_NANDFLASH) {
+			printk(PRINT_PREF "this test requires NAND flash\n");
 			goto out;
-		if (i % 256 == 0)
-			printk(PRINT_PREF "written up to eraseblock %u\n", i);
-		cond_resched();
-	}
-	printk(PRINT_PREF "written %u eraseblocks\n", i);
+		}
 
-	simple_srand(1);
-	printk(PRINT_PREF "verifying all eraseblocks\n");
-	for (i = 0; i < ebcnt; ++i) {
-		if (bbt[i])
-			continue;
-		err = verify_eraseblock(i);
-		if (unlikely(err))
+		subpgsize = mtd->writesize >> mtd->subpage_sft;
+		printk(PRINT_PREF "MTD device size %llu, eraseblock size %u, "
+			   "page size %u, subpage size %u, count of eraseblocks %u, "
+			   "pages per eraseblock %u, OOB size %u\n",
+			   (unsigned long long)mtd->size, mtd->erasesize,
+			   mtd->writesize, subpgsize, ebcnt, pgcnt, mtd->oobsize);
+
+		err = -ENOMEM;
+		bufsize = subpgsize * 32;
+		writebuf = kmalloc(bufsize, GFP_KERNEL);
+		if (!writebuf) {
+			printk(PRINT_PREF "error: cannot allocate memory\n");
 			goto out;
-		if (i % 256 == 0)
-			printk(PRINT_PREF "verified up to eraseblock %u\n", i);
-		cond_resched();
-	}
-	printk(PRINT_PREF "verified %u eraseblocks\n", i);
-
-	err = erase_whole_device();
-	if (err)
-		goto out;
-
-	err = verify_all_eraseblocks_ff();
-	if (err)
-		goto out;
-
-	/* Write all eraseblocks */
-	simple_srand(3);
-	printk(PRINT_PREF "writing whole device\n");
-	for (i = 0; i < ebcnt; ++i) {
-		if (bbt[i])
-			continue;
-		err = write_eraseblock2(i);
-		if (unlikely(err))
+		}
+		readbuf = kmalloc(bufsize, GFP_KERNEL);
+		if (!readbuf) {
+			printk(PRINT_PREF "error: cannot allocate memory\n");
 			goto out;
-		if (i % 256 == 0)
-			printk(PRINT_PREF "written up to eraseblock %u\n", i);
-		cond_resched();
-	}
-	printk(PRINT_PREF "written %u eraseblocks\n", i);
+		}
 
-	/* Check all eraseblocks */
-	simple_srand(3);
-	printk(PRINT_PREF "verifying all eraseblocks\n");
-	for (i = 0; i < ebcnt; ++i) {
-		if (bbt[i])
-			continue;
-		err = verify_eraseblock2(i);
-		if (unlikely(err))
+		tmp = mtd->size;
+		do_div(tmp, mtd->erasesize);
+		ebcnt = tmp;
+		pgcnt = mtd->erasesize / mtd->writesize;
+
+		err = scan_for_bad_eraseblocks();
+		if (err)
 			goto out;
-		if (i % 256 == 0)
-			printk(PRINT_PREF "verified up to eraseblock %u\n", i);
-		cond_resched();
+
+		err = erase_whole_device();
+		if (err)
+			goto out;
+
+		printk(PRINT_PREF "writing whole device\n");
+		simple_srand(1);
+		for (i = 0; i < ebcnt; ++i) {
+			if (bbt[i])
+				continue;
+			err = write_eraseblock(i);
+			if (unlikely(err))
+				goto out;
+			if (i % 256 == 0)
+				printk(PRINT_PREF "written up to eraseblock %u\n", i);
+			cond_resched();
+		}
+		printk(PRINT_PREF "written %u eraseblocks\n", i);
+
+		simple_srand(1);
+		printk(PRINT_PREF "verifying all eraseblocks\n");
+		for (i = 0; i < ebcnt; ++i) {
+			if (bbt[i])
+				continue;
+			err = verify_eraseblock(i);
+			if (unlikely(err))
+				goto out;
+			if (i % 256 == 0)
+				printk(PRINT_PREF "verified up to eraseblock %u\n", i);
+			cond_resched();
+		}
+		printk(PRINT_PREF "verified %u eraseblocks\n", i);
+
+		err = erase_whole_device();
+		if (err)
+			goto out;
+
+		err = verify_all_eraseblocks_ff();
+		if (err)
+			goto out;
+
+		/* Write all eraseblocks */
+		simple_srand(3);
+		printk(PRINT_PREF "writing whole device\n");
+		for (i = 0; i < ebcnt; ++i) {
+			if (bbt[i])
+				continue;
+			err = write_eraseblock2(i);
+			if (unlikely(err))
+				goto out;
+			if (i % 256 == 0)
+				printk(PRINT_PREF "written up to eraseblock %u\n", i);
+			cond_resched();
+		}
+		printk(PRINT_PREF "written %u eraseblocks\n", i);
+
+		/* Check all eraseblocks */
+		simple_srand(3);
+		printk(PRINT_PREF "verifying all eraseblocks\n");
+		for (i = 0; i < ebcnt; ++i) {
+			if (bbt[i])
+				continue;
+			err = verify_eraseblock2(i);
+			if (unlikely(err))
+				goto out;
+			if (i % 256 == 0)
+				printk(PRINT_PREF "verified up to eraseblock %u\n", i);
+			cond_resched();
+		}
+		printk(PRINT_PREF "verified %u eraseblocks\n", i);
+
+		err = erase_whole_device();
+		if (err)
+			goto out;
+
+		err = verify_all_eraseblocks_ff();
+		if (err)
+			goto out;
+
+		printk(PRINT_PREF "finished with %d errors\n", errcnt);
+
+	out:
+		kfree(bbt);
+		kfree(readbuf);
+		kfree(writebuf);
+		put_mtd_device(mtd);
+		if (err){
+			printk(PRINT_PREF "error %d occurred\n", err);
+			break;
+		}
+		printk(KERN_INFO "=================================================\n");
 	}
-	printk(PRINT_PREF "verified %u eraseblocks\n", i);
-
-	err = erase_whole_device();
-	if (err)
-		goto out;
-
-	err = verify_all_eraseblocks_ff();
-	if (err)
-		goto out;
-
-	printk(PRINT_PREF "finished with %d errors\n", errcnt);
-
-out:
-	kfree(bbt);
-	kfree(readbuf);
-	kfree(writebuf);
-	put_mtd_device(mtd);
-	if (err)
-		printk(PRINT_PREF "error %d occurred\n", err);
-	printk(KERN_INFO "=================================================\n");
 	return err;
 }
 module_init(mtd_subpagetest_init);
