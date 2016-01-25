@@ -203,8 +203,15 @@
 #define CONFIG_JFFS2_PART_SIZE		0xf980000	/* size of jffs2 */
 							/* partition */
 
+// Uncomment this for syscheck builds
+//#define SYSCHECK
+
 /* Environment information */
+#ifdef SYSCHECK
+#define CONFIG_BOOTDELAY		10
+#else
 #define CONFIG_BOOTDELAY		5
+#endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"loadaddr=0x82000000\0" \
@@ -224,7 +231,7 @@
 	"cpkernelsys=run cpuimage ; run cpcache ; run cpsys\0" \
 	"mmcargs=setenv bootargs console=${console} " \
 		"androidboot.console=ttyO2 mem=512M" \
-		"rootdelay=1 init=/init ip=off omap_vout.vid1_static_vrfb_alloc=y " \
+		"rootdelay=1 init=/init ip=off omap_vout.vid1_static_vrfb_alloc=y ubi.mtd=system,2048 rootwait" \
 		"omapfb.vram=0:8M " \
 		"vram=${vram} " \
 		"omapfb.mode=tv:${tvmode} " \
@@ -239,7 +246,7 @@
 		"vram=${vram} " \
 		"omapfb.mode=tv:${tvmode} " \
 		"androidboot.serialno=${serial} " \
-		"omapdss.def_disp=${defaultdisplay} \0" \
+		"omapdss.def_disp=${defaultdisplay}\0" \
 	"loaduimage=fatload mmc 0 ${loadaddr} uImage\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
@@ -265,7 +272,11 @@
 #define CONFIG_SYS_LONGHELP		/* undef to save memory */
 #define CONFIG_SYS_HUSH_PARSER		/* use "hush" command parser */
 #define CONFIG_SYS_PROMPT_HUSH_PS2	"> "
+#ifdef SYSCHECK
+#define CONFIG_SYS_PROMPT		"b2g syscheck 1.2 # "
+#else
 #define CONFIG_SYS_PROMPT		"OMAP3 beagleboard.org # "
+#endif
 #define CONFIG_SYS_CBSIZE		512	/* Console I/O Buffer Size */
 /* Print Buffer Size */
 #define CONFIG_SYS_PBSIZE		(CONFIG_SYS_CBSIZE + \
