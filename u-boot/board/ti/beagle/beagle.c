@@ -155,7 +155,11 @@ int misc_init_r(void)
 		setenv("mpurate", "600");
 		break;
 	case REVISION_C4:
+#ifdef SYSCHECK
+		printf("TCBIN Rev C - syscheck 1.2\n"); /* {PS} : printf("Beagle Rev C4\n"); */
+#else
 		printf("TCBIN Rev C\n"); /* {PS} : printf("Beagle Rev C4\n"); */
+#endif		
 		/* {PS} : MUX_BEAGLE_C(); */
 		/* Set VAUX2 to 1.8V for EHCI PHY */
 		twl4030_pmrecv_vsel_cfg(TWL4030_PM_RECEIVER_VAUX2_DEDICATED,
@@ -179,7 +183,11 @@ int misc_init_r(void)
 	default:
 		printf("Beagle unknown 0x%02x\n", beagle_revision);
 	}
-	
+
+#ifdef SYSCHECK	
+	// Skip boot to recovery in syscheck
+	setenv("dorecovery","0");
+#else
 	// {RD} Begin: check conditions to load recovery mode
 	if(boot_to_recovery() == 1){
 		printf("Entering recovery mode via Keypad shortcut\n");
@@ -201,8 +209,9 @@ int misc_init_r(void)
 				setenv("dorecovery","0");		
 		}
 	}								
-	// {RD} End: 
-		
+	// {RD} End:
+#endif
+	
 	/* Configure GPIOs to output */
 	
 	/* {PS} BEGIN */

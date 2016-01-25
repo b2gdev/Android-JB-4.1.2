@@ -286,7 +286,12 @@ void env_relocate (void)
 		set_default_env();
 	}
 	else {
-		env_relocate_spec ();
+#ifdef SYSCHECK		
+		// Skip reading NAND varibles for syscheck
+		set_default_env();
+#else
+		env_relocate_spec();
+#endif		
 	}
 	gd->env_addr = (ulong)&(env_ptr->data);
 
