@@ -1,0 +1,85 @@
+on early-init
+    start ueventd
+    mkdir /system
+    mkdir /data
+    mkdir /cache
+    mkdir /misc
+    mkdir /storage
+    mkdir /storage/sdcard1
+    mkdir /storage/usb1
+    mkdir /nand_system 
+    mkdir /nand_cache
+    mkdir /nand_data
+    mount_all /fstab.omap3beagleboard
+	
+on init
+
+loglevel 3
+    export PATH /sbin:/system/bin:/usr/bin
+    export ANDROID_ROOT /system
+    export ANDROID_DATA /data
+    export EXTERNAL_STORAGE /sdcard
+    export SECONDARY_STORAGE /storage/sdcard1:/storage/usb1
+
+    symlink /data/media /storage/sdcard0
+    symlink /storage/sdcard0 /sdcard 
+    symlink /system/etc /etc    
+    
+    mkdir /tmp/recovery
+    chown root shell /tmp/recovery
+	chmod 0775 /tmp/recovery    	
+	chmod 0777 /usr/bin/ubi*
+	
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 18D1
+    write /sys/class/android_usb/android0/idProduct D001
+    write /sys/class/android_usb/android0/functions adb
+    write /sys/class/android_usb/android0/iManufacturer ${ro.product.manufacturer}
+    write /sys/class/android_usb/android0/iProduct ${ro.product.model}
+    write /sys/class/android_usb/android0/iSerial ${ro.serialno}
+
+
+on boot
+
+	insmod /usr/modules/cp430_core.ko
+    insmod /usr/modules/cp430_keypad.ko
+    insmod /usr/modules/metec_flat20.ko
+    chmod 666 /dev/braille0
+
+    ifup lo
+    hostname localhost
+    domainname localdomain
+
+    class_start default
+
+service ueventd /sbin/ueventd
+    critical
+
+service console /usr/bin/sh
+    class core
+    console
+    disabled
+#    user shell
+    group log    
+    
+service recovery /sbin/recovery
+	disabled
+
+service adbd /sbin/adbd
+    disabled
+
+service braille /sbin/braille start
+    disabled
+        
+# Always start adbd on userdebug and eng builds
+on property:ro.debuggable=1
+    write /sys/class/android_usb/android0/enable 1        
+    start adbd
+    start console
+#    start recovery
+
+# Restart adbd so it can run as root
+on property:service.adb.root=1
+    write /sys/class/android_usb/android0/enable 0
+    restart adbd
+    write /sys/class/android_usb/android0/enable 1

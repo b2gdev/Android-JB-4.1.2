@@ -1,0 +1,121 @@
+#!/system/bin/sh
+
+echo -e "\n******  Starting Tests  ******\n"	
+
+# NAND Test
+NAND=$(dmesg | grep "NAND device: Manufacturer ID: 0x2c, Chip ID: 0xb3 (Micron )")
+if [ "$NAND" != "" ] ; then
+ echo -e "NAND \t \t \t [\e[32mPASS\e[39m]"
+ NANDP1=$(mount | grep "ubi0:system /nand_system ubifs")
+ if [ "$NANDP1" != "" ] ; then
+  echo -e "NAND partitions \t [\e[32mPASS\e[39m]"
+ else
+  echo -e "NAND partitions \t [\e[31mFAIL\e[39m]"
+ fi
+else
+ echo -e "NAND \t \t \t [\e[31mFAIL\e[39m]"
+fi
+
+# eMMC Test
+if ls /dev/block/platform/mmci-omap-hs.1/mmcblk* 1> /dev/null 2>&1 ; then
+ echo -e "eMMC \t \t \t [\e[32mPASS\e[39m]"
+ EMMCP1=$(mount | grep "/dev/block/platform/mmci-omap-hs.1/by-num/p1 /nand_data ext4")
+ EMMCP2=$(mount | grep "/dev/block/platform/mmci-omap-hs.1/by-num/p2 /nand_cache ext4")
+ if [ "$EMMCP1" != "" ] && [ "$EMMCP2" != "" ] ; then
+  echo -e "eMMC partitions \t [\e[32mPASS\e[39m]"
+ else
+  echo -e "eMMC partitions \t [\e[31mFAIL\e[39m]"
+ fi
+else
+ echo -e "eMMC \t \t \t [\e[31mFAIL\e[39m]"
+ echo -e "eMMC partitions \t [\e[32mFAIL\e[39m]"
+fi
+
+# SD card Test
+if ls /dev/block/platform/mmci-omap-hs.0/mmcblk* 1> /dev/null 2>&1 ; then
+ echo -e "SD card \t \t [\e[32mPASS\e[39m]"
+else
+ echo -e "SD card \t \t [\e[31mFAIL\e[39m]"
+fi
+
+# WiFi/BT
+if [ -e /sys/devices/platform/mmci-omap-hs.2/mmc_host/mmc2/mmc2:0001/mmc2:0001:2 ] ; then
+ echo -e "WiFi/BT module \t \t [\e[32mPASS\e[39m]"
+else
+ echo -e "WiFi/BT module \t \t [\e[31mFAIL\e[39m]"
+fi
+
+# Audio
+if [ -e /dev/snd/pcmC0D0p ] && [ -e /dev/snd/pcmC0D0c ] ; then
+ echo -e "Audio Codec \t \t [\e[32mPASS\e[39m]"
+else
+ echo -e "Audio Codec \t \t [\e[31mFAIL\e[39m]"
+fi
+
+# USB hub
+USB1=$(lsusb | grep "1d6b:0002")
+USB2=$(lsusb | grep "0424:2513")
+if [ "$USB1" != "" ] && [ "$USB2" != "" ] ; then
+ echo -e "USB HUB \t \t [\e[32mPASS\e[39m]"
+else
+ echo -e "USB HUB \t \t [\e[31mFAIL\e[39m]"
+fi
+
+# 3G
+M3G=$(lsusb | grep "1199:9011")
+if [ "$M3G" != "" ] ; then
+ echo -e "3G modem \t \t [\e[32mPASS\e[39m]"
+else
+ echo -e "3G modem \t \t [\e[31mFAIL\e[39m]"
+fi
+
+# Accel
+if [ -e /sys/bus/i2c/drivers/lis331dlh/2-0018 ] ; then
+ echo -e "Accelerometer \t \t [\e[32mPASS\e[39m]"
+else
+ echo -e "Accelerometer \t \t [\e[31mFAIL\e[39m]"
+fi
+
+# Compass
+if [ -e /sys/bus/i2c/drivers/hmc5883l/2-001e ] ; then
+ echo -e "Compass \t \t [\e[32mPASS\e[39m]"
+else
+ echo -e "Compass \t \t [\e[31mFAIL\e[39m]"
+fi
+
+# GPS
+/system/bin/gps_test
+rc=$?
+if [[ $rc == 0 ]]; then 
+ echo -e "GPS \t \t \t [\e[32mPASS\e[39m]"
+else
+ echo -e "GPS \t \t \t [\e[31mFAIL\e[39m]"
+fi
+
+# Vibrator
+echo -n -e "Vibrator \t \t [\e[33mTesting\e[39m]"
+/system/bin/twl3040_vib_test
+rc=$?
+if [[ $rc == 0 ]]; then 
+ echo -e "\rVibrator \t \t [\e[32mPASS\e[39m]   "
+else
+ echo -e "\rVibrator \t \t [\e[31mFAIL\e[39m]   "
+fi
+
+# MSP430
+echo -n -e "MSP430 \t \t [\e[33mTesting\e[39m]"
+rc=$(/sbin/getMSP430Version)
+#echo $rc
+case "$rc" in
+    *"v"*) echo -e "\rMSP430 \t \t [\e[32mPASS\e[39m]   " ;;
+        *) echo -e "\rMSP430 \t \t [\e[31mFAIL\e[39m]   " ;;
+esac
+
+# Keypad
+echo -e "Keypad \t \t \t [\e[33mNot Tested\e[39m]"
+
+# Display
+echo -e "Display \t \t [\e[33mNot Tested\e[39m]"
+
+# Buttons
+echo -e "Buttons \t \t [\e[33mNot Tested\e[39m]"
