@@ -156,7 +156,7 @@ int misc_init_r(void)
 		break;
 	case REVISION_C4:
 #ifdef SYSCHECK
-		printf("TCBIN Rev C - syscheck 1.2\n"); /* {PS} : printf("Beagle Rev C4\n"); */
+		printf("TCBIN Rev C - syscheck 1.3\n"); /* {PS} : printf("Beagle Rev C4\n"); */
 #else
 		printf("TCBIN Rev C\n"); /* {PS} : printf("Beagle Rev C4\n"); */
 #endif		
