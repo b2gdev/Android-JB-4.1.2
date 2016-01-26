@@ -204,7 +204,7 @@
 							/* partition */
 
 // Uncomment this for syscheck builds
-//#define SYSCHECK
+#define SYSCHECK
 
 /* Environment information */
 #ifdef SYSCHECK
