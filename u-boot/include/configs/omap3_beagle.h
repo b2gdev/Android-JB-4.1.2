@@ -204,7 +204,7 @@
 							/* partition */
 
 // Uncomment this for syscheck builds
-//#define SYSCHECK
+#define SYSCHECK
 // Uncomment this for USER builds
 //#define USERBUILD
 
