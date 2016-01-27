@@ -84,7 +84,7 @@ else
 fi
 
 # GPS
-/system/bin/gps_test
+/sbin/gps_test
 rc=$?
 if [[ $rc == 0 ]]; then 
  echo -e "GPS \t \t \t [\e[32mPASS\e[39m]"
@@ -94,7 +94,7 @@ fi
 
 # Vibrator
 echo -n -e "Vibrator \t \t [\e[33mTesting\e[39m]"
-/system/bin/twl3040_vib_test
+/sbin/twl3040_vib_test
 rc=$?
 if [[ $rc == 0 ]]; then 
  echo -e "\rVibrator \t \t [\e[32mPASS\e[39m]   "
@@ -103,13 +103,30 @@ else
 fi
 
 # MSP430
-echo -n -e "MSP430 \t \t [\e[33mTesting\e[39m]"
+echo -n -e "MSP430 \t \t \t [\e[33mTesting\e[39m]"
 rc=$(/sbin/getMSP430Version)
 #echo $rc
 case "$rc" in
-    *"v"*) echo -e "\rMSP430 \t \t [\e[32mPASS\e[39m]   " ;;
-        *) echo -e "\rMSP430 \t \t [\e[31mFAIL\e[39m]   " ;;
+    *"v"*) echo -e "\rMSP430 \t \t \t [\e[32mPASS\e[39m]   " ;;
+        *) echo -e "\rMSP430 \t \t \t [\e[31mFAIL\e[39m]   " ;;
 esac
+
+# Flasher
+/sbin/lm3553_test
+rc=$?
+if [[ $rc == 0 ]]; then 
+ echo -e "Flasher \t \t [\e[32mPASS\e[39m]"
+else
+ echo -e "Flasher \t \t [\e[31mFAIL\e[39m]"
+fi
+
+# Camera
+CAM=$(/system/bin/media-ctl -p | grep "ov5640 3-003c (1 pad, 1 link)")
+if [ "$CAM" != "" ] ; then
+ echo -e "Camera \t \t \t [\e[32mPASS\e[39m]"
+else
+ echo -e "Camera \t \t \t [\e[31mFAIL\e[39m]"
+fi
 
 # Keypad
 echo -e "Keypad \t \t \t [\e[33mNot Tested\e[39m]"

@@ -44,6 +44,7 @@ on boot
 	insmod /usr/modules/cp430_core.ko
     insmod /usr/modules/cp430_keypad.ko
     insmod /usr/modules/metec_flat20.ko
+    insmod /usr/modules/lm3553.ko
     chmod 666 /dev/braille0
 
     ifup lo
