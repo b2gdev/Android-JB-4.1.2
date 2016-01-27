@@ -12,13 +12,15 @@ cp -v tcbin_misc/syscheck/configs/fstab.omap3beagleboard out/target/product/beag
 cp -v tcbin_misc/syscheck/configs/init.rc out/target/product/beagleboard/recovery/root/
 cp -v tcbin_misc/syscheck/tests/non_destructive_nandtest out/target/product/beagleboard/recovery/root/sbin/
 cp -v tcbin_misc/syscheck/tests/destructive_nandtest out/target/product/beagleboard/recovery/root/sbin/
+cp -v tcbin_misc/syscheck/tests/fw_printenv out/target/product/beagleboard/recovery/root/sbin/
+cp -v tcbin_misc/syscheck/tests/fw_setenv out/target/product/beagleboard/recovery/root/sbin/
 cp -v kernel/drivers/mtd/tests/mtd_subpagetest.ko out/target/product/beagleboard/recovery/root/usr/modules/
 cp -v kernel/drivers/mtd/tests/mtd_readtest.ko out/target/product/beagleboard/recovery/root/usr/modules/
 cp -v kernel/drivers/misc/lm3553/lm3553.ko out/target/product/beagleboard/recovery/root/usr/modules/
 mkdir -p out/target/product/beagleboard/recovery/root/system/bin/
-cp -vr out/target/product/beagleboard/system/bin/* out/target/product/beagleboard/recovery/root/system/bin/
+cp -r out/target/product/beagleboard/system/bin/* out/target/product/beagleboard/recovery/root/system/bin/
 mkdir -p out/target/product/beagleboard/recovery/root/system/lib/
-cp -vr /home/b2g/src/b2g_dev/jb_qa/out/target/product/beagleboard/system/lib/* out/target/product/beagleboard/recovery/root/system/lib/
+cp -r /home/b2g/src/b2g_dev/jb_qa/out/target/product/beagleboard/system/lib/* out/target/product/beagleboard/recovery/root/system/lib/
 cd out/target/product/beagleboard/recovery
 echo "Creating Testing filesystem"
 ../../../../../build/tools/mktarball.sh ../../../../host/linux-x86/bin/fs_get_stats root . testing testing.tar.bz2
