@@ -34,7 +34,7 @@ cp ../../../../tcbin_misc/apks/MarineCompass.apk system/app/
 cp ../../../../tcbin_misc/apks/EasyVoiceRecorder.apk system/app/
 cp ../../../../tcbin_misc/apks/ES_FileExplorer.apk system/app/
 cp ../../../../tcbin_misc/apks/B2G_Updater.apk system/app/
-cp ../../../../tcbin_misc/apks/B2G_Editor.apk system/app/
+cp ../../../../tcbin_misc/apks/NBP_Editor.apk system/app/
 
 # Copy b2g-ui
 cp ../../../../tcbin_misc/apks/B2G_UI.apk system/app/
