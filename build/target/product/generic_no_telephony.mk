@@ -22,7 +22,6 @@ PRODUCT_POLICY := android.policy_phone
 PRODUCT_PACKAGES := \
     DeskClock \
     Bluetooth \
-    Calculator \
     Calendar \
     CertInstaller \
     DrmProvider \

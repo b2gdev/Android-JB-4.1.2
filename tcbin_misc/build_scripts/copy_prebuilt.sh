@@ -29,24 +29,32 @@ cp ../../../../kernel/drivers/net/usb/GobiNet.ko ./system/usr/modules/
 cp ../../../../kernel/drivers/misc/lm3553/lm3553.ko ./system/usr/modules/
 
 # other bundled apps
-cp ../../../../tcbin_misc/apks/AndroSensor.apk system/app/
-cp ../../../../tcbin_misc/apks/MarineCompass.apk system/app/
+#cp ../../../../tcbin_misc/apks/AndroSensor.apk system/app/
+#cp ../../../../tcbin_misc/apks/MarineCompass.apk system/app/
 cp ../../../../tcbin_misc/apks/EasyVoiceRecorder.apk system/app/
 cp ../../../../tcbin_misc/apks/ES_FileExplorer.apk system/app/
 cp ../../../../tcbin_misc/apks/B2G_Updater.apk system/app/
 cp ../../../../tcbin_misc/apks/NBP_Editor.apk system/app/
+cp ../../../../tcbin_misc/apks/NBP_Compass.apk system/app/
+cp ../../../../tcbin_misc/apks/PeriodicTable.apk system/app/
 
 # Copy b2g-ui
 cp ../../../../tcbin_misc/apks/B2G_UI.apk system/app/
-unzip -j -o ../../../../tcbin_misc/apks/B2G_UI.apk lib/armeabi/libb2g_ui.so -d system/lib/
-unzip -j -o ../../../../tcbin_misc/apks/B2G_UI.apk lib/armeabi/liblouis.so -d system/lib/
-chmod 755 system/lib/libb2g_ui.so
-chmod 755 system/lib/liblouis.so
+unzip -j -o ../../../../tcbin_misc/apks/B2G_UI.apk lib/armeabi/* -d system/lib/
 
 # Copy OI_FileManager
 cp ../../../../tcbin_misc/apks/OI_FileManager.apk system/app/
-unzip -j -o ../../../../tcbin_misc/apks/OI_FileManager.apk lib/armeabi/libaccess.so -d system/lib/
-chmod 755 system/lib/libaccess.so
+unzip -j -o ../../../../tcbin_misc/apks/OI_FileManager.apk lib/armeabi/* -d system/lib/
+
+# Copy Chrome
+cp ../../../../tcbin_misc/apks/Chrome.apk system/app/
+unzip -j -o ../../../../tcbin_misc/apks/Chrome.apk lib/armeabi-v7a/* -d system/lib/
+
+# Copy Tunein Player
+cp ../../../../tcbin_misc/apks/TuneinPlayer.apk system/app/
+unzip -j -o ../../../../tcbin_misc/apks/TuneinPlayer.apk lib/armeabi-v7a/* -d system/lib/
+
+chmod 755 system/lib/lib*
 
 rm -rf data/nativebenchmark/
 rm -rf data/nativetest/
