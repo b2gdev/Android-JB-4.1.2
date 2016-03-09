@@ -53,7 +53,7 @@
 #define  TCBIN_GPS_PWR_NODE "/dev/gps"
 
 #define  GPS_DEBUG  0
-#define ZONE_DB 0
+#define ZONE_DB 1
 
 #if GPS_DEBUG
 #  define  D(...)   ALOGD(__VA_ARGS__)
@@ -239,7 +239,7 @@ nmea_tokenizer_init( NmeaTokenizer*  t, const char*  p, const char*  end )
         if (q == NULL)
             q = end;
 
-        if (q > p) {
+        if (q >= p) {
             if (count < MAX_NMEA_TOKENS) {
                 t->tokens[count].p   = p;
                 t->tokens[count].end = q;
@@ -1007,6 +1007,86 @@ epoll_deregister( int  epoll_fd, int  fd )
     return ret;
 }
 
+int write_data (int fd, unsigned char write_buffer[], int write_len){
+	int ret;
+	
+	ret = write(fd, write_buffer, write_len);
+	
+	return ret;
+}
+
+void read_all_data(int fd, unsigned char read_buffer[], int buf_len){
+	int read_count=0;
+	int ret=1;
+	
+	memset(read_buffer, 0, buf_len);
+	
+	while(ret > 0){
+		ret = read(fd, &read_buffer[read_count], buf_len - read_count);
+		ZD("Reading all data");
+	}
+}
+
+int read_for_ack (int fd, unsigned char read_buffer[], int buf_len, int read_time, unsigned char short_str[], int len_short){
+	int read_count=0,match_count=0;
+	int ret=0;
+	int i=0,j=0;
+	
+	memset(read_buffer, 0, buf_len);
+	
+	while(i<read_time){
+	    ret = read(fd, &read_buffer[read_count], buf_len - read_count);
+	    
+	    if(ret > 0){
+			for(j=0; j < ret; j++){
+				if (read_buffer[read_count + j] == short_str[match_count]){
+					match_count++;
+				}else{
+					match_count=0;
+				}
+				
+				if(match_count == len_short){
+					ZD("ACK received");
+					return (read_count + ret);
+				}
+					
+			}
+		}
+	    
+	    i++;
+	    
+		sleep(1);
+	    
+	    if (ret < 0) {
+		    continue;
+	    }
+	    
+	    read_count += ret;
+	}
+	
+	return read_count;
+}
+
+#ifdef ZONE_DB
+int match_arr (unsigned char long_str[], int len_long, unsigned char short_str[], int len_short){
+	int i=0,j=0;
+	
+	for(i=0; i<len_long; i++){
+		if(long_str[i] == short_str[j]){
+			j++;
+		}else{
+			j=0;
+		}
+		
+		if(j >= len_short){
+			return 1;
+		}
+	}
+	
+	return 0;
+}
+#endif
+
 /* this is the main thread, it waits for commands from gps_state_start/stop and,
  * when started, messages from the TCBIN GPS daemon. these are simple NMEA sentences
  * that must be parsed to be converted into GPS fixes sent to the framework
@@ -1211,7 +1291,17 @@ gps_timer_thread( void*  arg )
 
 static void
 gps_state_init( GpsState*  state, GpsCallbacks* callbacks )
-{
+{   
+	unsigned char to_binary_msg[] = {36,'P','S','R','F','1','0','0',44,'0',44,'9','6','0','0',44,'8',44,'1',44,'0',42,'0','C','\r','\n'};
+    unsigned char gain_dis_msg[] = {0xA0, 0xA2, 0x00, 0x39, 0xB2, 0x02, 0x00, 0xF9, 0xC5, 0x68, 0x03, 0xFF, 0x00, 0x00, 0x0B, 0xB8, 0x00, 0x01, 0x77, 0xFA, 0x01, 0x01, 0x03, 0xFC, 0x03, 0xFC, 0x00, 0x04, 0x00, 0x3E, 0x00, 0x00, 0x00, 0x7C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x25, 0x80, 0x00, 0x00, 0x62, 0x00, 0x60, 0x01, 0x01, 0x01, 0xF4, 0x2A, 0x01, 0x0B, 0x58, 0xB0, 0xB3};
+	unsigned char ack_pkt_gain_dis[] = {0xA0 ,0xA2 ,0x00 ,0x03 ,0x0B ,0xB2 ,0x00 ,0x00 ,0xBD ,0xB0 ,0xB3};
+	unsigned char hot_reset_msg[] = {0xA0, 0xA2, 0x00, 0x19, 0x80, 0xFF, 0xD7, 0x00, 0xF9, 0xFF, 0xBE, 0x52, 0x66, 0x00, 0x3A, 0xC5, 0x7A, 0x00, 0x01, 0x24, 0xF8, 0x00, 0x83, 0xD6, 0x00, 0x03, 0x9C, 0x0C, 0x33, 0x0A, 0x91, 0xB0, 0xB3};
+	unsigned char ack_pkt_reset[] = {0xA0, 0xA2, 0x00, 0x03, 0x0B, 0x80, 0x00, 0x00, 0x8B, 0xB0, 0xB3};
+	unsigned char to_nema_msg[] = {0xA0, 0xA2, 0x00, 0x18, 0x81, 0x02, 0x01, 0x01, 0x00, 0x01, 0x01, 0x01, 0x05, 0x01, 0x01, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x25, 0x80, 0x01, 0x3A, 0xB0, 0xB3};
+	int sent;
+	int count =0;
+	unsigned char read_buffer[65536];
+	
     ZI("gps_state_init\n");
     state->init       = STATE_INIT;
     state->control[0] = -1;
@@ -1274,6 +1364,47 @@ gps_state_init( GpsState*  state, GpsCallbacks* callbacks )
     //PWR ON GPS    
     gps_pwrOn();
     gps_disable();
+    
+    
+    gps_enable();
+    
+    sleep(2);     	// Keep this - This interval will prepare to get data from GPS. Can be optimized
+    ZD("From NEMA to OSP\n");
+	sent = write_data(state->fd,to_binary_msg,sizeof(to_binary_msg));
+	ZI("Out of %d bytes - %d bytes written\n", sizeof(to_binary_msg), sent);
+	
+	sleep(1);		// Added to give an interval to switch to OSP. Not optimized. Try removing
+	
+	ZD("To disable LNA\n");
+	sent = write_data(state->fd,gain_dis_msg,sizeof(gain_dis_msg));
+	ZI("Out of %d bytes - %d bytes written\n", sizeof(gain_dis_msg), sent);
+	
+	ZD("Waiting for ACK\n");
+	count = read_for_ack(state->fd,read_buffer,sizeof(read_buffer),5, ack_pkt_gain_dis,sizeof(ack_pkt_gain_dis));
+#ifdef ZONE_DB
+	sent = match_arr(read_buffer,count,ack_pkt_gain_dis,sizeof(ack_pkt_gain_dis));
+#endif
+	ZI("Bytes read - %d, ACK Received -%d\n",count, sent);
+	
+	ZD("Hot start rest\n");
+	sent = write_data(state->fd,hot_reset_msg,sizeof(hot_reset_msg));
+	ZI("Out of %d bytes - %d bytes written\n", sizeof(hot_reset_msg), sent);
+	
+	ZD("Waiting for ACK\n");
+	count = read_for_ack(state->fd,read_buffer,sizeof(read_buffer),5,ack_pkt_reset,sizeof(ack_pkt_reset));
+#ifdef ZONE_DB
+	sent = match_arr(read_buffer,count,ack_pkt_reset,sizeof(ack_pkt_reset));
+#endif
+	ZI("Bytes read - %d, ACK Received -%d\n",count, sent);
+	
+	ZD("To NEMA from OSP\n");
+	sent = write_data(state->fd,to_nema_msg,sizeof(to_nema_msg));
+	ZI("Out of %d bytes - %d bytes written\n", sizeof(to_nema_msg), sent);
+	
+	gps_disable();
+	// Read all data and clear the read buffer
+	read_all_data(state->fd,read_buffer,sizeof(read_buffer));
+	
         
     if ( socketpair( AF_LOCAL, SOCK_STREAM, 0, state->control ) < 0 ) {
         ALOGE("could not create thread control socket pair: %s", strerror(errno));

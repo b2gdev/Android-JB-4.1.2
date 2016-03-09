@@ -371,6 +371,8 @@ static void
 w2sg0006_platform_shutdown(struct platform_device *device)
 {
 	printk(KERN_INFO "w2sg0006: %s\n",__FUNCTION__);
+	gps_pwr_disable();
+	printk(KERN_INFO "GPS Powered Down\n",__FUNCTION__);
 }
 
 static struct platform_driver w2sg0006_platform_driver = {
