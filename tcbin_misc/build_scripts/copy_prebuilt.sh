@@ -37,6 +37,7 @@ cp ../../../../tcbin_misc/apks/B2G_Updater.apk system/app/
 cp ../../../../tcbin_misc/apks/NBP_Editor.apk system/app/
 cp ../../../../tcbin_misc/apks/NBP_Compass.apk system/app/
 cp ../../../../tcbin_misc/apks/PeriodicTable.apk system/app/
+cp ../../../../tcbin_misc/apks/NBP_Calculator.apk system/app/
 
 # Copy b2g-ui
 cp ../../../../tcbin_misc/apks/B2G_UI.apk system/app/
@@ -51,8 +52,8 @@ cp ../../../../tcbin_misc/apks/Chrome.apk system/app/
 unzip -j -o ../../../../tcbin_misc/apks/Chrome.apk lib/armeabi-v7a/* -d system/lib/
 
 # Copy Tunein Player
-cp ../../../../tcbin_misc/apks/TuneinPlayer.apk system/app/
-unzip -j -o ../../../../tcbin_misc/apks/TuneinPlayer.apk lib/armeabi-v7a/* -d system/lib/
+cp ../../../../tcbin_misc/apks/TuneInPlayer.apk system/app/
+unzip -j -o ../../../../tcbin_misc/apks/TuneInPlayer.apk lib/armeabi-v7a/* -d system/lib/
 
 chmod 755 system/lib/lib*
 
