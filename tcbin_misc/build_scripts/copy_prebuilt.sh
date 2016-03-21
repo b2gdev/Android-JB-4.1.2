@@ -30,7 +30,7 @@ cp ../../../../kernel/drivers/misc/lm3553/lm3553.ko ./system/usr/modules/
 
 # other bundled apps
 #cp ../../../../tcbin_misc/apks/AndroSensor.apk system/app/
-#cp ../../../../tcbin_misc/apks/MarineCompass.apk system/app/
+cp ../../../../tcbin_misc/apks/GPSTest.apk system/app/
 cp ../../../../tcbin_misc/apks/EasyVoiceRecorder.apk system/app/
 cp ../../../../tcbin_misc/apks/ES_FileExplorer.apk system/app/
 cp ../../../../tcbin_misc/apks/B2G_Updater.apk system/app/
@@ -54,6 +54,10 @@ unzip -j -o ../../../../tcbin_misc/apks/Chrome.apk lib/armeabi-v7a/* -d system/l
 # Copy Tunein Player
 cp ../../../../tcbin_misc/apks/TuneInPlayer.apk system/app/
 unzip -j -o ../../../../tcbin_misc/apks/TuneInPlayer.apk lib/armeabi-v7a/* -d system/lib/
+
+# Copy GoogleMaps
+cp ../../../../tcbin_misc/apks/GoogleMaps.apk system/app/
+unzip -j -o ../../../../tcbin_misc/apks/GoogleMaps.apk lib/armeabi-v7a/* -d system/lib/
 
 chmod 755 system/lib/lib*
 
