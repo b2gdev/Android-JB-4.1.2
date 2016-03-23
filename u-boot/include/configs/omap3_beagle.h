@@ -226,7 +226,7 @@
 	"recoverycmd=run nandargs ; nandecc sw ; nand read 0x82000000 0xA80000 0x1000000 ; bootm 0x82000000\0" \
 	"cpuimage=nandecc sw ; fatload mmc 0:3 0x82000000 norm_uImage ; nand erase 0x280000 0x800000 ; nand write 0x82000000 0x280000 0x800000\0" \
 	"cpbkuimage=nandecc sw ; fatload mmc 0:3 0x82000000 bk_uImage ; nand erase 0xA80000 0x1000000 ; nand write 0x82000000 0xA80000 0x900000\0" \
-	"cpsys=nandecc sw ; fatload mmc 0:3 0x82000000 ubi_system.img ; nand erase 0x1B80000; nand write 0x82000000 0x1B80000 0xF000000\0" \
+	"cpsys=nandecc sw ; fatload mmc 0:3 0x82000000 ubi_system.img ; nand erase 0x1B80000; nand write 0x82000000 0x1B80000 0x18000000\0" \
 	"cpall=run cpxl ; run cpub ; run cpuimage ; run cpbkuimage ; run cpsys\0" \
 	"cpkernelsys=run cpuimage ; run cpcache ; run cpsys\0" \
 	"mmcargs=setenv bootargs console=${console} " \
