@@ -98,15 +98,30 @@
 
 int is_bt_on = 0; /* {RD} */
 
-#define MAX_USB_SERIAL_NUM	17
+#define MAX_USB_SERIAL_NUM	11
 
-static char device_serial[MAX_USB_SERIAL_NUM] = "0123456789ABCDEF";
+static char device_serial[MAX_USB_SERIAL_NUM] = "0123456789";
 
 int u_boot_serial_number = 0;
 
 static int __init set_device_serial_number(char *str)
 {
- get_option(&str, &u_boot_serial_number);
+	int i = 0;
+	if (str == NULL || *str == '\0')
+		return 0;
+
+	for(i = 0; i < MAX_USB_SERIAL_NUM - 1; i++, str++){
+		if (str == NULL)
+			break;
+			
+		device_serial[i] = *str;
+		device_serial[i+1] = '\0';
+		
+		if (*str == '\0')
+			break;
+	}
+
+	u_boot_serial_number = 1;	            
     return 1;
 }
 
@@ -295,12 +310,7 @@ static void __init omap3_beagle_init_rev(void)
 	if(u_boot_serial_number == 0){
 		system_serial_high = omap_readl(OMAP_DIE_ID_1);
 		system_serial_low = omap_readl(OMAP_DIE_ID_0);
-		sprintf(device_serial, "%08X%08X", system_serial_high,
-				system_serial_low);
-	}else{
-		system_serial_high = 0;
-		system_serial_low = u_boot_serial_number & 0xFFFFFFFF;
-		sprintf(device_serial, "%u", u_boot_serial_number);		
+		sprintf(device_serial, "%08X", system_serial_low);
 	}
 			
 	return;
