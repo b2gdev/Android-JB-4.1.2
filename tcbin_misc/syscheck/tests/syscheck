@@ -6,12 +6,14 @@ echo -e "\n******  Starting Tests  ******\n"
 NAND=$(dmesg | grep "NAND device: Manufacturer ID: 0x2c, Chip ID: 0xb3 (Micron )")
 if [ "$NAND" != "" ] ; then
  echo -e "NAND \t \t \t [\e[32mPASS\e[39m]"
+ mount -t ubifs ubi0:system /nand_system/
  NANDP1=$(mount | grep "ubi0:system /nand_system ubifs")
  if [ "$NANDP1" != "" ] ; then
   echo -e "NAND partitions \t [\e[32mPASS\e[39m]"
  else
   echo -e "NAND partitions \t [\e[31mFAIL\e[39m]"
  fi
+ umount /nand_system/
 else
  echo -e "NAND \t \t \t [\e[31mFAIL\e[39m]"
 fi
@@ -19,6 +21,8 @@ fi
 # eMMC Test
 if ls /dev/block/platform/mmci-omap-hs.1/mmcblk* 1> /dev/null 2>&1 ; then
  echo -e "eMMC \t \t \t [\e[32mPASS\e[39m]"
+ mount -t ext4 /dev/block/platform/mmci-omap-hs.1/by-num/p1 /nand_data/
+ mount -t ext4 /dev/block/platform/mmci-omap-hs.1/by-num/p2 /nand_cache/
  EMMCP1=$(mount | grep "/dev/block/platform/mmci-omap-hs.1/by-num/p1 /nand_data ext4")
  EMMCP2=$(mount | grep "/dev/block/platform/mmci-omap-hs.1/by-num/p2 /nand_cache ext4")
  if [ "$EMMCP1" != "" ] && [ "$EMMCP2" != "" ] ; then
@@ -26,6 +30,8 @@ if ls /dev/block/platform/mmci-omap-hs.1/mmcblk* 1> /dev/null 2>&1 ; then
  else
   echo -e "eMMC partitions \t [\e[31mFAIL\e[39m]"
  fi
+ umount /nand_data/
+ umount /nand_cache/
 else
  echo -e "eMMC \t \t \t [\e[31mFAIL\e[39m]"
  echo -e "eMMC partitions \t [\e[32mFAIL\e[39m]"
