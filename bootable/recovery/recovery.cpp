@@ -901,7 +901,7 @@ main(int argc, char **argv) {
     if (status != INSTALL_SUCCESS) ui->SetBackground(RecoveryUI::ERROR);
     if (status != INSTALL_SUCCESS || ui->IsTextVisible()) {
 		ui->ShowText(true); //{RD}
-		ui->Print("\n Error occurred while auto updating... \n Please select the action you want to do\n");
+		ui->Print("\n Recovery was unable to find information for auto updating... \n Please select the action you want to do\n");
         prompt_and_wait(device);
     }
 
