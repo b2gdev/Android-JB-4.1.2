@@ -205,12 +205,20 @@
 
 // Uncomment this for syscheck builds
 //#define SYSCHECK
+// Uncomment this for USER builds
+//#define USERBUILD
 
 /* Environment information */
 #ifdef SYSCHECK
 #define CONFIG_BOOTDELAY		10
 #else
+
+#ifdef USERBUILD
+#define CONFIG_BOOTDELAY		0
+#else
 #define CONFIG_BOOTDELAY		5
+#endif
+
 #endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
