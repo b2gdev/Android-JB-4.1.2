@@ -45,7 +45,7 @@ Setup the toolchain path to point to arm-eabi- tools in prebuilts/gcc/linux-x86/
 2) Building
 ============
 2.1) Refer build_all.sh for build instructions
-2.2) Use ./tcbin_misc/build_scripts/nandfs_build.sh to build NAND filesystem
+2.2) Use ./tcbin_misc/build_scripts/debug_nandfs_build.sh or user_nandfs_build.sh to build the appropriate NAND filesystem
 
 
 3) Deployment

@@ -8,15 +8,10 @@ mkdir -p system/usr/bin/
 mkdir -p system/usr/modules/
 mkdir -p system/etc/
 
-cp -rfd ../../../../tcbin_misc/busybox/* system/usr/bin/
-cp ../../../../tcbin_misc/executables/installotapackage system/usr/bin/
 cp ../../../../tcbin_misc/executables/set_wifi_mac system/usr/bin/
-cp ../../../../tcbin_misc/executables/format_emmc system/usr/bin/
-cp ../../../../tcbin_misc/executables/nuke_emmc system/usr/bin/
 cp ../../../../tcbin_misc/executables/getMSP430Version system/usr/bin/
 cp ../../../../tcbin_misc/executables/getAllFWVersions system/usr/bin/
 chmod -R +x system/usr/bin/
-chmod 777 system/usr/bin/busybox
 cp ../../../../tcbin_misc/gps.conf system/etc/
 
 # copy drivers
