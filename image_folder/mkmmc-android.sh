@@ -106,7 +106,7 @@ umount "$1"1
 mount "$1"2 /mnt
 tar jxvf $5 -C /mnt --numeric-owner &> /dev/null
 chmod 755 /mnt
-chmod 777 /mnt/usr/bin/busybox
+chmod -R 777 /mnt/usr/bin/
 umount "$1"2
 
 if [ "$6" ]
