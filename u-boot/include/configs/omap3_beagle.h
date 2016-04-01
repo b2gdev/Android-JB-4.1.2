@@ -206,7 +206,7 @@
 // Uncomment this for syscheck builds
 //#define SYSCHECK
 // Uncomment this for USER builds
-//#define USERBUILD
+#define USERBUILD
 
 /* Environment information */
 #ifdef SYSCHECK
