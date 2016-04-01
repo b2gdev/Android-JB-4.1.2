@@ -4,8 +4,8 @@ echo "Copying Google apps ..."
 
 cd ../../out/target/product/beagleboard
 
-rm -f system/app/Provision.apk
-rm -f system/app/QuickSearchBox.apk
+rm -f -v system/app/Provision.*
+rm -f -v system/app/QuickSearchBox.*
 
 mkdir -p system/tmp
 cd system/tmp
