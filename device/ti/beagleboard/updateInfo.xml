@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <versionInfo>
+    <version id="v4.4.0" maxUpdateId="v4.4.1"/>
     <version id="v4.3.7" maxUpdateId="v4.4.0"/>
     <version id="v4.3.6" maxUpdateId="v4.4.0"/>
     <version id="v4.3.5" maxUpdateId="v4.4.0"/>
