@@ -377,7 +377,7 @@ static int __init mtd_subpagetest_init(void)
 	printk(KERN_INFO "=================================================\n");
 
 	// Iterate for all MTD blocks
-	for(j = 0; j < 8; j++){
+	for(j = 0; j < 7; j++){
 		switch(j){
 			case 0:
 				printk(PRINT_PREF "NAND Partition: x-loader\n");
@@ -398,9 +398,6 @@ static int __init mtd_subpagetest_init(void)
 				printk(PRINT_PREF "NAND Partition: misc\n");
 				break;
 			case 6:
-				printk(PRINT_PREF "NAND Partition: Cache\n");
-				break;
-			case 7:
 				printk(PRINT_PREF "NAND Partition: System\n");
 				break;
 			default:

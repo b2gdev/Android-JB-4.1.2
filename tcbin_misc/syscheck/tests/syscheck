@@ -1,5 +1,14 @@
 #!/system/bin/sh
 
+# Device serial number
+SERIAL=$(fw_printenv serial | grep "serial")
+if [ "$SERIAL" != "" ] ; then 
+	echo -n "Device "
+	echo $SERIAL
+else
+	echo Device serial number not found
+fi
+
 echo -e "\n******  Starting Tests  ******\n"	
 
 # NAND Test

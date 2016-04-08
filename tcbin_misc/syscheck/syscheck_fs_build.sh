@@ -8,7 +8,7 @@ cp -v tcbin_misc/syscheck/tests/syscheck out/target/product/beagleboard/recovery
 cp -v tcbin_misc/syscheck/tests/gps_test out/target/product/beagleboard/recovery/root/sbin/
 cp -v tcbin_misc/syscheck/tests/twl3040_vib_test out/target/product/beagleboard/recovery/root/sbin/
 cp -v tcbin_misc/syscheck/tests/lm3553_test out/target/product/beagleboard/recovery/root/sbin/
-rm out/target/product/beagleboard/fstab.omap3beagleboard
+rm -v out/target/product/beagleboard/recovery/root/fstab.omap3beagleboard
 cp -v tcbin_misc/syscheck/configs/init.rc out/target/product/beagleboard/recovery/root/
 cp -v tcbin_misc/syscheck/tests/non_destructive_nandtest out/target/product/beagleboard/recovery/root/sbin/
 cp -v tcbin_misc/syscheck/tests/destructive_nandtest out/target/product/beagleboard/recovery/root/sbin/

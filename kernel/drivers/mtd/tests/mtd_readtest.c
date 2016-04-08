@@ -167,7 +167,7 @@ static int __init mtd_readtest_init(void)
 	printk(KERN_INFO "=================================================\n");
 	
 	// Iterate for all MTD blocks
-	for(j = 0; j < 8; j++){
+	for(j = 0; j < 7; j++){
 		switch(j){
 			case 0:
 				printk(PRINT_PREF "NAND Partition: x-loader\n");
@@ -188,9 +188,6 @@ static int __init mtd_readtest_init(void)
 				printk(PRINT_PREF "NAND Partition: misc\n");
 				break;
 			case 6:
-				printk(PRINT_PREF "NAND Partition: Cache\n");
-				break;
-			case 7:
 				printk(PRINT_PREF "NAND Partition: System\n");
 				break;
 			default:
@@ -238,21 +235,26 @@ static int __init mtd_readtest_init(void)
 		err = scan_for_bad_eraseblocks();
 		if (err)
 			goto out;
+		
+		if(j==0){
+			printk(PRINT_PREF "Read tests are not perofrmed for x-loader since it uses hardware ecc scheme\n");
+		}else{
+			/* Read all eraseblocks 1 page at a time */
+			printk(PRINT_PREF "testing page read\n");
+			
+			for (i = 0; i < ebcnt; ++i) {
+				int ret;
 
-		/* Read all eraseblocks 1 page at a time */
-		printk(PRINT_PREF "testing page read\n");
-		for (i = 0; i < ebcnt; ++i) {
-			int ret;
-
-			if (bbt[i])
-				continue;
-			ret = read_eraseblock_by_page(i);
-			if (ret) {
-				dump_eraseblock(i);
-				if (!err)
-					err = ret;
+				if (bbt[i])
+					continue;
+				ret = read_eraseblock_by_page(i);
+				if (ret) {
+					dump_eraseblock(i);
+					if (!err)
+						err = ret;
+				}
+				cond_resched();
 			}
-			cond_resched();
 		}
 
 		if (err)
