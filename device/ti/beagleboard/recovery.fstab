@@ -4,5 +4,6 @@
 /cache		ext4		/dev/block/platform/mmci-omap-hs.1/by-num/p2
 /data		ext4		/dev/block/platform/mmci-omap-hs.1/by-num/p1
 /storage/sdcard1	vfat		/dev/block/platform/mmci-omap-hs.0/by-num/p1
+/storage/sdcard3	vfat		/dev/block/platform/mmci-omap-hs.0/by-num/p3
 /storage/usb1	vfat		/dev/block/platform/ehci-omap.0/by-num/p1
 /misc		mtd			misc
