@@ -68,7 +68,7 @@ service tty1sh /sbin/tty1sh
     class core
     disabled
     
-service brltty /sbin/brltty -n
+service brltty /sbin/brltty -q -n
     disabled
     
 service recovery /sbin/recovery
