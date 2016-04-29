@@ -14,6 +14,8 @@ cp -v tcbin_misc/syscheck/tests/non_destructive_nandtest out/target/product/beag
 cp -v tcbin_misc/syscheck/tests/destructive_nandtest out/target/product/beagleboard/recovery/root/sbin/
 cp -v tcbin_misc/syscheck/tests/fw_printenv out/target/product/beagleboard/recovery/root/sbin/
 cp -v tcbin_misc/syscheck/tests/fw_setenv out/target/product/beagleboard/recovery/root/sbin/
+cp -v tcbin_misc/syscheck/sbin/* out/target/product/beagleboard/recovery/root/sbin/
+cp -v tcbin_misc/syscheck/etc/* out/target/product/beagleboard/recovery/root/etc/
 cp -v kernel/drivers/mtd/tests/mtd_subpagetest.ko out/target/product/beagleboard/recovery/root/usr/modules/
 cp -v kernel/drivers/mtd/tests/mtd_readtest.ko out/target/product/beagleboard/recovery/root/usr/modules/
 cp -v kernel/drivers/misc/lm3553/lm3553.ko out/target/product/beagleboard/recovery/root/usr/modules/
