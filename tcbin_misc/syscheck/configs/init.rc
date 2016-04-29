@@ -63,6 +63,13 @@ service console /usr/bin/sh
 #    user shell
     group log    
     
+service tty1sh /sbin/tty1sh
+    class core
+    disabled
+    
+service brltty /sbin/brltty -n
+    disabled
+    
 service recovery /sbin/recovery
 	disabled
 
@@ -77,6 +84,8 @@ on property:ro.debuggable=1
     write /sys/class/android_usb/android0/enable 1        
     start adbd
     start console
+    start tty1sh
+    start brltty
 #    start recovery
 
 # Restart adbd so it can run as root
