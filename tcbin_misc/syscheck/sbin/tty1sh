@@ -1,3 +1,19 @@
 #!/usr/bin/sh
+
+exec <>/dev/tty1 >&0 2>&1
+
+clear
+echo "Syscheck - System Maintenance and Rescue Shell"
+
+homeDirectory="/home"
+mkdir -p "${homeDirectory}"
+cd "${homeDirectory}"
+
+export HOME="$(pwd)"
 export PS1='syscheck# '
-exec /usr/bin/sh "${@}" <>/dev/tty1 >&0 2>&1
+
+shellProfile="${HOME}/.profile"
+[ ! -f "${shellProfile}" ] || . "${shellProfile}"
+
+exec /usr/bin/sh +m "${@}"
+exit "${?}"
