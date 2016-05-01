@@ -1,6 +1,7 @@
 #!/usr/bin/sh
 
-exec <>/dev/tty1 >&0 2>&1
+vtNumber=1
+exec <> "/dev/tty${vtNumber}" >&0 2>&1
 
 clear
 echo "Syscheck - System Maintenance and Rescue Shell"
@@ -9,11 +10,12 @@ homeDirectory="/home"
 mkdir -p "${homeDirectory}"
 cd "${homeDirectory}"
 
+export SHELL="/usr/bin/sh"
 export HOME="$(pwd)"
 export PS1='syscheck# '
 
 shellProfile="${HOME}/.profile"
 [ ! -f "${shellProfile}" ] || . "${shellProfile}"
 
-exec /usr/bin/sh +m "${@}"
+openvt -c "${vtNumber}" -w "${SHELL}" "${@}"
 exit "${?}"
