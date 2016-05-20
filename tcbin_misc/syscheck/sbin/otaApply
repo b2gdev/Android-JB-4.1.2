@@ -1,0 +1,35 @@
+#!/usr/bin/sh
+set -e
+. "$(dirname "${0}")/prologue.sh"
+
+[ "${#}" -ge 1 ] || syntaxError "missing OTA file"
+otaFile="${1}"
+shift 1
+
+[ "${#}" -eq 0 ] || syntaxError "too many parameters"
+
+logFile="/tmp/recovery/recovery.log"
+: >"${logFile}"
+
+recovery --update_package="${otaFile}" &
+processIdentifier="${!}"
+exec <"${logFile}"
+
+while true
+do
+  while read line
+  do
+    case "${line}"
+    in
+      *"ing "*"..."*) programMessage "${line%%...*}";;
+      E:*) programMessage "${line#??}";;
+      *[Pp]"lease select "*) break 2;;
+      *);;
+    esac
+  done
+
+  sleep 1
+done
+
+kill "${processIdentifier}"
+semanticError "OTA failed"
