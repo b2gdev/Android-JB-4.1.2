@@ -281,7 +281,7 @@
 #define CONFIG_SYS_HUSH_PARSER		/* use "hush" command parser */
 #define CONFIG_SYS_PROMPT_HUSH_PS2	"> "
 #ifdef SYSCHECK
-#define CONFIG_SYS_PROMPT		"b2g syscheck 1.6 # "
+#define CONFIG_SYS_PROMPT		"b2g syscheck 1.7 # "
 #else
 #define CONFIG_SYS_PROMPT		"OMAP3 beagleboard.org # "
 #endif
