@@ -238,8 +238,8 @@
 	"cpall=run cpxl ; run cpub ; run cpuimage ; run cpbkuimage ; run cpsys\0" \
 	"cpkernelsys=run cpuimage ; run cpcache ; run cpsys\0" \
 	"mmcargs=setenv bootargs console=${console} " \
-		"androidboot.console=ttyO2 mem=512M" \
-		"rootdelay=1 init=/init ip=off omap_vout.vid1_static_vrfb_alloc=y ubi.mtd=system,2048 rootwait" \
+		"androidboot.console=ttyO2 mem=512M " \
+		"rootdelay=1 init=/init ip=off omap_vout.vid1_static_vrfb_alloc=y ubi.mtd=system,2048 rootwait " \
 		"omapfb.vram=0:8M " \
 		"vram=${vram} " \
 		"omapfb.mode=tv:${tvmode} " \
