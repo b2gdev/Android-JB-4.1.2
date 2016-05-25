@@ -26,6 +26,8 @@ PRODUCT_PACKAGES += \
         
 PRODUCT_DEFAULT_DEV_CERTIFICATE := device/ti/beagleboard/security/release
 
+PRODUCT_EXTRA_RECOVERY_KEYS := device/ti/beagleboard/security/user
+
 PRODUCT_PROPERTY_OVERRIDES := \
         net.dns1=8.8.8.8 \
         net.dns2=8.8.4.4
