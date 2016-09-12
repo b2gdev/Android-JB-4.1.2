@@ -38,10 +38,6 @@ cp ../../../../tcbin_misc/apks/NBP_Calculator.apk system/app/
 cp ../../../../tcbin_misc/apks/B2G_UI.apk system/app/
 unzip -j -o ../../../../tcbin_misc/apks/B2G_UI.apk lib/armeabi/* -d system/lib/
 
-# Copy OI_FileManager
-cp ../../../../tcbin_misc/apks/OI_FileManager.apk system/app/
-unzip -j -o ../../../../tcbin_misc/apks/OI_FileManager.apk lib/armeabi/* -d system/lib/
-
 # Copy Chrome
 cp ../../../../tcbin_misc/apks/Chrome.apk system/app/
 unzip -j -o ../../../../tcbin_misc/apks/Chrome.apk lib/armeabi-v7a/* -d system/lib/
@@ -50,9 +46,13 @@ unzip -j -o ../../../../tcbin_misc/apks/Chrome.apk lib/armeabi-v7a/* -d system/l
 cp ../../../../tcbin_misc/apks/TuneInPlayer.apk system/app/
 unzip -j -o ../../../../tcbin_misc/apks/TuneInPlayer.apk lib/armeabi-v7a/* -d system/lib/
 
-# Copy GoogleMaps
+# Copy Google Maps
 cp ../../../../tcbin_misc/apks/GoogleMaps.apk system/app/
 unzip -j -o ../../../../tcbin_misc/apks/GoogleMaps.apk lib/armeabi-v7a/* -d system/lib/
+
+# Copy Google TTS
+cp ../../../../tcbin_misc/apks/GoogleTTS.apk system/app/
+unzip -j -o ../../../../tcbin_misc/apks/GoogleTTS.apk lib/armeabi-v7a/* -d system/lib/
 
 chmod 755 system/lib/lib*
 
