@@ -35,7 +35,7 @@ The following command installs the required packages for setting up the android 
   minicom tftpd expect libswitch-perl u-boot-tools
   $ sudo ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
 
-The JDK version 1.6.0_23 is required : 
+The JDK version 1.6.0_23 is required : https://drive.google.com/file/d/0B-vV81AxHSyfU1RESlZ2MFlveDg/view?usp=sharing 
 
 1.2) Toolchain setup
 =====================
