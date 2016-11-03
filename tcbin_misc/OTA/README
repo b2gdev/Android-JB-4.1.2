@@ -1,3 +1,5 @@
+1) Creating an OTA zip
+
 # Add your update files to the update folder following the folder structure described below
 
 META-INF/
@@ -11,12 +13,22 @@ system/
 data/ 
    +- (Update files)
 
-# Run get_built_binaries.sh to get latest update-binary and signapk.jar
+# The update-script is where all the update logic is. It is written in the Edify scripting language. Refer previous releases for examples.
+
+# Run get_built_binaries.sh to get latest update-binary and signapk.jar. If you are on the "user" branch, the update-binary won't be built automatically. You can either manually build it get it from : https://drive.google.com/open?id=0B-vV81AxHSyfWmdCVEJta0ZRSE0
 
 # Create unsigned zip using 
-update$ zip -9r ../unsigned.zip * -x system/.gitignore
+cd update
+zip -9r ../unsigned.zip * -x system/.gitignore
 
 # Run the following to create the signed update
-$ java -jar signapk.jar -w release.x509.pem release.pk8 unsigned.zip update.zip
+java -jar signapk.jar -w release.x509.pem release.pk8 unsigned.zip update.zip
 
-# Enter release key password when if promted
+2) Enabling automatic updates
+
+# Open the file device/ti/beagleboard/updateInfo.xml and udate the "maxUpdateId" and "checksum" values for the target base versions. This is how the update clients know that there is a new update available.
+
+# Create a release commit and tag : e.g. https://github.com/b2gdev/Android-JB-4.1.2/commit/3541f8c28b9cce2b36c4c35de2d88d0f321f5b49 
+
+# Create a Github release for the new tag and attach the OTA zip to it : e.g. https://github.com/b2gdev/Android-JB-4.1.2/releases 
+
