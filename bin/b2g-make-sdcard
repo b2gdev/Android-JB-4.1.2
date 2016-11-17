@@ -1,5 +1,7 @@
 #!/bin/sh
 . "$(dirname "${0}")/b2g-prologue.sh"
+includeShellDefinitions b2g-partitions
+includeShellDefinitions b2g-build
 
 showHelp() {
 cat <<END_HELP
@@ -7,120 +9,6 @@ usage: ${scriptName} [option ...]
 -f  Format the SD card.
 -h  Show this usage summary on standard output, and then exit.
 END_HELP
-}
-
-isFileSystem() {
-  local device="${1}"
-
-  awk -v "device=${device}" '
-    $1 == device {
-      exit(1)
-    }
-  ' /proc/mounts || return 0
-
-  return 1
-}
-
-isSwapSpace() {
-  local device="${1}"
-
-  awk -v "device=${device}" '
-    $1 == device {
-      exit(1)
-    }
-  ' /proc/swaps || return 0
-
-  return 1
-}
-
-isActive() {
-  local device="${1}"
-
-  isFileSystem "${device}" && return 0
-  isSwapSpace "${device}" && return 0
-  return 1
-}
-
-verifyPartitions() {
-  local partitionNumber=0
-
-  while [ "${#}" -ge 2 ]
-  do
-    partitionNumber=$((partitionNumber + 1))
-    local device="${sdcardDevice}${partitionNumber}"
-
-    local requiredType="${1}"
-    local requiredLabel="${2}"
-    shift 2
-
-    local actualType="$(sfdisk -c "${sdcardDevice}" "${partitionNumber}" 2>/dev/null)"
-    [ "${actualType}" = "${requiredType}" ] || return 1
-
-    case "${actualType}"
-    in
-      c) local actualLabel="$(dosfslabel "${device}")";;
-      83) local actualLabel="$(e2label "${device}")";;
-      *) internalError "unsupported partition type: ${actualType}"
-    esac
-
-    [ "${actualLabel}" = "${requiredLabel}" ] || return 1
-  done
-}
-
-updatePartitionTable() {
-  parted -s "${sdcardDevice}" "${@}"
-}
-
-makePartitionTable() {
-  local type="${1}"
-
-  updatePartitionTable mktable "${type}"
-  currentPartitionCount=0
-  currentPartitionEnd=0
-}
-
-addPartition() {
-  local size="${1}"
-  local fs="${2}"
-
-  local number="${currentPartitionCount}"
-  currentPartitionCount=$((currentPartitionCount + 1))
-  local type="primary"
-
-  local start="${currentPartitionEnd}"
-  local end
-
-  if [ "${start}" -eq 0 ]
-  then
-    start="1s"
-  else
-    start="${start}MB"
-  fi
-
-  if [ -n "${size}" ]
-  then
-    currentPartitionEnd=$((currentPartitionEnd + size))
-    end="${currentPartitionEnd}MB"
-  else
-    end="100%"
-    type="extended"
-  fi
-
-  updatePartitionTable mkpart "${type}" "${fs}" "${start}" "${end}"
-}
-
-makeLinuxFileSystem() {
-  local partition="${1}"
-  local label="${2}"
-
-  mke2fs -q -L "${label}" "${sdcardDevice}${partition}"
-}
-
-makeDosFileSystem() {
-  local partition="${1}"
-  local label="${2}"
-
-  mkdosfs -n "${label}" "${sdcardDevice}${partition}"
 }
 
 formatDevice=false
@@ -142,29 +30,29 @@ handleArguments "fh" "${@}"
 [ -b "${sdcardDevice}" ] || syntaxError "not a block device: ${sdcardDevice}"
 [ -r "${sdcardDevice}" ] || syntaxError "device not readable: ${sdcardDevice}"
 [ -w "${sdcardDevice}" ] || syntaxError "device not writable: ${sdcardDevice}"
-isActive "${sdcardDevice}" && syntaxError "device in use: ${sdcardDevice}"
+isActiveDevice "${sdcardDevice}" && syntaxError "device in use: ${sdcardDevice}"
 
 if "${formatDevice}"
 then
-  makePartitionTable msdos
+  makePartitionTable "${sdcardDevice}" msdos
 
-  addPartition 6 fat16
-  updatePartitionTable set 1 boot on
-  makeDosFileSystem 1 boot
+  addPartition "${sdcardDevice}" 6 fat16
+  setPartitionProperty "${sdcardDevice}" 1 boot on
+  makeFileSystem_DOS "${sdcardDevice}" 1 boot
 
-  addPartition 1000 ext4
-  makeLinuxFileSystem 2 rootfs
+  addPartition "${sdcardDevice}" 1000 ext4
+  makeFileSystem_Linux "${sdcardDevice}" 2 rootfs
 
-  addPartition 1000 fat16
-  makeDosFileSystem 3 data
+  addPartition "${sdcardDevice}" 1000 fat16
+  makeFileSystem_DOS "${sdcardDevice}" 3 data
 
-  addPartition
-elif ! verifyPartitions c boot 83 rootfs c data
+  addPartition "${sdcardDevice}"
+elif ! verifyPartitions "${sdcardDevice}" e boot 83 rootfs e data
 then
   semanticError "not formatted correctly: ${sdcardDevice}"
 fi
 
-setBuildDirectory ""
+setBuildDirectory
 needTemporaryDirectory
 
 exit 0
