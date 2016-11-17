@@ -10,8 +10,12 @@
 
 /tcbin_misc/mtd-utils/ubifs.img
 
+/u-boot/tools/env/fw_printenv
+/u-boot/tools/env/fw_setenv
+
 /x-loader/include/asm/arch
 /x-loader/include/asm/proc
+/x-loader/signGP
 
 /image_folder/
 /out/
