@@ -1,0 +1,346 @@
+#!/bin/sh
+. "$(dirname "${0}")/b2g-prologue.sh"
+
+showHelp() {
+cat <<END_HELP
+usage: ${scriptName} [option ...]
+
+This script builds the following images:
+  ${loaderName} -> ${loaderImage}
+  ${bootName} -> ${bootImage}
+  For ${androidName}:
+    kernel -> ${androidImage}
+    modules -> ${modulesImage}
+    /system -> ${systemImage}
+    ${recoveryName} -> ${recoveryImage}
+
+Build output is logged to: ${logFile}
+
+An image is implicitly built if it doesn't yet exist, but isn't rebuilt unless
+it's explicitly requested by option and/or implicitly required by dependency.
+
+Options:
+-a            Rebuild the ${androidName} API (required whenever it has been changed).
+-b            Build the ${bootName} image.
+-d directory  The build directory (defaults to the current directory).
+-e            Build ${androidName} in engineering mode.
+-f            Fresh build. Remove any images that have already been built.
+-h            Show this usage summary on standard output, and then exit.
+-l            Build the ${loaderName} image.
+-n            Don't implicitly build images that don't yet exist.
+-r            Build the ${recoveryName} image.
+-t            Test mode. Log commands on standard output without executing them.
+-u            Build ${androidName} in user mode.
+-C            Clean the build cache (leave the compiled build tools).
+-E            Empty the build cache (remove everything).
+-K            Clean the kernel tree.
+-L            Capture kernel tree listings (<stage>.ktl and <from>-<to>.ktd).
+-P name       Clean a package.
+-X            Trace script execution (enable the shell's -x option).
+
+The -e and -u options are mutually exclusive. If neither has been specified
+then -e is assumed if the -a option has been specified and/or if the ${androidName}
+image hasn't been built yet. If either is in effect then -r is implied.
+
+The -C, -E, and -P options are mutually exclusive.
+END_HELP
+}
+
+writeBorder() {
+  writeLine "################################################################################"
+}
+
+logStage() {
+  local stage="${1}"
+
+  [ -t 3 ] && echo >&3 "${programName}: ${stage}"
+  writeBorder
+  logLine "${stage}"
+}
+
+hostCommand() {
+  logLine "host command: ${*}"
+  "${testMode}" || "${@}"
+}
+
+makeDirectory() {
+  local directory="${1}"
+
+  "${buildAllImages}" && hostCommand rm -f -r "${directory}"
+  hostCommand mkdir -p "${directory}"
+}
+
+makeBuildTarget() {
+  hostCommand make -j8 "TARGET_PRODUCT=${targetProduct}" OMAPES=5.x "${@}"
+}
+
+makeLoaderTarget() {
+  hostCommand make -C "${loaderDirectory}/" "CROSS_COMPILE=${toolPrefix}" "${@}"
+} 
+
+makeBootTarget() {
+  hostCommand make -C "${bootDirectory}/" "CROSS_COMPILE=${toolPrefix}" "${@}"
+} 
+
+makeKernelTarget() {
+  hostCommand make -C "${kernelDirectory}/" "ARCH=${targetArchitecture}" "CROSS_COMPILE=${toolPrefix}" "${@}"
+}
+
+makeKernelImage() {
+  makeKernelTarget -j8 uImage
+}
+
+saveKernelImage() {
+  local image="${1}"
+
+  hostCommand cp "${kernelDirectory}/arch/${targetArchitecture}/boot/uImage" "${image}"
+}
+
+listKernelTree() {
+  local name="${1}"
+
+  "${listKernelTrees}" || return 0
+  logLine "listing kernel tree: ${name}"
+  "${testMode}" && return 0
+
+  local directory="${kernelDirectory}"
+  local newListing="${name}.ktl"
+  find "${directory}" -print | sort >"${newListing}"
+
+  [ -z "${previousKernelTree}" ] || {
+    logLine "comparing kernel trees: ${previousKernelTree} -> ${name}"
+    local oldListing="${previousKernelTree}.ktl"
+    local diff="${previousKernelTree}-${name}.ktd"
+
+    diff "${oldListing}" "${newListing}" >"${diff}" || {
+      sed -e "s%^< *${directory}/%-%; t; s%^> *${directory}/%+%; t; d" -i "${diff}"
+    }
+  }
+
+  previousKernelTree="${name}"
+}
+
+testMode=false
+rootDirectory=""
+
+buildAllImages=false
+buildMissingImages=true
+
+buildLoaderImage=false
+buildBootImage=false
+buildRecoveryImage=false
+
+buildAndroidImage=false
+buildAndroidAPI=false
+buildEngineeringVariant=false
+buildUserVariant=false
+
+cleanPackage=false
+cleanBuildCache=false
+emptyBuildCache=false
+
+cleanKernelTree=false
+listKernelTrees=false
+traceScriptExecution=false
+
+handleOption_a() {
+  buildAndroidAPI=true
+}
+
+handleOption_b() {
+  buildBootImage=true
+}
+
+handleOption_d() {
+  rootDirectory="${OPTARG}"
+}
+
+handleOption_e() {
+  buildEngineeringVariant=true
+}
+
+handleOption_f() {
+  buildAllImages=true
+}
+
+handleOption_l() {
+  buildLoaderImage=true
+}
+
+handleOption_n() {
+  buildMissingImages=false
+}
+
+handleOption_r() {
+  buildRecoveryImage=true
+}
+
+handleOption_t() {
+  testMode=true
+}
+
+handleOption_u() {
+  buildUserVariant=true
+}
+
+handleOption_C() {
+  cleanBuildCache=true
+}
+
+handleOption_E() {
+  emptyBuildCache=true
+}
+
+handleOption_K() {
+  cleanKernelTree=true
+}
+
+handleOption_L() {
+  listKernelTrees=true
+}
+
+handleOption_P() {
+  cleanPackage=true
+  packageName="${OPTARG}"
+}
+
+handleOption_X() {
+  traceScriptExecution=true
+}
+
+handleArguments "abd:efhlnrtuCEKLP:X" "${@}"
+mutuallyExclusiveOptions e "${buildEngineeringVariant}" u "${buildUserVariant}"
+mutuallyExclusiveOptions C "${cleanBuildCache}" E "${emptyBuildCache}" P "${cleanPackage}"
+setBuildDirectory "${rootDirectory}"
+
+if "${testMode}"
+then
+  exec 3>/dev/null
+else
+  lockScriptExecution
+  exec 3>&2
+  startLogFile
+fi
+
+"${traceScriptExecution}" && set -x
+
+logStage "preparing the build environment"
+"${listKernelTrees}" && hostCommand rm -f *.ktl *.ktd
+makeDirectory "${bootImageDirectory}"
+makeDirectory "${nandImageDirectory}"
+
+"${buildMissingImages}" && {
+  [ -f "${loaderImage}" ] || buildLoaderImage=true
+  [ -f "${bootImage}" ] || buildBootImage=true
+  [ -f "${androidImage}" ] || buildAndroidImage=true
+  [ -f "${systemImage}" ] || buildAndroidImage=true
+  [ -f "${recoveryImage}" ] || buildRecoveryImage=true
+}
+
+"${buildAndroidAPI}" && buildAndroidImage=true
+"${buildEngineeringVariant}" && buildAndroidImage=true
+"${buildUserVariant}" && buildAndroidImage=true
+
+"${buildAndroidImage}" && {
+  cleanKernelTree=true
+  [ -f "${androidImage}" ] || buildAndroidAPI=true
+  buildRecoveryImage=true
+
+  if "${buildUserVariant}"
+  then
+    androidVariantTarget="user"
+    systemPartitionScript="user_nandfs_build.sh"
+  else
+    buildEngineeringVariant=true
+    androidVariantTarget="eng"
+    systemPartitionScript="debug_nandfs_build.sh"
+  fi
+}
+
+"${cleanPackage}" && {
+  logStage "cleaning package: ${packageName}"
+  makeBuildTarget "clean-${packageName}"
+}
+
+"${cleanBuildCache}" && {
+  logStage "cleaning the build cache"
+  makeBuildTarget "installclean"
+}
+
+"${emptyBuildCache}" && {
+  logStage "emptying the build cache"
+  makeBuildTarget "clean"
+}
+
+"${buildLoaderImage}" && {
+  logStage "building the ${loaderName} image: ${loaderImage}"
+  makeLoaderTarget distclean
+  makeLoaderTarget omap3530beagle_config
+  makeLoaderTarget
+  hostCommand cd "${loaderDirectory}/"
+  hostCommand ./signGP ./x-load.bin
+  hostCommand mv x-load.bin.ift MLO
+  hostCommand cd "${buildDirectory}"
+  hostCommand cp "${loaderDirectory}/MLO" "${loaderImage}"
+}
+
+"${buildBootImage}" && {
+  logStage "building the ${bootName} image: ${bootImage}"
+  makeBootTarget distclean
+  makeBootTarget omap3_beagle_config
+  makeBootTarget
+  hostCommand cp "${bootDirectory}/u-boot.bin" "${bootImage}"
+}
+
+"${cleanKernelTree}" && {
+  logStage "cleaning the kernel tree"
+  makeKernelTarget clean
+}
+
+"${buildAndroidImage}" && {
+  listKernelTree clean
+
+  "${buildAndroidAPI}" && {
+    logStage "building the ${androidName} API"
+    makeBuildTarget update-api
+    listKernelTree api
+  }
+
+  logStage "configuring the kernel"
+  makeKernelTarget omap3_tcbin_android_normal_defconfig
+  listKernelTree config
+
+  logStage "building the ${androidVariantTarget} kernel and file system"
+  makeBuildTarget "TARGET_BUILD_VARIANT=${androidVariantTarget}"
+  listKernelTree "${androidVariantTarget}"
+
+  logStage "building the kernel modules image: ${modulesImage}"
+  makeKernelTarget modules
+  saveKernelImage "${modulesImage}"
+  listKernelTree modules
+
+  logStage "building the ${androidName} image: ${androidImage}"
+  makeKernelTarget omap3_tcbin_android_normal_defconfig
+  makeKernelImage
+  saveKernelImage "${androidImage}"
+  listKernelTree android
+
+  logStage "building the ${androidVariantTarget} system partition image: ${systemImage}"
+  hostCommand cd "${scriptsDirectory}"
+  hostCommand "./${systemPartitionScript}"
+  hostCommand cd "${buildDirectory}"
+}
+
+"${buildRecoveryImage}" && {
+  logStage "building the ${recoveryName} image: ${recoveryImage}"
+  hostCommand cd "${scriptsDirectory}"
+  hostCommand ./backupfs_build.sh
+  hostCommand cd "${buildDirectory}"
+  makeKernelTarget omap3_tcbin_android_backup_defconfig
+  makeKernelImage
+  saveKernelImage "${recoveryImage}"
+  listKernelTree recovery
+}
+
+logStage "done"
+exit 0

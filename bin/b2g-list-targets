@@ -1,0 +1,22 @@
+#!/bin/sh
+. "$(dirname "${0}")/b2g-prologue.sh"
+
+showHelp() {
+cat <<END_HELP
+usage: ${scriptName} [option ...]
+-h  Show this usage summary on standard output, and then exit.
+END_HELP
+}
+
+handleArguments "h" "${@}"
+setBuildDirectory ""
+
+make --print-data-base --no-builtin-rules --no-builtin-variables \
+     -f "${programDirectory}/${programName}.mk" "${programName}-nothing" |
+  sed -n \
+      -e "/^${programName}-/d" \
+      -e '/\//d' \
+      -e '/^[a-zA-Z0-9][^ :]*:/s/:.*//p' |
+  sort
+
+exit 0
