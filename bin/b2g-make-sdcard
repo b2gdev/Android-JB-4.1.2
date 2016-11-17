@@ -28,6 +28,7 @@ handleParameters() {
 handleArguments "fh" "${@}"
 
 [ -b "${sdcardDevice}" ] || syntaxError "not a block device: ${sdcardDevice}"
+[ "${sdcardDevice}" = "${sdcardDevice%[0-9]}" ] || syntaxError "not whole device: ${sdcardDevice}"
 [ -r "${sdcardDevice}" ] || syntaxError "device not readable: ${sdcardDevice}"
 [ -w "${sdcardDevice}" ] || syntaxError "device not writable: ${sdcardDevice}"
 isActiveDevice "${sdcardDevice}" && syntaxError "device in use: ${sdcardDevice}"

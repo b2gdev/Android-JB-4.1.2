@@ -8,8 +8,14 @@ programDirectory="${0%/*}"
 [ -n "${programDirectory}" ] || programDirectory="."
 readonly programDirectory="$(cd "${programDirectory}" && pwd)"
 
+readonly initialDirectory="$(pwd)"
+
 readonly logFile="${programName}.log"
 readonly pidFile="${programName}.pid"
+
+getFormattedTime() {
+  date "+%Y-%m-%d@%H:%M:%S"
+}
 
 writeLine() {
   local line="${1}"
@@ -138,7 +144,7 @@ removeTemporaryDirectory() {
 }
 
 needTemporaryDirectory() {
-  readonly temporaryDirectory="$(mktemp -d --tmpdir "${programName}.${$}.XXXXXX")"
+  readonly temporaryDirectory="$(mktemp -d --tmpdir "${programName}.$(getFormattedTime).${$}.XXXXXX")"
   addCleanupCommand removeTemporaryDirectory
 }
 
@@ -159,9 +165,11 @@ startLogFile() {
   logLine() {
     local line="${1}"
 
-    writeLine "${programName}: $(date "+%Y-%m-%d@%H:%M:%S") ${line}"
+    writeLine "${programName}: $(getFormattedTime) ${line}"
   }
 
-  exec >"${logFile}" 2>&1
+  exec >"${logFile}"
+  programMessage "log file: ${logFile}"
+  exec 2>&1
 }
 
