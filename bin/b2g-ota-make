@@ -2,7 +2,7 @@
 . "$(dirname "${0}")/b2g-prologue.sh"
 includeShellDefinitions b2g-build
 
-readonly defaultHeapSize="1000M"
+readonly defaultHeapSize="1500M"
 readonly defaultOtaName="OTA"
 
 showHelp() {
@@ -24,7 +24,8 @@ makeDirectory() {
 getFile() {
   local file="${1}"
 
-  cp "${buildDirectory}/${file}" .
+  [ "${file}" = "${file#/}" ] && file="${buildDirectory}/${file}"
+  cp "${file}" .
 }
 
 heapSize=""
@@ -82,6 +83,8 @@ metaDirectory="${updateDirectory}/META-INF/com/google/android"
 makeDirectory "${metaDirectory}"
 cd "${metaDirectory}"
 getFile "tcbin_misc/OTA/update/META-INF/com/google/android/updater-script"
+getFile "${programDirectory}/update-binary"
+getFile "tcbin_misc/executables/setup_3g_audio"
 
 systemDirectory="${updateDirectory}/system"
 makeDirectory "${systemDirectory}"
