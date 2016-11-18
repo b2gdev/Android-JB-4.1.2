@@ -1,5 +1,0 @@
-ui_print("Wiping data partition...");
-run_program("/system/bin/mount_emmc");
-run_program("/system/bin/clean_emmc");
-unmount("/data");
-ui_print("Data partition wiped...");

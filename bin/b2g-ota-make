@@ -5,6 +5,8 @@ includeShellDefinitions b2g-build
 readonly defaultArchiveName="OTA"
 readonly defaultHeapSize="1500M"
 
+readonly archiveExtension="zip"
+
 showHelp() {
 cat <<END_HELP
 usage: ${scriptName} [option ...]
@@ -37,7 +39,7 @@ getExecutable() {
 
 archiveName=""
 heapSize=""
-interactiveShell=false
+invokeShell=false
 
 handleOption_m() {
   heapSize="${OPTARG}"
@@ -48,7 +50,7 @@ handleOption_n() {
 }
 
 handleOption_s() {
-  interactiveShell=true
+  invokeShell=true
 }
 
 handleArguments "hm:n:s" "${@}"
@@ -58,29 +60,21 @@ handleArguments "hm:n:s" "${@}"
 [ "${archiveName}" = "${archiveName#/}" ] && archiveName="${initialDirectory}/${archiveName}"
 [ "${archiveName}" = "${archiveName%/}" ] || syntaxError "invalid archive name: ${archiveName}"
 
-readonly archiveExtension="zip"
-readonly unsignedArchive="unsigned.${archiveExtension}"
-readonly signedArchive="${archiveName}.${archiveExtension}"
-
-readonly signingJar="signapk.jar"
-readonly keyName="release"
-readonly keyExtension="pk8"
-readonly certificateExtension="x509.pem"
-
 setBuildDirectory
 needTemporaryDirectory
-programMessage "collecting files"
-
-cd "${temporaryDirectory}"
-getFile "out/host/linux-x86/framework/${signingJar}"
-
-for extension in "${keyExtension}" "${certificateExtension}"
-do
-  getFile "device/ti/beagleboard/security/${keyName}.${extension}"
-done
 
 updateDirectory="${temporaryDirectory}/update"
 makeDirectory "${updateDirectory}"
+
+metaDirectory="${updateDirectory}/META-INF/com/google/android"
+makeDirectory "${metaDirectory}"
+
+systemDirectory="${updateDirectory}/system"
+makeDirectory "${systemDirectory}"
+
+dataDirectory="${updateDirectory}/data"
+makeDirectory "${dataDirectory}"
+
 cd "${updateDirectory}"
 getFile "${bootImage}"
 getFile "${androidImage}"
@@ -88,25 +82,11 @@ getFile "${recoveryImage}"
 getFile "${systemImage}"
 getExecutable "setup_3g_audio"
 
-metaDirectory="${updateDirectory}/META-INF/com/google/android"
-makeDirectory "${metaDirectory}"
 cd "${metaDirectory}"
 getFile "${scriptDirectory}/update-binary"
 cat "${scriptDirectory}/"*".upd" >"updater-script"
 
-systemDirectory="${updateDirectory}/system"
-makeDirectory "${systemDirectory}"
-
-binDirectory="${systemDirectory}/bin"
-makeDirectory "${binDirectory}"
-cd "${binDirectory}"
-getExecutable "mount_emmc"
-getExecutable "clean_emmc"
-
-dataDirectory="${updateDirectory}/data"
-makeDirectory "${dataDirectory}"
-
-"${interactiveShell}" && {
+"${invokeShell}" && {
   programMessage "invoking interactive shell"
   cd "${updateDirectory}"
   export "PS1=${programName}> "
@@ -115,10 +95,26 @@ makeDirectory "${dataDirectory}"
 
 programMessage "creating archive"
 cd "${updateDirectory}"
+
+readonly unsignedArchive="unsigned.${archiveExtension}"
 zip -q -9 -r "${temporaryDirectory}/${unsignedArchive}" *
 
 programMessage "signing archive"
 cd "${temporaryDirectory}"
+
+readonly signingJar="signapk.jar"
+getFile "out/host/linux-x86/framework/${signingJar}"
+
+readonly keyName="release"
+readonly keyExtension="pk8"
+readonly certificateExtension="x509.pem"
+
+for extension in "${keyExtension}" "${certificateExtension}"
+do
+  getFile "device/ti/beagleboard/security/${keyName}.${extension}"
+done
+
+readonly signedArchive="${archiveName}.${archiveExtension}"
 java "-Xmx${heapSize}" -jar "${signingJar}" -w \
      "${keyName}.${certificateExtension}" \
      "${keyName}.${keyExtension}" \
