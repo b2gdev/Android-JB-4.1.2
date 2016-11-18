@@ -1,7 +1,0 @@
-ui_print("Flashing recovery Kernel...");
-assert(package_extract_file("bk_uImage", "/tmp/bk_uImage"),
-write_raw_image("/tmp/bk_uImage","recovery"),
-delete("/tmp/bk_uImage"));
-ui_print("Recovery Kernel image flashed...");
-ui_print("");
-set_progress(0.40);

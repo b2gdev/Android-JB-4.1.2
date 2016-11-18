@@ -1,0 +1,11 @@
+ui_print("Flashing Kernel...");
+
+assert(
+  package_extract_file("norm_uImage", "/tmp/norm_uImage"),
+  write_raw_image("/tmp/norm_uImage","Kernel"),
+  delete("/tmp/norm_uImage")
+);
+
+ui_print("Kernel image flashed...");
+ui_print("");
+set_progress(0.25);

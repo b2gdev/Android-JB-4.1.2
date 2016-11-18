@@ -1,8 +1,0 @@
-ui_print("Flashing system image...");
-unmount("/system");
-assert(package_extract_file("ubi_system.img", "/tmp/ubi_system.img"),
-write_raw_image("/tmp/ubi_system.img","system"),
-delete("/tmp/ubi_system.img"));
-ui_print("system image flashed...");
-ui_print("");
-set_progress(0.75);

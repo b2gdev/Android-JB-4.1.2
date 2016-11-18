@@ -1,6 +1,0 @@
-ui_print("Flashing u-boot...");
-assert(package_extract_file("u-boot.bin", "/tmp/u-boot.bin"),
-write_raw_image("/tmp/u-boot.bin","U-Boot"),
-delete("/tmp/u-boot.bin"));
-ui_print("u-boot flashed...");
-ui_print("");

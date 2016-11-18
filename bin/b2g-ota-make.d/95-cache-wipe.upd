@@ -1,2 +1,3 @@
 ui_print("Clear Cache...");
 wipe_cache();
+ui_print("Cache Clear...");

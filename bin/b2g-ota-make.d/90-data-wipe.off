@@ -1,0 +1,12 @@
+ui_print("Clear data...");
+
+assert(
+  package_extract_file("clean_emmc", "/tmp/clean_emmc"),
+  run_program("/usr/bin/chmod","777","/tmp/clean_emmc"),
+  run_program("/tmp/clean_emmc"),
+  delete("/tmp/clean_emmc")
+);
+
+ui_print("data cleared...");
+ui_print("");
+set_progress(0.85);
