@@ -4,4 +4,4 @@ write_raw_image("/tmp/norm_uImage","Kernel"),
 delete("/tmp/norm_uImage"));
 ui_print("Kernel image flashed...");
 ui_print("");
-set_progress(0.25000);
+set_progress(0.25);
