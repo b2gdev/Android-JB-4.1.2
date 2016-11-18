@@ -69,8 +69,9 @@ readonly certificateExtension="x509.pem"
 
 setBuildDirectory
 needTemporaryDirectory
-cd "${temporaryDirectory}"
+programMessage "collecting files"
 
+cd "${temporaryDirectory}"
 getFile "out/host/linux-x86/framework/${signingJar}"
 
 for extension in "${keyExtension}" "${certificateExtension}"
@@ -106,18 +107,22 @@ dataDirectory="${updateDirectory}/data"
 makeDirectory "${dataDirectory}"
 
 "${interactiveShell}" && {
+  programMessage "invoking interactive shell"
   cd "${updateDirectory}"
   export "PS1=${programName}> "
   "${SHELL:-/bin/sh}" || :
 }
 
+programMessage "creating archive"
 cd "${updateDirectory}"
 zip -q -9 -r "${temporaryDirectory}/${unsignedArchive}" *
 
+programMessage "signing archive"
 cd "${temporaryDirectory}"
 java "-Xmx${heapSize}" -jar "${signingJar}" -w \
      "${keyName}.${certificateExtension}" \
      "${keyName}.${keyExtension}" \
      "${unsignedArchive}" "${signedArchive}"
 
+programMessage "done"
 exit 0
