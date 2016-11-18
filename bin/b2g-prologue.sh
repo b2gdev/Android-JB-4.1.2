@@ -7,6 +7,7 @@ readonly programName="${scriptName%.sh}"
 programDirectory="${0%/*}"
 [ -n "${programDirectory}" ] || programDirectory="."
 readonly programDirectory="$(cd "${programDirectory}" && pwd)"
+readonly scriptDirectory="${programDirectory}/${programName}.d"
 
 readonly initialDirectory="$(pwd)"
 
