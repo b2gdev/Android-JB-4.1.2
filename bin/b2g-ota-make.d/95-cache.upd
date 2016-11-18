@@ -1,3 +1,2 @@
 ui_print("Clear Cache...");
 wipe_cache();
-show_progress(1.0, 10);

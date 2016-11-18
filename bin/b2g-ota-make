@@ -2,16 +2,16 @@
 . "$(dirname "${0}")/b2g-prologue.sh"
 includeShellDefinitions b2g-build
 
+readonly defaultArchiveName="OTA"
 readonly defaultHeapSize="1500M"
-readonly defaultOtaName="OTA"
 
 showHelp() {
 cat <<END_HELP
 usage: ${scriptName} [option ...]
 -h       Show this usage summary on standard output, and then exit.
 -m size  Specify the Java memory size (defaults to ${defaultHeapSize}).
--n name  Specify the OTA name (defaults to ${defaultOtaName}).
--s       Invoke an interactive shell to inspect the OTA.
+-n name  Specify the archive name (defaults to ${defaultArchiveName}).
+-s       Invoke an interactive shell to inspect/modify the archive.
 END_HELP
 }
 
@@ -28,16 +28,23 @@ getFile() {
   cp "${file}" .
 }
 
+getExecutable() {
+  local program="${1}"
+
+  getFile "tcbin_misc/executables/${program}"
+  chmod a+rx "${program}"
+}
+
+archiveName=""
 heapSize=""
 interactiveShell=false
-otaName=""
 
 handleOption_m() {
   heapSize="${OPTARG}"
 }
 
 handleOption_n() {
-  otaName="${OPTARG}"
+  archiveName="${OPTARG}"
 }
 
 handleOption_s() {
@@ -47,13 +54,13 @@ handleOption_s() {
 handleArguments "hm:n:s" "${@}"
 [ -n "${heapSize}" ] || heapSize="${defaultHeapSize}"
 
-[ -n "${otaName}" ] || otaName="${defaultOtaName}"
-[ "${otaName}" = "${otaName#/}" ] && otaName="${initialDirectory}/${otaName}"
-[ "${otaName}" = "${otaName%/}" ] || syntaxError "invalid OTA name: ${otaName}"
+[ -n "${archiveName}" ] || archiveName="${defaultArchiveName}"
+[ "${archiveName}" = "${archiveName#/}" ] && archiveName="${initialDirectory}/${archiveName}"
+[ "${archiveName}" = "${archiveName%/}" ] || syntaxError "invalid archive name: ${archiveName}"
 
 readonly archiveExtension="zip"
 readonly unsignedArchive="unsigned.${archiveExtension}"
-readonly signedArchive="${otaName}.${archiveExtension}"
+readonly signedArchive="${archiveName}.${archiveExtension}"
 
 readonly signingJar="signapk.jar"
 readonly keyName="release"
@@ -78,7 +85,7 @@ getFile "${bootImage}"
 getFile "${androidImage}"
 getFile "${recoveryImage}"
 getFile "${systemImage}"
-getFile "tcbin_misc/executables/setup_3g_audio"
+getExecutable "setup_3g_audio"
 
 metaDirectory="${updateDirectory}/META-INF/com/google/android"
 makeDirectory "${metaDirectory}"
@@ -89,6 +96,21 @@ cat "${scriptDirectory}/"*".upd" >"updater-script"
 systemDirectory="${updateDirectory}/system"
 makeDirectory "${systemDirectory}"
 
+binDirectory="${systemDirectory}/bin"
+makeDirectory "${binDirectory}"
+cd "${binDirectory}"
+getExecutable "mount_emmc"
+getExecutable "clean_emmc"
+
+dataDirectory="${updateDirectory}/data"
+makeDirectory "${dataDirectory}"
+
+"${interactiveShell}" && {
+  cd "${updateDirectory}"
+  export "PS1=${programName}> "
+  "${SHELL:-/bin/sh}" || :
+}
+
 cd "${updateDirectory}"
 zip -q -9 -r "${temporaryDirectory}/${unsignedArchive}" *
 
@@ -97,11 +119,5 @@ java "-Xmx${heapSize}" -jar "${signingJar}" -w \
      "${keyName}.${certificateExtension}" \
      "${keyName}.${keyExtension}" \
      "${unsignedArchive}" "${signedArchive}"
-
-"${interactiveShell}" && {
-  cd "${updateDirectory}"
-  export "PS1=${programName}> "
-  "${SHELL:-/bin/sh}" || :
-}
 
 exit 0
