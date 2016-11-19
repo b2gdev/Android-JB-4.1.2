@@ -1,5 +1,0 @@
-ui_print("********************************************");
-ui_print("|          National Braille Press          |");
-ui_print("|              B2G OTA v4.1.3              |");
-ui_print("********************************************");
-set_progress(0.10);

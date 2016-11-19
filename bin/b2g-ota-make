@@ -1,6 +1,7 @@
 #!/bin/sh
 . "$(dirname "${0}")/b2g-prologue.sh"
 includeShellDefinitions b2g-build
+includeShellDefinitions b2g-strings
 
 readonly defaultArchiveName="OTA"
 readonly defaultHeapSize="1500M"
@@ -15,6 +16,32 @@ usage: ${scriptName} [option ...]
 -n name  Specify the archive name (defaults to ${defaultArchiveName}).
 -s       Invoke an interactive shell to inspect/modify the archive.
 END_HELP
+}
+
+showHeader() {
+  line1="${ownerName}"
+  line2="$(getFormattedRevision)"
+
+  local length1="${#line1}"
+  local length2="${#line2}"
+  local length=$(((length1 > length2)? length1: length2))
+
+  local horizontal="*"
+  local vertical="|"
+
+  local border
+  replicateString border "${horizontal}" $((length + 4))
+
+  centerString line1 "${length}"
+  centerString line2 "${length}"
+
+  local prefix="${vertical} "
+  local suffix=" ${vertical}"
+
+  echo "\"${border}\","
+  echo "\"${prefix}${line1}${suffix}\","
+  echo "\"${prefix}${line2}${suffix}\","
+  echo "\"${border}\""
 }
 
 makeDirectory() {
@@ -63,6 +90,16 @@ handleArguments "hm:n:s" "${@}"
 setBuildDirectory
 needTemporaryDirectory
 
+edifyExtension="upd"
+edifyDirectory="${temporaryDirectory}/edify"
+makeDirectory "${edifyDirectory}"
+
+cd "${buildDirectory}"
+showHeader >"${edifyDirectory}/01.${edifyExtension}"
+
+cd "${edifyDirectory}"
+cp "${scriptDirectory}/"*".${edifyExtension}" .
+
 updateDirectory="${temporaryDirectory}/update"
 makeDirectory "${updateDirectory}"
 
@@ -84,7 +121,7 @@ getExecutable "setup_3g_audio"
 
 cd "${metaDirectory}"
 getFile "${scriptDirectory}/update-binary"
-cat "${scriptDirectory}/"*".upd" >"updater-script"
+cat "${edifyDirectory}/"* >"updater-script"
 
 "${invokeShell}" && {
   programMessage "invoking interactive shell"

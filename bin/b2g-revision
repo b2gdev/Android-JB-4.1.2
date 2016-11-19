@@ -1,0 +1,14 @@
+#!/bin/sh
+. "$(dirname "${0}")/b2g-prologue.sh"
+
+showHelp() {
+cat <<END_HELP
+usage: ${scriptName} [option ...]
+-h  Show this usage summary on standard output, and then exit.
+END_HELP
+}
+
+handleArguments "h" "${@}"
+
+getFormattedRevision
+exit 0

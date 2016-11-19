@@ -1,6 +1,8 @@
 set -e
 umask 022
 
+readonly ownerName="National Braille Press"
+
 readonly scriptName="${0##*/}"
 readonly programName="${scriptName%.sh}"
 
@@ -14,8 +16,20 @@ readonly initialDirectory="$(pwd)"
 readonly logFile="${programName}.log"
 readonly pidFile="${programName}.pid"
 
+setVariable() {
+  eval "${1}='${2}'"
+}
+
+getVariable() {
+  eval setVariable "'${1}'" "\"\${${2}}\""
+}
+
 getFormattedTime() {
   date "+%Y-%m-%d@%H:%M:%S"
+}
+
+getFormattedRevision() {
+  git describe --tags --always --abbrev=1 --dirty=MODIFIED
 }
 
 writeLine() {
