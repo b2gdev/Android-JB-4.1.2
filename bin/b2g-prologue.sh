@@ -28,10 +28,6 @@ getFormattedTime() {
   date "+%Y-%m-%d@%H:%M:%S"
 }
 
-getFormattedRevision() {
-  git describe --tags --always --abbrev=1 --dirty=MODIFIED
-}
-
 writeLine() {
   local line="${1}"
 

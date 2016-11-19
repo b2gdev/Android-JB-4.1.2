@@ -1,5 +1,6 @@
 #!/bin/sh
 . "$(dirname "${0}")/b2g-prologue.sh"
+includeShellDefinitions b2g-build
 
 showHelp() {
 cat <<END_HELP
@@ -10,5 +11,6 @@ END_HELP
 
 handleArguments "h" "${@}"
 
-getFormattedRevision
+setBuildDirectory
+showBuildIdentifier
 exit 0

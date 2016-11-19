@@ -61,5 +61,11 @@ setBuildDirectory() {
 
   cd "${buildDirectory}"
   readonly buildDirectory="$(pwd)"
+  export GIT_WORK_TREE="${buildDirectory}"
+  export GIT_DIR="${GIT_WORK_TREE}/.git"
+}
+
+showBuildIdentifier() {
+  git "--work-tree=${programDirectory}" describe --tags --always --abbrev=1 --dirty=MODIFIED
 }
 
