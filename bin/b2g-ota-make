@@ -18,7 +18,13 @@ usage: ${scriptName} [option ...]
 END_HELP
 }
 
-showHeader() {
+printLine() {
+  local line="${1}"
+
+  echo "ui_print(\"${line}\");"
+}
+
+printBanner() {
   line1="${ownerName}"
   line2="B2G OTA $(getFormattedRevision)"
 
@@ -38,10 +44,10 @@ showHeader() {
   local prefix="${vertical} "
   local suffix=" ${vertical}"
 
-  echo "\"${border}\","
-  echo "\"${prefix}${line1}${suffix}\","
-  echo "\"${prefix}${line2}${suffix}\","
-  echo "\"${border}\""
+  printLine "${border}"
+  printLine "${prefix}${line1}${suffix}"
+  printLine "${prefix}${line2}${suffix}"
+  printLine "${border}"
 }
 
 makeDirectory() {
@@ -95,7 +101,7 @@ edifyDirectory="${temporaryDirectory}/edify"
 makeDirectory "${edifyDirectory}"
 
 cd "${buildDirectory}"
-showHeader >"${edifyDirectory}/01.${edifyExtension}"
+printBanner >"${edifyDirectory}/00.${edifyExtension}"
 
 cd "${edifyDirectory}"
 cp "${scriptDirectory}/"*".${edifyExtension}" .
