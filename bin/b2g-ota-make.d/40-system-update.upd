@@ -1,10 +1,22 @@
-ui_print("Flashing system image...");
-unmount("/system");
-mount("ext4", "EMMC", "/dev/block/platform/mmci-omap-hs.1/by-num/p1", "/data");
 ui_print("Extracting system image...");
 
+ifelse(
+  is_mounted("/system"),
+  unmount("/system")
+);
+
+mount(
+  "ext4", "EMMC",
+  "/dev/block/platform/mmci-omap-hs.1/by-num/p1", "/data"
+);
+
 assert(
-  package_extract_file("ubi_system.img", "/data/ubi_system.img"),
+  package_extract_file("ubi_system.img", "/data/ubi_system.img")
+);
+
+ui_print("Flashing system image...");
+
+assert(
   write_raw_image("/data/ubi_system.img","system"),
   delete("/data/ubi_system.img")
 );

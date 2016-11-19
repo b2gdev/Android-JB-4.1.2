@@ -1,1 +1,4 @@
-unmount("/data");
+ifelse(
+  is_mounted("/data"),
+  unmount("/data")
+);
