@@ -20,7 +20,7 @@ END_HELP
 
 showHeader() {
   line1="${ownerName}"
-  line2="$(getFormattedRevision)"
+  line2="B2G OTA $(getFormattedRevision)"
 
   local length1="${#line1}"
   local length2="${#line2}"
