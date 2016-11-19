@@ -3,7 +3,6 @@
 includeShellDefinitions b2g-build
 includeShellDefinitions b2g-strings
 
-readonly defaultArchiveName="OTA"
 readonly defaultHeapSize="1500M"
 
 readonly archiveExtension="zip"
@@ -13,7 +12,7 @@ cat <<END_HELP
 usage: ${scriptName} [option ...]
 -h       Show this usage summary on standard output, and then exit.
 -m size  Specify the Java memory size (defaults to ${defaultHeapSize}).
--n name  Specify the archive name (defaults to ${defaultArchiveName}).
+-n name  Specify the archive name.
 -s       Invoke an interactive shell to inspect/modify the archive.
 END_HELP
 }
@@ -89,11 +88,8 @@ handleOption_s() {
 handleArguments "hm:n:s" "${@}"
 [ -n "${heapSize}" ] || heapSize="${defaultHeapSize}"
 
-[ -n "${archiveName}" ] || archiveName="${defaultArchiveName}"
-[ "${archiveName}" = "${archiveName#/}" ] && archiveName="${initialDirectory}/${archiveName}"
-[ "${archiveName}" = "${archiveName%/}" ] || syntaxError "invalid archive name: ${archiveName}"
-
 setBuildDirectory
+readonly defaultArchiveName="update-$(showBuildIdentifier)"
 needTemporaryDirectory
 
 edifyExtension="upd"
@@ -157,11 +153,21 @@ do
   getFile "device/ti/beagleboard/security/${keyName}.${extension}"
 done
 
+if [ -z "${archiveName}" ]
+then
+  archiveName="${defaultArchiveName}"
+elif [ "${archiveName}" != "${archiveName%/}" ]
+then
+  archiveName="${archiveName}${defaultArchiveName}"
+fi
+
+[ "${archiveName}" = "${archiveName#/}" ] && archiveName="${initialDirectory%/}/${archiveName}"
 readonly signedArchive="${archiveName}.${archiveExtension}"
+
 java "-Xmx${heapSize}" -jar "${signingJar}" -w \
      "${keyName}.${certificateExtension}" \
      "${keyName}.${keyExtension}" \
      "${unsignedArchive}" "${signedArchive}"
 
-programMessage "done"
+programMessage "archive ready: ${signedArchive}"
 exit 0
