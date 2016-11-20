@@ -207,8 +207,8 @@ static struct android_usb_platform_data android_usb_pdata = {
 	.products	= usb_products,
 	.num_products	= ARRAY_SIZE(usb_products),
 	.version	= 0x0100,
-	.product_name	= "Team_CBI_Notetaker",
-	.manufacturer_name	= "Zone24x7.Inc.",
+	.product_name	= "B2G",
+	.manufacturer_name	= "National Braille Press",
 	.serial_number	= device_serial,
 	.num_functions	= ARRAY_SIZE(usb_functions_all),
 };
