@@ -1,3 +1,5 @@
+unset MAKEFLAGS
+
 readonly targetProduct="beagleboard"
 readonly targetArchitecture="arm"
 readonly toolPrefix="arm-eabi-"
@@ -23,7 +25,13 @@ readonly bootName="U-Boot"
 readonly androidName="Android"
 readonly recoveryName="recovery"
 
-unset MAKEFLAGS=
+readonly buildCache="out"
+readonly hostCache="${buildCache}/host"
+readonly targetCache="${buildCache}/target"
+readonly productsCache="${targetCache}/product"
+readonly productCache="${productsCache}/${targetProduct}"
+readonly systemCache="${productCache}/system"
+readonly buildProperties="${systemCache}/build.prop"
 
 testBuildDirectory() {
   local directory="${1}"
@@ -67,5 +75,22 @@ setBuildDirectory() {
 
 showBuildIdentifier() {
   git "--work-tree=${programDirectory}" describe --tags --always --abbrev=1 --dirty=MODIFIED
+}
+
+showBuildProperty() {
+  local property="${1}"
+
+  awk -v "property=${property}" -F= '
+    $1 == property {
+      sub("^[^=]*= *", "")
+      sub(" *$", "")
+      print
+      exit
+    }
+  ' <"${buildDirectory}/${buildProperties}"
+}
+
+showBuildType() {
+  showBuildProperty ro.build.type
 }
 

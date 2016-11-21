@@ -150,7 +150,7 @@ readonly certificateExtension="x509.pem"
 
 for extension in "${keyExtension}" "${certificateExtension}"
 do
-  getFile "device/ti/beagleboard/security/${keyName}.${extension}"
+  getFile "device/ti/beagleboard/security/$(showBuildType)/${keyName}.${extension}"
 done
 
 if [ -z "${archiveName}" ]
