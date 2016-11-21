@@ -24,7 +24,7 @@ getVariable() {
   eval setVariable "'${1}'" "\"\${${2}}\""
 }
 
-getFormattedTime() {
+showFormattedTime() {
   date "+%Y-%m-%d@%H:%M:%S"
 }
 
@@ -155,7 +155,7 @@ removeTemporaryDirectory() {
 }
 
 needTemporaryDirectory() {
-  readonly temporaryDirectory="$(mktemp -d --tmpdir "${programName}.$(getFormattedTime).${$}.XXXXXX")"
+  readonly temporaryDirectory="$(mktemp -d --tmpdir "${programName}.$(showFormattedTime).${$}.XXXXXX")"
   addCleanupCommand removeTemporaryDirectory
 }
 
@@ -176,7 +176,7 @@ startLogFile() {
   logLine() {
     local line="${1}"
 
-    writeLine "${programName}: $(getFormattedTime) ${line}"
+    writeLine "${programName}: $(showFormattedTime) ${line}"
   }
 
   exec >"${logFile}"
