@@ -24,7 +24,7 @@
 PRODUCT_PACKAGES += \
         TCBIN-Text-Viewer
         
-PRODUCT_DEFAULT_DEV_CERTIFICATE := device/ti/beagleboard/security/release
+PRODUCT_DEFAULT_DEV_CERTIFICATE := device/ti/beagleboard/security/$(TARGET_BUILD_VARIANT)/release
 
 PRODUCT_PROPERTY_OVERRIDES := \
         net.dns1=8.8.8.8 \
