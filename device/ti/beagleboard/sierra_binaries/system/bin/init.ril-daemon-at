@@ -1,4 +1,0 @@
-#!/system/bin/ash
-
-# start rild
-/system/bin/rild -l /system/lib/libsierraat-ril.so -- -a -i wwan0

@@ -1,9 +1,0 @@
-
-================================================
-Copyrights and Licenses for Third Party Software
-Distributed with MCLinker Project
-================================================
-Program             Directory
--------             ---------
-Google Test         ${MCLinker}/utils/gtest
-

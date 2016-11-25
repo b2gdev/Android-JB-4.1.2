@@ -1,3 +1,0 @@
-bootargs=console=ttyO0,115200n8 androidboot.console=ttyO0 mem=256M root=/dev/mmcblk0p2 rw rootfstype=ext4 rootwait init=/init ip=off
-bootcmd=mmc rescan ; fatload mmc 0 81000000 uImage ; bootm 81000000
-uenvcmd=boot

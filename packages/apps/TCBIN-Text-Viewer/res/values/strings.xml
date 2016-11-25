@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <string name="hello">TCBIN Text Viewer</string>
-    <string name="app_name">\tTCBIN Text Viewer</string>
-    <string name="cmd_mode_text">Enter Command 1 - 5</string>
-    <string name="no_sdcard_msg">SD Card Not Present</string>
-
-</resources>

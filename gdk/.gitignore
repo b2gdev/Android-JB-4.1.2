@@ -1,5 +1,0 @@
-samples/*/bin
-samples/*/gen
-samples/*/libs
-samples/*/obj
-samples/*/res/raw/*.bc
