@@ -1,0 +1,187 @@
+#!/system/bin/sh
+exec >"/data/local/tmp/${0##*/}.log" 2>&1
+
+log() {
+  local message="${1}"
+
+  echo >&2 "`date +%Y-%m-%d@%H:%M:%S` ${message}"
+}
+
+waitForPath() {
+  local path="${1}"
+
+  local timeout=0
+
+  while [ ! -e "${path}" ]
+  do
+    [ "${timeout}" -gt 0 ] || log "waiting for path: ${path}"
+
+    let "(timeout += 1) < 100" || {
+      log "path wait timed out: ${path}"
+      return 1
+    }
+
+    sleep 0.1
+  done
+
+  [ "${timeout}" -eq 0 ] || log "path exists: ${path}"
+  return 0
+}
+
+hostCommand() {
+# log "host command: ${*}"
+  "${@}"
+}
+
+sqlCommand() {
+  local command="${1}"
+
+  hostCommand sqlite3 "/data/data/com.android.providers.settings/databases/settings.db" "${command}"
+}
+
+getField() {
+  local table="${1}"
+  local name="${2}"
+
+  sqlCommand "select value from ${table} where name=\"${name}\""
+}
+
+setField() {
+  local table="${1}"
+  local name="${2}"
+  local newValue="${3}"
+
+  oldValue="$(getField "${table}" "${name}")"
+  log "checking field: ${table}.${name}: ${oldValue}"
+
+  [ "${oldValue}" = "${newValue}" ] || {
+    log "setting field: ${table}.${name} = ${newValue}"
+    sqlCommand "insert into ${table} (name, value) values (\"${name}\", \"${newValue}\")"
+  }
+}
+
+getProperty() {
+  local name="${1}"
+
+  hostCommand getprop "${name}"
+}
+
+setProperty() {
+  local name="${1}"
+  local newValue="${2}"
+
+  oldValue="$(getProperty "${name}")"
+  log "checking property: ${name}: ${oldValue}"
+
+  [ "${oldValue}" = "${newValue}" ] || {
+    log "setting property: ${name} = ${newValue}"
+    hostCommand setprop "${name}" "${newValue}"
+  }
+}
+
+getPermission() {
+  local path="${1}"
+
+  hostCommand stat -c "%a" "${path}"
+}
+
+setPermission() {
+  local path="${1}"
+  local newValue="${2}"
+
+  ! waitForPath "${path}" || {
+    oldValue="$(getPermission "${path}")"
+    log "checking permission: ${path}: ${oldValue}"
+
+    [ "${oldValue}" = "${newValue}" ] || {
+      log "setting permission: ${path} = ${newValue}"
+      hostCommand chmod "${newValue}" "${path}"
+    }
+  }
+}
+
+permitEventDevice() {
+  local identifier="${1}"
+  local root="/sys/bus/platform/devices/${identifier}"
+
+  ! waitForPath "${root}" || {
+    set -- `ls "${root}/input"*`
+
+    [ "${#}" -eq 1 ] && {
+      local name="${1##*/}"
+      local event="${name#input}"
+
+      [ -n "${event}" ] && {
+        local device="/dev/input/event${event}"
+        log "permitting event device: ${identifier}"
+        setPermission "${device}" 666
+      }
+    }
+  }
+}
+
+buildType="$(getprop ro.build.type)"
+log "build type: ${buildType}"
+
+case "${buildType}"
+in
+  eng)
+    # enable ADB (the Android Debug Bridge)
+    setProperty persist.service.adb.enable 1
+    setField secure adb_enabled 1
+    ;;
+
+  *);;
+esac
+
+recoveryLog="/data/local/tmp/recovery.log"
+log "copying recovery log to: ${recoveryLog}"
+hostCommand cp /cache/recovery/last_log "${recoveryLog}"
+hostCommand chmod 644 "${recoveryLog}"
+
+# enable firmware version querying
+setPermission /dev/cp430_core 644
+
+# enable the braille device
+setPermission /dev/braille0 666
+
+# enable key event injection
+setPermission /dev/uinput 666
+
+# enable power switch monitoring
+permitEventDevice twl4030_pwrbutton
+
+# enable keyboard monitoring
+permitEventDevice cp430_keypad
+
+# disable scren locking
+setField secure lockscreen.disabled 1
+
+# set the screen off timeout to 30 minutes (in milliseconds)
+setField system screen_off_timeout 1800000
+
+# enable the installation of packages from foreign sources
+setField secure install_non_market_apps 1
+
+# enable the developer settings screen
+setField secure development_settings_enabled 1
+
+# enable accessibility services
+setField secure accessibility_enabled 1
+
+# wait for booting to finish
+log "waiting for boot to complete"
+while [ "`getprop sys.boot_completed`" != "1" ]
+do
+  sleep 5
+done
+log "boot completed"
+
+log "setting input method"
+package="org.nbp.b2g.ui"
+component="${package}/.InputService"
+hostCommand ime enable "${component}" &&
+hostCommand ime set "${component}"
+
+log "done"
+exit 0
