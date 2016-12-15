@@ -25,6 +25,6 @@ LOCAL_CFLAGS += -DHAVE_GPS_HARDWARE
 LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware
 LOCAL_SRC_FILES := gps_tcbin.c
 LOCAL_MODULE := gps.beagleboard
-LOCAL_MODULE_TAGS := debug
+LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)
 endif
