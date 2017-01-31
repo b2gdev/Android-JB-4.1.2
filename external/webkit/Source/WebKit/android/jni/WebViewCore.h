@@ -96,12 +96,40 @@ namespace android {
 
     enum NavigationAxis {
         AXIS_CHARACTER = 0,
-        AXIS_WORD = 1,
-        AXIS_SENTENCE = 2,
-        AXIS_HEADING = 3,
-        AXIS_SIBLING = 4,
-        AXIS_PARENT_FIRST_CHILD = 5,
-        AXIS_DOCUMENT = 6
+        AXIS_WORD,
+        AXIS_SENTENCE,
+
+        AXIS_HEADING,
+        AXIS_SIBLING,
+        AXIS_PARENT_FIRST_CHILD,
+        AXIS_DOCUMENT,
+
+        AXIS_ARTICLE,
+        AXIS_BUTTON,
+        AXIS_CHECKBOX,
+        AXIS_COMBOBOX,
+        AXIS_CONTROL,
+        AXIS_FOCUSABLE,
+        AXIS_FRAME,
+        AXIS_GRAPHIC,
+        AXIS_H1,
+        AXIS_H2,
+        AXIS_H3,
+        AXIS_H4,
+        AXIS_H5,
+        AXIS_H6,
+        AXIS_LANDMARK,
+        AXIS_LINK,
+        AXIS_LIST,
+        AXIS_LIST_ITEM,
+        AXIS_MAIN,
+        AXIS_MEDIA,
+        AXIS_RADIO,
+        AXIS_SECTION,
+        AXIS_TABLE,
+        AXIS_TEXT_FIELD,
+        AXIS_UNVISITED_LINK,
+        AXIS_VISITED_LINK,
     };
 
     class ListBoxReply;

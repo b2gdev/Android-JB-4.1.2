@@ -30,6 +30,9 @@ import android.webkit.WebViewCore.EventHub;
 import java.util.ArrayList;
 import java.util.Stack;
 
+import java.util.Map;
+import java.util.HashMap;
+
 /**
  * This class injects accessibility into WebViews with disabled JavaScript or
  * WebViews with enabled JavaScript but for which we have no accessibility
@@ -76,16 +79,50 @@ class AccessibilityInjectorFallback {
 
     // WebView navigation axes from WebViewCore.h, plus an additional axis for
     // the default behavior.
-    private static final int NAVIGATION_AXIS_CHARACTER = 0;
-    private static final int NAVIGATION_AXIS_WORD = 1;
-    private static final int NAVIGATION_AXIS_SENTENCE = 2;
-    @SuppressWarnings("unused")
-    private static final int NAVIGATION_AXIS_HEADING = 3;
-    private static final int NAVIGATION_AXIS_SIBLING = 5;
-    @SuppressWarnings("unused")
-    private static final int NAVIGATION_AXIS_PARENT_FIRST_CHILD = 5;
-    private static final int NAVIGATION_AXIS_DOCUMENT = 6;
-    private static final int NAVIGATION_AXIS_DEFAULT_WEB_VIEW_BEHAVIOR = 7;
+    private enum NavigationAxis {
+      CHARACTER,
+      WORD,
+      SENTENCE,
+
+      HEADING,
+      SIBLING,
+      PARENT_FIRST_CHILD,
+      DOCUMENT,
+
+      ARTICLE,
+      BUTTON,
+      CHECKBOX,
+      COMBOBOX,
+      CONTROL,
+      FOCUSABLE,
+      FRAME,
+      GRAPHIC,
+      H1,
+      H2,
+      H3,
+      H4,
+      H5,
+      H6,
+      LANDMARK,
+      LINK,
+      LIST,
+      LIST_ITEM,
+      MAIN,
+      MEDIA,
+      RADIO,
+      SECTION,
+      TABLE,
+      TEXT_FIELD,
+      UNVISITED_LINK,
+      VISITED_LINK,
+
+      DEFAULT; // not sent to WebViewCore
+    }
+
+    private final static Map<String, NavigationAxis> navigationAxisMap
+               = new HashMap<String, NavigationAxis>();
+
+    private static final int NAVIGATION_AXIS_DEFAULT_WEB_VIEW_BEHAVIOR = NavigationAxis.DEFAULT.ordinal();
 
     // WebView navigation directions from WebViewCore.h.
     private static final int NAVIGATION_DIRECTION_BACKWARD = 0;
@@ -274,17 +311,26 @@ class AccessibilityInjectorFallback {
             case AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY:
             case AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY: {
                 final int direction = getDirectionForAction(action);
-                final int axis = getAxisForGranularity(arguments.getInt(
-                        AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT));
-                return traverseGivenAxis(direction, axis, true, null);
+                final NavigationAxis axis =
+                    getNavigationAxis(
+                        arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT)
+                    );
+
+                return traverseGivenAxis(direction, axis);
             }
+
             case AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT:
             case AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT: {
                 final int direction = getDirectionForAction(action);
                 // TODO: Add support for moving by object.
-                final int axis = NAVIGATION_AXIS_SENTENCE;
-                return traverseGivenAxis(direction, axis, true, null);
+                final NavigationAxis axis =
+                    getNavigationAxis(
+                        arguments.getString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING)
+                    );
+
+                return traverseGivenAxis(direction, axis);
             }
+
             default:
                 return false;
         }
@@ -317,21 +363,40 @@ class AccessibilityInjectorFallback {
      * @param granularity An accessibility granularity identifier.
      * @return A web view navigation axis.
      */
-    private static int getAxisForGranularity(int granularity) {
-        switch (granularity) {
+    private static NavigationAxis getNavigationAxis(int movementGranularity) {
+        switch (movementGranularity) {
             case AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER:
-                return NAVIGATION_AXIS_CHARACTER;
+                return NavigationAxis.CHARACTER;
             case AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD:
-                return NAVIGATION_AXIS_WORD;
+                return NavigationAxis.WORD;
             case AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE:
-                return NAVIGATION_AXIS_SENTENCE;
+                return NavigationAxis.SENTENCE;
             case AccessibilityNodeInfo.MOVEMENT_GRANULARITY_PARAGRAPH:
                 // TODO: This should map to object once we implement it.
-                return NAVIGATION_AXIS_SENTENCE;
+                return NavigationAxis.SENTENCE;
             case AccessibilityNodeInfo.MOVEMENT_GRANULARITY_PAGE:
-                return NAVIGATION_AXIS_DOCUMENT;
+                return NavigationAxis.DOCUMENT;
             default:
-                return -1;
+                return null;
+        }
+    }
+
+    /**
+     * Returns the {@link WebView}-defined axis for the given
+     * {@link AccessibilityNodeInfo}-defined HTML element.
+     * 
+     * @param element An HTML element type.
+     * @return A web view navigation axis.
+     */
+    private static NavigationAxis getNavigationAxis(String elementType) {
+        synchronized (navigationAxisMap) {
+            if (navigationAxisMap.size() == 0) {
+                for (NavigationAxis axis : NavigationAxis.values()) {
+                    navigationAxisMap.put(axis.name(), axis);
+                }
+            }
+
+            return navigationAxisMap.get(elementType);
         }
     }
 
@@ -368,6 +433,10 @@ class AccessibilityInjectorFallback {
 
         webViewCore.sendMessage(EventHub.MODIFY_SELECTION, direction, axis);
         return true;
+    }
+
+    private boolean traverseGivenAxis(int direction, NavigationAxis axis) {
+        return traverseGivenAxis(direction, ((axis != null)? axis.ordinal(): -1), true, null);
     }
 
     /**
