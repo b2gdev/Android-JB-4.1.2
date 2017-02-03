@@ -2684,13 +2684,24 @@ bool WebViewCore::isDescendantOf(Node* parent, Node* node)
 static String getNodeText(Node* root) {
     String text = String();
     Node* node = root;
+    bool stripLeadingNewline = false;
 
     while (node) {
         if (node->isTextNode()) {
             String value = node->nodeValue();
+
+            if (stripLeadingNewline) {
+                stripLeadingNewline = false;
+
+                if ((value.length() > 0) && (value[0] == '\n')) {
+                    value.remove(0);
+                }
+            }
+
             text.append(value);
         } else if (node->hasTagName(HTMLNames::brTag)) {
             text.append('\n');
+            stripLeadingNewline = true;
         }
 
         node = node->traverseNextNode(root);
