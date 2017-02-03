@@ -2681,7 +2681,8 @@ bool WebViewCore::isDescendantOf(Node* parent, Node* node)
     return false;
 }
 
-static String getNodeText(Node* root) {
+static String getNodeText(Node* root)
+{
     String text = String();
     Node* node = root;
     bool stripLeadingNewline = false;
@@ -2708,6 +2709,19 @@ static String getNodeText(Node* root) {
     }
 
     return text;
+}
+
+String WebViewCore::getBodyText()
+{
+    HTMLElement* body = m_mainFrame->document()->body();
+    return getNodeText(body);
+}
+
+static jstring GetBodyText(JNIEnv* env, jobject obj, jint nativeClass)
+{
+    WebViewCore* viewImpl = reinterpret_cast<WebViewCore*>(nativeClass);
+    String bodyText = viewImpl->getBodyText();
+    return wtfStringToJstring(env, bodyText);
 }
 
 String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, int direction, int axis)
@@ -2743,8 +2757,6 @@ String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, in
 
             if (forward) {
                 currentNode = currentNode->lastDescendant();
-            } else {
-                dumpDomTree(true);
             }
 
             break;
@@ -2804,7 +2816,6 @@ String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, in
         scrollNodeIntoView(m_mainFrame, currentNode);
 
         String text = getNodeText(currentNode);
-        ALOGV("Selection markup: %s", text.utf8().data());
         return text;
     }
 
@@ -5122,6 +5133,8 @@ static JNINativeMethod gJavaWebViewCoreMethods[] = {
         (void*) SetBackgroundColor },
     { "nativeRegisterURLSchemeAsLocal", "(ILjava/lang/String;)V",
         (void*) RegisterURLSchemeAsLocal },
+    { "nativeGetBodyText", "(I)Ljava/lang/String;",
+        (void*) GetBodyText },
     { "nativeDumpDomTree", "(IZ)V",
         (void*) DumpDomTree },
     { "nativeDumpRenderTree", "(IZ)V",

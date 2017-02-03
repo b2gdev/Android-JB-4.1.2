@@ -133,8 +133,8 @@ class AccessibilityInjectorFallback {
         new ArrayList<AccessibilityWebContentKeyBinding>();
 
     // handle to the WebViewClassic this injector is associated with.
-    private final WebViewClassic mWebView;
-    private final WebView mWebViewInternal;
+    private final WebViewClassic mWebViewClassic;
+    private final WebView mWebView;
 
     // events scheduled for sending as soon as we receive the selected text
     private final Stack<AccessibilityEvent> mScheduledEventStack = new Stack<AccessibilityEvent>();
@@ -157,8 +157,8 @@ class AccessibilityInjectorFallback {
      * @param webView The associated WebViewClassic.
      */
     public AccessibilityInjectorFallback(WebViewClassic webView) {
-        mWebView = webView;
-        mWebViewInternal = mWebView.getWebView();
+        mWebViewClassic = webView;
+        mWebView = mWebViewClassic.getWebView();
         ensureWebContentKeyBindings();
     }
 
@@ -421,7 +421,7 @@ class AccessibilityInjectorFallback {
      */
     private boolean traverseGivenAxis(int direction, int axis, boolean sendEvent,
             String contentDescription) {
-        WebViewCore webViewCore = mWebView.getWebViewCore();
+        WebViewCore webViewCore = mWebViewClassic.getWebViewCore();
 
         if (webViewCore == null) {
             return false;
@@ -447,7 +447,18 @@ class AccessibilityInjectorFallback {
     }
 
     private boolean traverseGivenAxis(int direction, NavigationAxis axis) {
-        return traverseGivenAxis(direction, ((axis != null)? axis.ordinal(): -1), true, null);
+        final int axisValue;
+        final String axisName;
+
+        if (axis != null) {
+            axisValue = axis.ordinal();
+            axisName = axis.name();
+        } else {
+            axisValue = -1;
+            axisName = null;
+        }
+
+        return traverseGivenAxis(direction, axisValue, true, axisName);
     }
 
     /**
@@ -465,8 +476,6 @@ class AccessibilityInjectorFallback {
         AccessibilityEvent event = mScheduledEventStack.pop();
 
         if (selectionString != null) {
-            mWebViewInternal.setContentDescription(selectionString);
-
             if (event != null) {
                 event.getText().add(selectionString);
                 event.setFromIndex(0);
@@ -487,7 +496,7 @@ class AccessibilityInjectorFallback {
         }
         // accessibility may be disabled while waiting for the selection string
         AccessibilityManager accessibilityManager =
-            AccessibilityManager.getInstance(mWebView.getContext());
+            AccessibilityManager.getInstance(mWebViewClassic.getContext());
         if (accessibilityManager.isEnabled()) {
             accessibilityManager.sendAccessibilityEvent(event);
         }
@@ -499,7 +508,7 @@ class AccessibilityInjectorFallback {
      */
     private AccessibilityEvent getPartiallyPopulatedAccessibilityEvent(int eventType) {
         AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
-        mWebViewInternal.onInitializeAccessibilityEvent(event);
+        mWebView.onInitializeAccessibilityEvent(event);
         return event;
     }
 
@@ -512,7 +521,7 @@ class AccessibilityInjectorFallback {
         }
 
         String webContentKeyBindingsString  = Settings.Secure.getString(
-                mWebView.getContext().getContentResolver(),
+                mWebViewClassic.getContext().getContentResolver(),
                 Settings.Secure.ACCESSIBILITY_WEB_CONTENT_KEY_BINDINGS);
 
         SimpleStringSplitter semiColonSplitter = new SimpleStringSplitter(';');

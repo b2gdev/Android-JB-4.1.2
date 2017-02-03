@@ -445,6 +445,8 @@ namespace android {
 
         void setBackgroundColor(SkColor c);
 
+        WTF::String getBodyText();
+
         void dumpDomTree(bool);
         void dumpRenderTree(bool);
 

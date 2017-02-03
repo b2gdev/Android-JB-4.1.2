@@ -1737,6 +1737,7 @@ public final class WebViewClassic implements WebViewProvider, WebViewProvider.Sc
             info.addAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
         }
 
+        info.setText(getWebViewCore().getBodyText());
         getAccessibilityInjector().onInitializeAccessibilityNodeInfo(info);
     }
 

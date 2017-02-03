@@ -675,6 +675,8 @@ public final class WebViewCore {
 
     private native void nativeSetBackgroundColor(int nativeClass, int color);
 
+    private native String nativeGetBodyText(int nativeClass);
+
     private native void nativeDumpDomTree(int nativeClass, boolean useFile);
 
     private native void nativeDumpRenderTree(int nativeClass, boolean useFile);
@@ -746,6 +748,10 @@ public final class WebViewCore {
      */
     private native String nativeModifySelection(int nativeClass, int direction,
             int granularity);
+
+    String getBodyText() {
+        return nativeGetBodyText(mNativeClass);
+    }
 
     // EventHub for processing messages
     private final EventHub mEventHub;
