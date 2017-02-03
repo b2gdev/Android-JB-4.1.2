@@ -2215,25 +2215,23 @@ String WebViewCore::modifySelection(const int direction, const int axis)
 {
     DOMSelection* selection = m_mainFrame->domWindow()->getSelection();
     ASSERT(selection);
+
     // We've seen crashes where selection is null, but we don't know why
     // See http://b/5244036
     if (!selection)
         return String();
+
     if (selection->rangeCount() > 1)
         selection->removeAllRanges();
+
     switch (axis) {
         case AXIS_CHARACTER:
         case AXIS_WORD:
         case AXIS_SENTENCE:
             return modifySelectionTextNavigationAxis(selection, direction, axis);
-        case AXIS_HEADING:
-        case AXIS_SIBLING:
-        case AXIS_PARENT_FIRST_CHILD:
-        case AXIS_DOCUMENT:
-            return modifySelectionDomNavigationAxis(selection, direction, axis);
+
         default:
-            ALOGE("Invalid navigation axis: %d", axis);
-            return String();
+            return modifySelectionDomNavigationAxis(selection, direction, axis);
     }
 }
 
@@ -2683,73 +2681,122 @@ bool WebViewCore::isDescendantOf(Node* parent, Node* node)
     return false;
 }
 
+static String getNodeText(Node* root) {
+    String text = String();
+    Node* node = root;
+
+    while (node) {
+        if (node->isTextNode()) {
+            String value = node->nodeValue();
+            text.append(value);
+        } else if (node->hasTagName(HTMLNames::brTag)) {
+            text.append('\n');
+        }
+
+        node = node->traverseNextNode(root);
+    }
+
+    return text;
+}
+
 String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, int direction, int axis)
 {
     HTMLElement* body = m_mainFrame->document()->body();
+
     if (!m_currentNodeDomNavigationAxis && selection->focusNode()) {
         m_currentNodeDomNavigationAxis = selection->focusNode();
         selection->empty();
-        if (m_currentNodeDomNavigationAxis->isTextNode())
+
+        if (m_currentNodeDomNavigationAxis->isTextNode()) {
             m_currentNodeDomNavigationAxis =
                 m_currentNodeDomNavigationAxis->parentNode();
-    }
-    if (!m_currentNodeDomNavigationAxis)
-        m_currentNodeDomNavigationAxis = currentFocus();
-    if (!m_currentNodeDomNavigationAxis
-            || !validNode(m_mainFrame, m_mainFrame,
-                                        m_currentNodeDomNavigationAxis))
-        m_currentNodeDomNavigationAxis = body;
-    Node* currentNode = m_currentNodeDomNavigationAxis;
-    if (axis == AXIS_HEADING) {
-        if (currentNode == body && direction == DIRECTION_BACKWARD)
-            currentNode = currentNode->lastDescendant();
-        do {
-            if (direction == DIRECTION_FORWARD)
-                currentNode = currentNode->traverseNextNode(body);
-            else
-                currentNode = currentNode->traversePreviousNode(body);
-        } while (currentNode && (currentNode->isTextNode()
-            || !isVisible(currentNode) || !isHeading(currentNode)));
-    } else if (axis == AXIS_PARENT_FIRST_CHILD) {
-        if (direction == DIRECTION_FORWARD) {
-            currentNode = currentNode->firstChild();
-            while (currentNode && (currentNode->isTextNode()
-                    || !isVisible(currentNode)))
-                currentNode = currentNode->nextSibling();
-        } else {
-            do {
-                if (currentNode == body)
-                    return String();
-                currentNode = currentNode->parentNode();
-            } while (currentNode && (currentNode->isTextNode()
-                    || !isVisible(currentNode)));
         }
-    } else if (axis == AXIS_SIBLING) {
-        do {
-            if (direction == DIRECTION_FORWARD)
-                currentNode = currentNode->nextSibling();
-            else {
-                if (currentNode == body)
-                    return String();
-                currentNode = currentNode->previousSibling();
-            }
-        } while (currentNode && (currentNode->isTextNode()
-                || !isVisible(currentNode)));
-    } else if (axis == AXIS_DOCUMENT) {
-        currentNode = body;
-        if (direction == DIRECTION_FORWARD)
-            currentNode = currentNode->lastDescendant();
-    } else {
-        ALOGE("Invalid axis: %d", axis);
-        return String();
     }
+
+    if (!m_currentNodeDomNavigationAxis) {
+        m_currentNodeDomNavigationAxis = currentFocus();
+    }
+
+    if (!m_currentNodeDomNavigationAxis ||
+        !validNode(m_mainFrame, m_mainFrame,
+                   m_currentNodeDomNavigationAxis)) {
+        m_currentNodeDomNavigationAxis = body;
+    }
+
+    Node* currentNode = m_currentNodeDomNavigationAxis;
+    bool forward = direction == DIRECTION_FORWARD;
+
+    switch (axis) {
+        case AXIS_MAIN: {
+            currentNode = body;
+
+            if (forward) {
+                currentNode = currentNode->lastDescendant();
+            } else {
+                dumpDomTree(true);
+            }
+
+            break;
+        }
+
+        case AXIS_PARENT_FIRST_CHILD: {
+            if (forward) {
+                currentNode = currentNode->firstChild();
+
+                while (currentNode && currentNode->isTextNode()) {
+                    currentNode = currentNode->nextSibling();
+                }
+            } else {
+                do {
+                    currentNode = currentNode->parentNode();
+                } while (currentNode && currentNode->isTextNode());
+            }
+
+            break;
+        }
+
+        case AXIS_SIBLING: {
+            do {
+                if (forward) {
+                    currentNode = currentNode->nextSibling();
+                } else {
+                    currentNode = currentNode->previousSibling();
+                }
+            } while (currentNode && currentNode->isTextNode());
+
+            break;
+        }
+
+        case AXIS_HEADING: {
+            do {
+                if (forward) {
+                    currentNode = currentNode->traverseNextNode(body);
+                } else {
+                    currentNode = currentNode->traversePreviousNode(body);
+                }
+
+                if (!currentNode) break;
+                if (currentNode->isTextNode()) continue;
+            } while (!isHeading(currentNode));
+
+            break;
+        }
+
+        default: {
+            ALOGE("Invalid DOM navigation axis: %d", axis);
+            return String();
+        }
+    }
+
     if (currentNode) {
         m_currentNodeDomNavigationAxis = currentNode;
         scrollNodeIntoView(m_mainFrame, currentNode);
-        String selectionString = createMarkup(currentNode);
-        ALOGV("Selection markup: %s", selectionString.utf8().data());
-        return selectionString;
+
+        String text = getNodeText(currentNode);
+        ALOGV("Selection markup: %s", text.utf8().data());
+        return text;
     }
+
     return String();
 }
 

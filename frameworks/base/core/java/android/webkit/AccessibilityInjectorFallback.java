@@ -84,10 +84,17 @@ class AccessibilityInjectorFallback {
       WORD,
       SENTENCE,
 
-      HEADING,
-      SIBLING,
+      MAIN,
       PARENT_FIRST_CHILD,
-      DOCUMENT,
+      SIBLING,
+
+      HEADING,
+      H1,
+      H2,
+      H3,
+      H4,
+      H5,
+      H6,
 
       ARTICLE,
       BUTTON,
@@ -97,17 +104,10 @@ class AccessibilityInjectorFallback {
       FOCUSABLE,
       FRAME,
       GRAPHIC,
-      H1,
-      H2,
-      H3,
-      H4,
-      H5,
-      H6,
       LANDMARK,
       LINK,
       LIST,
       LIST_ITEM,
-      MAIN,
       MEDIA,
       RADIO,
       SECTION,
@@ -269,7 +269,7 @@ class AccessibilityInjectorFallback {
     private void setCurrentAxis(int axis, boolean sendEvent, String contentDescription) {
         mCurrentAxis = axis;
         if (sendEvent) {
-            final AccessibilityEvent event = getPartialyPopulatedAccessibilityEvent(
+            final AccessibilityEvent event = getPartiallyPopulatedAccessibilityEvent(
                     AccessibilityEvent.TYPE_ANNOUNCEMENT);
             event.getText().add(String.valueOf(axis));
             event.setContentDescription(contentDescription);
@@ -375,7 +375,7 @@ class AccessibilityInjectorFallback {
                 // TODO: This should map to object once we implement it.
                 return NavigationAxis.SENTENCE;
             case AccessibilityNodeInfo.MOVEMENT_GRANULARITY_PAGE:
-                return NavigationAxis.DOCUMENT;
+                return NavigationAxis.MAIN;
             default:
                 return null;
         }
@@ -412,13 +412,14 @@ class AccessibilityInjectorFallback {
     private boolean traverseGivenAxis(int direction, int axis, boolean sendEvent,
             String contentDescription) {
         WebViewCore webViewCore = mWebView.getWebViewCore();
+
         if (webViewCore == null) {
             return false;
         }
 
         AccessibilityEvent event = null;
         if (sendEvent) {
-            event = getPartialyPopulatedAccessibilityEvent(
+            event = getPartiallyPopulatedAccessibilityEvent(
                     AccessibilityEvent.TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
             // the text will be set upon receiving the selection string
             event.setContentDescription(contentDescription);
@@ -447,15 +448,21 @@ class AccessibilityInjectorFallback {
             Log.d(LOG_TAG, "Selection string: " + selectionString);
         }
         mIsLastSelectionStringNull = (selectionString == null);
+
         if (mScheduledEventStack.isEmpty()) {
             return;
         }
         AccessibilityEvent event = mScheduledEventStack.pop();
-        if ((event != null) && (selectionString != null)) {
-            event.getText().add(selectionString);
-            event.setFromIndex(0);
-            event.setToIndex(selectionString.length());
-            sendAccessibilityEvent(event);
+
+        if (selectionString != null) {
+            mWebViewInternal.setContentDescription(selectionString);
+
+            if (event != null) {
+                event.getText().add(selectionString);
+                event.setFromIndex(0);
+                event.setToIndex(selectionString.length());
+                sendAccessibilityEvent(event);
+            }
         }
     }
 
@@ -480,7 +487,7 @@ class AccessibilityInjectorFallback {
      * @return An accessibility event whose members are populated except its
      *         text and content description.
      */
-    private AccessibilityEvent getPartialyPopulatedAccessibilityEvent(int eventType) {
+    private AccessibilityEvent getPartiallyPopulatedAccessibilityEvent(int eventType) {
         AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
         mWebViewInternal.onInitializeAccessibilityEvent(event);
         return event;
