@@ -280,6 +280,7 @@ class AccessibilityInjector {
 
         if (!shouldInjectJavaScript(url)) {
             toggleFallbackAccessibilityInjector(true);
+            mAccessibilityInjectorFallback.onPageFinished(url);
             return;
         }
 

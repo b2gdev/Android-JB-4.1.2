@@ -336,6 +336,16 @@ class AccessibilityInjectorFallback {
         }
     }
 
+    boolean navigateToBodyElement() {
+        Bundle arguments = new Bundle();
+        arguments.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING, NavigationAxis.MAIN.name());
+        return performAccessibilityAction(AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT, arguments);
+    }
+
+    public void onPageFinished(String url) {
+        navigateToBodyElement();
+    }
+
     /**
      * Returns the {@link WebView}-defined direction for the given
      * {@link AccessibilityNodeInfo}-defined action.
