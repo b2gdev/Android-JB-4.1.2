@@ -2796,7 +2796,7 @@ String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, in
         }
 
         {
-            bool (WebViewCore::*testNode) (Node*);
+            bool (WebViewCore::*testNode) (Node*) const;
 
         case AXIS_HEADING:
             testNode = &android::WebViewCore::isHeading;
@@ -2934,7 +2934,7 @@ String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, in
     return String();
 }
 
-String WebViewCore::getAttribute(Node* node, const QualifiedName& name)
+String WebViewCore::getAttribute(Node* node, const QualifiedName& name) const
 {
     if (node->isElementNode()) {
         Element* element = static_cast<Element*>(node);
@@ -2944,32 +2944,35 @@ String WebViewCore::getAttribute(Node* node, const QualifiedName& name)
     return String();
 }
 
-String WebViewCore::getRole(Node* node)
+String WebViewCore::getRole(Node* node) const
 {
     return getAttribute(node, WebCore::HTMLNames::roleAttr);
 }
 
-bool WebViewCore::hasRole(Node* node, ...)
+bool WebViewCore::hasRole(Node* node, ...) const
 {
-    va_list choices;
-    va_start(choices, node);
-
-    String role = getRole(node);
     bool found = false;
-    const char *choice;
+    String role = getRole(node);
 
-    while ((choice = va_arg(choices, const char*))) {
-        if (equalIgnoringCase(role, choice)) {
-            found = true;
-            break;
+    if (!role.isEmpty()) {
+        va_list choices;
+        va_start(choices, node);
+        const char *choice;
+
+        while ((choice = va_arg(choices, const char*))) {
+            if (equalIgnoringCase(role, choice)) {
+                found = true;
+                break;
+            }
         }
+
+        va_end(choices);
     }
 
-    va_end(choices);
     return found;
 }
 
-bool WebViewCore::isVisible(Node* node)
+bool WebViewCore::isVisible(Node* node) const
 {
     // start off an element
     Element* element = 0;
@@ -2999,7 +3002,7 @@ bool WebViewCore::isVisible(Node* node)
     return true;
 }
 
-bool WebViewCore::isHeading(Node* node)
+bool WebViewCore::isHeading(Node* node) const
 {
     if (isH1(node)) return true;
     if (isH2(node)) return true;
@@ -3010,138 +3013,138 @@ bool WebViewCore::isHeading(Node* node)
     return hasRole(node, "heading", NULL);
 }
 
-bool WebViewCore::isH1(Node* node)
+bool WebViewCore::isH1(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h1Tag);
 }
 
-bool WebViewCore::isH2(Node* node)
+bool WebViewCore::isH2(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h2Tag);
 }
 
-bool WebViewCore::isH3(Node* node)
+bool WebViewCore::isH3(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h3Tag);
 }
 
-bool WebViewCore::isH4(Node* node)
+bool WebViewCore::isH4(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h4Tag);
 }
 
-bool WebViewCore::isH5(Node* node)
+bool WebViewCore::isH5(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h5Tag);
 }
 
-bool WebViewCore::isH6(Node* node)
+bool WebViewCore::isH6(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h6Tag);
 }
 
-bool WebViewCore::isArticle(Node* node)
+bool WebViewCore::isArticle(Node* node) const
 {
     return hasRole(node, "article", NULL);
 }
 
-bool WebViewCore::isBlockQuote(Node* node)
+bool WebViewCore::isBlockQuote(Node* node) const
 {
     return hasRole(node, "blockquote", NULL);
 }
 
-bool WebViewCore::isButton(Node* node)
+bool WebViewCore::isButton(Node* node) const
 {
     return hasRole(node, "button", NULL);
 }
 
-bool WebViewCore::isCheckBox(Node* node)
+bool WebViewCore::isCheckBox(Node* node) const
 {
     return hasRole(node, "checkbox", "menuitemcheckbox", NULL);
 }
 
-bool WebViewCore::isComboBox(Node* node)
+bool WebViewCore::isComboBox(Node* node) const
 {
     return hasRole(node, "combobox", NULL);
 }
 
-bool WebViewCore::isControl(Node* node)
+bool WebViewCore::isControl(Node* node) const
 {
     return false;
 }
 
-bool WebViewCore::isFocusable(Node* node)
+bool WebViewCore::isFocusable(Node* node) const
 {
     return false;
 }
 
-bool WebViewCore::isFrame(Node* node)
+bool WebViewCore::isFrame(Node* node) const
 {
     return false;
 }
 
-bool WebViewCore::isGraphic(Node* node)
+bool WebViewCore::isGraphic(Node* node) const
 {
     return hasRole(node, "img", NULL);
 }
 
-bool WebViewCore::isLandMark(Node* node)
+bool WebViewCore::isLandMark(Node* node) const
 {
     return hasRole(node, "article", "application", "banner", "complementary", "contentinfo", "main", "navigation", "region", "search", NULL);
 }
 
-bool WebViewCore::isLink(Node* node)
+bool WebViewCore::isLink(Node* node) const
 {
     return hasRole(node, "link", NULL);
 }
 
-bool WebViewCore::isList(Node* node)
+bool WebViewCore::isList(Node* node) const
 {
     return hasRole(node, "list", "listbox", NULL);
 }
 
-bool WebViewCore::isListItem(Node* node)
+bool WebViewCore::isListItem(Node* node) const
 {
     return hasRole(node, "listitem", NULL);
 }
 
-bool WebViewCore::isMedia(Node* node)
+bool WebViewCore::isMedia(Node* node) const
 {
     return false;
 }
 
-bool WebViewCore::isRadioButton(Node* node)
+bool WebViewCore::isRadioButton(Node* node) const
 {
     return hasRole(node, "radio", "menuitemradio", NULL);
 }
 
-bool WebViewCore::isRadioGroup(Node* node)
+bool WebViewCore::isRadioGroup(Node* node) const
 {
     return hasRole(node, "radiogroup", NULL);
 }
 
-bool WebViewCore::isSection(Node* node)
+bool WebViewCore::isSection(Node* node) const
 {
     return false;
 }
 
-bool WebViewCore::isTable(Node* node)
+bool WebViewCore::isTable(Node* node) const
 {
     return hasRole(node, "grid", NULL);
 }
 
-bool WebViewCore::isTextField(Node* node)
+bool WebViewCore::isTextField(Node* node) const
 {
     return false;
 }
 
-bool WebViewCore::isUnvisitedLink(Node* node)
+bool WebViewCore::isUnvisitedLink(Node* node) const
 {
     if (!isLink(node)) return false;
     return false;
 }
 
-bool WebViewCore::isVisitedLink(Node* node)
+bool WebViewCore::isVisitedLink(Node* node) const
 {
     if (!isLink(node)) return false;
     return false;
