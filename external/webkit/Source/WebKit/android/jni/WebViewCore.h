@@ -680,7 +680,7 @@ namespace android {
 
         String getAttribute(Node* node, const QualifiedName& name);
         String getRole(Node* node);
-        bool hasRole(Node* node, const char* role);
+        bool hasRole(Node* node, ...);
 
         bool isVisible(WebCore::Node* node);
         bool isHeading(WebCore::Node* node);
@@ -691,6 +691,7 @@ namespace android {
         bool isH5(Node* node);
         bool isH6(Node* node);
         bool isArticle(Node* node);
+        bool isBlockQuote(Node* node);
         bool isButton(Node* node);
         bool isCheckBox(Node* node);
         bool isComboBox(Node* node);
@@ -703,7 +704,8 @@ namespace android {
         bool isList(Node* node);
         bool isListItem(Node* node);
         bool isMedia(Node* node);
-        bool isRadio(Node* node);
+        bool isRadioButton(Node* node);
+        bool isRadioGroup(Node* node);
         bool isSection(Node* node);
         bool isTable(Node* node);
         bool isTextField(Node* node);

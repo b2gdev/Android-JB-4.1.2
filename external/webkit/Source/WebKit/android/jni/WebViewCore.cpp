@@ -139,6 +139,7 @@
 
 #include <JNIHelp.h>
 #include <JNIUtility.h>
+#include <stdarg.h>
 #include <androidfw/KeycodeLabels.h>
 #include <cutils/properties.h>
 #include <v8.h>
@@ -2757,6 +2758,10 @@ String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, in
 
             if (forward) {
                 currentNode = currentNode->lastDescendant();
+
+                while (currentNode && currentNode->isTextNode()) {
+                    currentNode = currentNode->traversePreviousNode(body);
+                }
             }
 
             break;
@@ -2874,7 +2879,7 @@ String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, in
             goto FIND_NODE;
 
         case AXIS_RADIO:
-            testNode = &android::WebViewCore::isRadio;
+            testNode = &android::WebViewCore::isRadioButton;
             goto FIND_NODE;
 
         case AXIS_SECTION:
@@ -2944,9 +2949,24 @@ String WebViewCore::getRole(Node* node)
     return getAttribute(node, WebCore::HTMLNames::roleAttr);
 }
 
-bool WebViewCore::hasRole(Node* node, const char* role)
+bool WebViewCore::hasRole(Node* node, ...)
 {
-    return equalIgnoringCase(getRole(node), role);
+    va_list choices;
+    va_start(choices, node);
+
+    String role = getRole(node);
+    bool found = false;
+    const char *choice;
+
+    while ((choice = va_arg(choices, const char*))) {
+        if (equalIgnoringCase(role, choice)) {
+            found = true;
+            break;
+        }
+    }
+
+    va_end(choices);
+    return found;
 }
 
 bool WebViewCore::isVisible(Node* node)
@@ -2987,7 +3007,7 @@ bool WebViewCore::isHeading(Node* node)
     if (isH4(node)) return true;
     if (isH5(node)) return true;
     if (isH6(node)) return true;
-    return hasRole(node, "heading");
+    return hasRole(node, "heading", NULL);
 }
 
 bool WebViewCore::isH1(Node* node)
@@ -3022,22 +3042,27 @@ bool WebViewCore::isH6(Node* node)
 
 bool WebViewCore::isArticle(Node* node)
 {
-    return false;
+    return hasRole(node, "article", NULL);
+}
+
+bool WebViewCore::isBlockQuote(Node* node)
+{
+    return hasRole(node, "blockquote", NULL);
 }
 
 bool WebViewCore::isButton(Node* node)
 {
-    return false;
+    return hasRole(node, "button", NULL);
 }
 
 bool WebViewCore::isCheckBox(Node* node)
 {
-    return false;
+    return hasRole(node, "checkbox", "menuitemcheckbox", NULL);
 }
 
 bool WebViewCore::isComboBox(Node* node)
 {
-    return false;
+    return hasRole(node, "combobox", NULL);
 }
 
 bool WebViewCore::isControl(Node* node)
@@ -3057,27 +3082,27 @@ bool WebViewCore::isFrame(Node* node)
 
 bool WebViewCore::isGraphic(Node* node)
 {
-    return false;
+    return hasRole(node, "img", NULL);
 }
 
 bool WebViewCore::isLandMark(Node* node)
 {
-    return false;
+    return hasRole(node, "article", "application", "banner", "complementary", "contentinfo", "main", "navigation", "region", "search", NULL);
 }
 
 bool WebViewCore::isLink(Node* node)
 {
-    return false;
+    return hasRole(node, "link", NULL);
 }
 
 bool WebViewCore::isList(Node* node)
 {
-    return false;
+    return hasRole(node, "list", "listbox", NULL);
 }
 
 bool WebViewCore::isListItem(Node* node)
 {
-    return false;
+    return hasRole(node, "listitem", NULL);
 }
 
 bool WebViewCore::isMedia(Node* node)
@@ -3085,9 +3110,14 @@ bool WebViewCore::isMedia(Node* node)
     return false;
 }
 
-bool WebViewCore::isRadio(Node* node)
+bool WebViewCore::isRadioButton(Node* node)
 {
-    return false;
+    return hasRole(node, "radio", "menuitemradio", NULL);
+}
+
+bool WebViewCore::isRadioGroup(Node* node)
+{
+    return hasRole(node, "radiogroup", NULL);
 }
 
 bool WebViewCore::isSection(Node* node)
@@ -3097,7 +3127,7 @@ bool WebViewCore::isSection(Node* node)
 
 bool WebViewCore::isTable(Node* node)
 {
-    return false;
+    return hasRole(node, "grid", NULL);
 }
 
 bool WebViewCore::isTextField(Node* node)
@@ -3107,11 +3137,13 @@ bool WebViewCore::isTextField(Node* node)
 
 bool WebViewCore::isUnvisitedLink(Node* node)
 {
+    if (!isLink(node)) return false;
     return false;
 }
 
 bool WebViewCore::isVisitedLink(Node* node)
 {
+    if (!isLink(node)) return false;
     return false;
 }
 
