@@ -677,8 +677,39 @@ namespace android {
         WebCore::Text* traverseNextContentTextNode(WebCore::Node* fromNode,
                                                    WebCore::Node* toNode,
                                                    int direction);
+
+        String getAttribute(Node* node, const QualifiedName& name);
+        String getRole(Node* node);
+        bool hasRole(Node* node, const char* role);
+
         bool isVisible(WebCore::Node* node);
         bool isHeading(WebCore::Node* node);
+        bool isH1(Node* node);
+        bool isH2(Node* node);
+        bool isH3(Node* node);
+        bool isH4(Node* node);
+        bool isH5(Node* node);
+        bool isH6(Node* node);
+        bool isArticle(Node* node);
+        bool isButton(Node* node);
+        bool isCheckBox(Node* node);
+        bool isComboBox(Node* node);
+        bool isControl(Node* node);
+        bool isFocusable(Node* node);
+        bool isFrame(Node* node);
+        bool isGraphic(Node* node);
+        bool isLandMark(Node* node);
+        bool isLink(Node* node);
+        bool isList(Node* node);
+        bool isListItem(Node* node);
+        bool isMedia(Node* node);
+        bool isRadio(Node* node);
+        bool isSection(Node* node);
+        bool isTable(Node* node);
+        bool isTextField(Node* node);
+        bool isUnvisitedLink(Node* node);
+        bool isVisitedLink(Node* node);
+
         WTF::String formatMarkup(WebCore::DOMSelection* selection);
         void selectAt(int x, int y);
 

@@ -2790,7 +2790,114 @@ String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, in
             break;
         }
 
-        case AXIS_HEADING: {
+        {
+            bool (WebViewCore::*testNode) (Node*);
+
+        case AXIS_HEADING:
+            testNode = &android::WebViewCore::isHeading;
+            goto FIND_NODE;
+
+        case AXIS_H1:
+            testNode = &android::WebViewCore::isH1;
+            goto FIND_NODE;
+
+        case AXIS_H2:
+            testNode = &android::WebViewCore::isH2;
+            goto FIND_NODE;
+
+        case AXIS_H3:
+            testNode = &android::WebViewCore::isH3;
+            goto FIND_NODE;
+
+        case AXIS_H4:
+            testNode = &android::WebViewCore::isH4;
+            goto FIND_NODE;
+
+        case AXIS_H5:
+            testNode = &android::WebViewCore::isH5;
+            goto FIND_NODE;
+
+        case AXIS_H6:
+            testNode = &android::WebViewCore::isH6;
+            goto FIND_NODE;
+
+        case AXIS_ARTICLE:
+            testNode = &android::WebViewCore::isArticle;
+            goto FIND_NODE;
+
+        case AXIS_BUTTON:
+            testNode = &android::WebViewCore::isButton;
+            goto FIND_NODE;
+
+        case AXIS_CHECKBOX:
+            testNode = &android::WebViewCore::isCheckBox;
+            goto FIND_NODE;
+
+        case AXIS_COMBOBOX:
+            testNode = &android::WebViewCore::isComboBox;
+            goto FIND_NODE;
+
+        case AXIS_CONTROL:
+            testNode = &android::WebViewCore::isControl;
+            goto FIND_NODE;
+
+        case AXIS_FOCUSABLE:
+            testNode = &android::WebViewCore::isFocusable;
+            goto FIND_NODE;
+
+        case AXIS_FRAME:
+            testNode = &android::WebViewCore::isFrame;
+            goto FIND_NODE;
+
+        case AXIS_GRAPHIC:
+            testNode = &android::WebViewCore::isGraphic;
+            goto FIND_NODE;
+
+        case AXIS_LANDMARK:
+            testNode = &android::WebViewCore::isLandMark;
+            goto FIND_NODE;
+
+        case AXIS_LINK:
+            testNode = &android::WebViewCore::isLink;
+            goto FIND_NODE;
+
+        case AXIS_LIST:
+            testNode = &android::WebViewCore::isList;
+            goto FIND_NODE;
+
+        case AXIS_LIST_ITEM:
+            testNode = &android::WebViewCore::isListItem;
+            goto FIND_NODE;
+
+        case AXIS_MEDIA:
+            testNode = &android::WebViewCore::isMedia;
+            goto FIND_NODE;
+
+        case AXIS_RADIO:
+            testNode = &android::WebViewCore::isRadio;
+            goto FIND_NODE;
+
+        case AXIS_SECTION:
+            testNode = &android::WebViewCore::isSection;
+            goto FIND_NODE;
+
+        case AXIS_TABLE:
+            testNode = &android::WebViewCore::isTable;
+            goto FIND_NODE;
+
+        case AXIS_TEXT_FIELD:
+            testNode = &android::WebViewCore::isTextField;
+            goto FIND_NODE;
+
+        case AXIS_UNVISITED_LINK:
+            testNode = &android::WebViewCore::isUnvisitedLink;
+            goto FIND_NODE;
+
+        case AXIS_VISITED_LINK:
+            testNode = &android::WebViewCore::isVisitedLink;
+            goto FIND_NODE;
+
+        FIND_NODE:
             do {
                 if (forward) {
                     currentNode = currentNode->traverseNextNode(body);
@@ -2800,7 +2907,7 @@ String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, in
 
                 if (!currentNode) break;
                 if (currentNode->isTextNode()) continue;
-            } while (!isHeading(currentNode));
+            } while (!(this->*testNode)(currentNode));
 
             break;
         }
@@ -2822,26 +2929,24 @@ String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, in
     return String();
 }
 
-bool WebViewCore::isHeading(Node* node)
+String WebViewCore::getAttribute(Node* node, const QualifiedName& name)
 {
-    if (node->hasTagName(WebCore::HTMLNames::h1Tag)
-            || node->hasTagName(WebCore::HTMLNames::h2Tag)
-            || node->hasTagName(WebCore::HTMLNames::h3Tag)
-            || node->hasTagName(WebCore::HTMLNames::h4Tag)
-            || node->hasTagName(WebCore::HTMLNames::h5Tag)
-            || node->hasTagName(WebCore::HTMLNames::h6Tag)) {
-        return true;
-    }
-
     if (node->isElementNode()) {
         Element* element = static_cast<Element*>(node);
-        String roleAttribute =
-            element->getAttribute(WebCore::HTMLNames::roleAttr).string();
-        if (equalIgnoringCase(roleAttribute, "heading"))
-            return true;
+        return element->getAttribute(name).string();
     }
 
-    return false;
+    return String();
+}
+
+String WebViewCore::getRole(Node* node)
+{
+    return getAttribute(node, WebCore::HTMLNames::roleAttr);
+}
+
+bool WebViewCore::hasRole(Node* node, const char* role)
+{
+    return equalIgnoringCase(getRole(node), role);
 }
 
 bool WebViewCore::isVisible(Node* node)
@@ -2872,6 +2977,142 @@ bool WebViewCore::isVisible(Node* node)
         currentNode = currentNode->parentNode();
     }
     return true;
+}
+
+bool WebViewCore::isHeading(Node* node)
+{
+    if (isH1(node)) return true;
+    if (isH2(node)) return true;
+    if (isH3(node)) return true;
+    if (isH4(node)) return true;
+    if (isH5(node)) return true;
+    if (isH6(node)) return true;
+    return hasRole(node, "heading");
+}
+
+bool WebViewCore::isH1(Node* node)
+{
+    return node->hasTagName(WebCore::HTMLNames::h1Tag);
+}
+
+bool WebViewCore::isH2(Node* node)
+{
+    return node->hasTagName(WebCore::HTMLNames::h2Tag);
+}
+
+bool WebViewCore::isH3(Node* node)
+{
+    return node->hasTagName(WebCore::HTMLNames::h3Tag);
+}
+
+bool WebViewCore::isH4(Node* node)
+{
+    return node->hasTagName(WebCore::HTMLNames::h4Tag);
+}
+
+bool WebViewCore::isH5(Node* node)
+{
+    return node->hasTagName(WebCore::HTMLNames::h5Tag);
+}
+
+bool WebViewCore::isH6(Node* node)
+{
+    return node->hasTagName(WebCore::HTMLNames::h6Tag);
+}
+
+bool WebViewCore::isArticle(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isButton(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isCheckBox(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isComboBox(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isControl(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isFocusable(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isFrame(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isGraphic(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isLandMark(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isLink(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isList(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isListItem(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isMedia(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isRadio(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isSection(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isTable(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isTextField(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isUnvisitedLink(Node* node)
+{
+    return false;
+}
+
+bool WebViewCore::isVisitedLink(Node* node)
+{
+    return false;
 }
 
 String WebViewCore::formatMarkup(DOMSelection* selection)
