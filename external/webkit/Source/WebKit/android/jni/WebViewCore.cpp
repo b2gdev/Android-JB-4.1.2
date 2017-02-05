@@ -2803,27 +2803,27 @@ String WebViewCore::modifySelectionDomNavigationAxis(DOMSelection* selection, in
             goto FIND_NODE;
 
         case AXIS_H1:
-            testNode = &android::WebViewCore::isH1;
+            testNode = &android::WebViewCore::isHeadingLevel1;
             goto FIND_NODE;
 
         case AXIS_H2:
-            testNode = &android::WebViewCore::isH2;
+            testNode = &android::WebViewCore::isHeadingLevel2;
             goto FIND_NODE;
 
         case AXIS_H3:
-            testNode = &android::WebViewCore::isH3;
+            testNode = &android::WebViewCore::isHeadingLevel3;
             goto FIND_NODE;
 
         case AXIS_H4:
-            testNode = &android::WebViewCore::isH4;
+            testNode = &android::WebViewCore::isHeadingLevel4;
             goto FIND_NODE;
 
         case AXIS_H5:
-            testNode = &android::WebViewCore::isH5;
+            testNode = &android::WebViewCore::isHeadingLevel5;
             goto FIND_NODE;
 
         case AXIS_H6:
-            testNode = &android::WebViewCore::isH6;
+            testNode = &android::WebViewCore::isHeadingLevel6;
             goto FIND_NODE;
 
         case AXIS_ARTICLE:
@@ -3004,41 +3004,41 @@ bool WebViewCore::isVisible(Node* node) const
 
 bool WebViewCore::isHeading(Node* node) const
 {
-    if (isH1(node)) return true;
-    if (isH2(node)) return true;
-    if (isH3(node)) return true;
-    if (isH4(node)) return true;
-    if (isH5(node)) return true;
-    if (isH6(node)) return true;
+    if (isHeadingLevel1(node)) return true;
+    if (isHeadingLevel2(node)) return true;
+    if (isHeadingLevel3(node)) return true;
+    if (isHeadingLevel4(node)) return true;
+    if (isHeadingLevel5(node)) return true;
+    if (isHeadingLevel6(node)) return true;
     return hasRole(node, "heading", NULL);
 }
 
-bool WebViewCore::isH1(Node* node) const
+bool WebViewCore::isHeadingLevel1(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h1Tag);
 }
 
-bool WebViewCore::isH2(Node* node) const
+bool WebViewCore::isHeadingLevel2(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h2Tag);
 }
 
-bool WebViewCore::isH3(Node* node) const
+bool WebViewCore::isHeadingLevel3(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h3Tag);
 }
 
-bool WebViewCore::isH4(Node* node) const
+bool WebViewCore::isHeadingLevel4(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h4Tag);
 }
 
-bool WebViewCore::isH5(Node* node) const
+bool WebViewCore::isHeadingLevel5(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h5Tag);
 }
 
-bool WebViewCore::isH6(Node* node) const
+bool WebViewCore::isHeadingLevel6(Node* node) const
 {
     return node->hasTagName(WebCore::HTMLNames::h6Tag);
 }

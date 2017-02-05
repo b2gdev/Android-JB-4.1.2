@@ -684,12 +684,12 @@ namespace android {
 
         bool isVisible(WebCore::Node* node) const;
         bool isHeading(WebCore::Node* node) const;
-        bool isH1(Node* node) const;
-        bool isH2(Node* node) const;
-        bool isH3(Node* node) const;
-        bool isH4(Node* node) const;
-        bool isH5(Node* node) const;
-        bool isH6(Node* node) const;
+        bool isHeadingLevel1(Node* node) const;
+        bool isHeadingLevel2(Node* node) const;
+        bool isHeadingLevel3(Node* node) const;
+        bool isHeadingLevel4(Node* node) const;
+        bool isHeadingLevel5(Node* node) const;
+        bool isHeadingLevel6(Node* node) const;
         bool isArticle(Node* node) const;
         bool isBlockQuote(Node* node) const;
         bool isButton(Node* node) const;
