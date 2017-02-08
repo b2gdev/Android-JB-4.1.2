@@ -2685,40 +2685,46 @@ bool WebViewCore::isDescendantOf(Node* parent, Node* node)
 static String getNodeText(Node* root)
 {
     String text = String();
-    Node* node = root;
-    bool stripLeadingNewline = false;
 
-    while (node) {
-        if (node->isTextNode()) {
-            String value = node->nodeValue();
+    {
+        Node* node = root;
+        bool stripLeadingNewline = false;
 
-            // if a <br> has occurred then ignore (if present) a leading newline
-            if (stripLeadingNewline) {
-                stripLeadingNewline = false;
+        while (node) {
+            if (node->isTextNode()) {
+                String value = node->nodeValue();
 
-                if ((value.length() > 0) && (value[0] == '\n')) {
-                    value.remove(0);
+                // if a <br> has occurred then ignore (if present) a leading newline
+                if (stripLeadingNewline) {
+                    stripLeadingNewline = false;
+
+                    if ((value.length() > 0) && (value[0] == '\n')) {
+                        value.remove(0);
+                    }
                 }
-            }
 
-            text.append(value);
-        } else if (node->hasTagName(HTMLNames::brTag)) {
-            // interpret <br> as a newline (but only once)
-            if (!stripLeadingNewline) {
-                stripLeadingNewline = true;
-                int length = text.length();
+                text.append(value);
+            } else if (node->hasTagName(HTMLNames::brTag)) {
+                // interpret <br> as a newline (but only once)
+                if (!stripLeadingNewline) {
+                    stripLeadingNewline = true;
+                    int length = text.length();
 
-                // don't append a newline if the text already ends with one
-                if (length > 0) {
-                    if (text[length-1] != '\n') {
-                        text.append('\n');
+                    // don't append a newline if the text already ends with one
+                    if (length > 0) {
+                        if (text[length-1] != '\n') {
+                            text.append('\n');
+                        }
                     }
                 }
             }
-        }
 
-        node = node->traverseNextNode(root);
+            node = node->traverseNextNode(root);
+        }
     }
+
+    // isSpaceOrNewline(c) doesn't catch U+00A0 (non-breaking space)
+    text.replace(0XA0, ' ');
 
     {
         const int length = text.length();
@@ -2753,8 +2759,10 @@ static String getNodeText(Node* root)
                     text.remove(from, count);
                 }
 
-                end = isNewline? index: NO_END;
+                end = NO_END;
             }
+
+            if (isNewline) end = index;
         }
 
         if (end > 0) {
@@ -2787,7 +2795,6 @@ static String getNodeText(Node* root)
 String WebViewCore::getBodyText()
 {
     HTMLElement* body = m_mainFrame->document()->body();
-dumpDomTree(true);
     return getNodeText(body);
 }
 
