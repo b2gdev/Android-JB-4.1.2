@@ -2692,6 +2692,7 @@ static String getNodeText(Node* root)
         if (node->isTextNode()) {
             String value = node->nodeValue();
 
+            // if a <br> has occurred then ignore (if present) a leading newline
             if (stripLeadingNewline) {
                 stripLeadingNewline = false;
 
@@ -2702,11 +2703,82 @@ static String getNodeText(Node* root)
 
             text.append(value);
         } else if (node->hasTagName(HTMLNames::brTag)) {
-            text.append('\n');
-            stripLeadingNewline = true;
+            // interpret <br> as a newline (but only once)
+            if (!stripLeadingNewline) {
+                stripLeadingNewline = true;
+                int length = text.length();
+
+                // don't append a newline if the text already ends with one
+                if (length > 0) {
+                    if (text[length-1] != '\n') {
+                        text.append('\n');
+                    }
+                }
+            }
         }
 
         node = node->traverseNextNode(root);
+    }
+
+    {
+        const int length = text.length();
+        int index = length;
+
+        int end = length;
+        const int NO_END = -1;
+
+        // iterate backward, character by character, through the text
+        // remove trailing whitespace at the end of each line
+        // interpret newlines at the end of the text as whitespace
+        while (index > 0) {
+            const UChar character = text[--index];
+            const bool isNewline = character == '\n';
+
+            if (isNewline) {
+                if (end == length) {
+                    // remove empty trailing lines
+                    continue;
+                }
+            } else if (isSpaceOrNewline(character)) {
+                continue;
+            }
+
+            // this character is significant and must not be removed
+            if (end != NO_END) {
+                // remove the rest of this line
+                const int from = index + 1;
+                const int count = end - from;
+
+                if (count > 0) {
+                    text.remove(from, count);
+                }
+
+                end = isNewline? index: NO_END;
+            }
+        }
+
+        if (end > 0) {
+            // remove the content of the first line since it's blank
+            text.remove(0, end);
+        }
+    }
+
+    // remove leading empty lines
+    {
+        const int length = text.length();
+        int end = 0;
+
+        while (end < length) {
+            if (text[end] != '\n') {
+                break;
+            }
+
+            end += 1;
+        }
+
+        if (end > 0) {
+            text.remove(0, end);
+        }
     }
 
     return text;
@@ -2715,6 +2787,7 @@ static String getNodeText(Node* root)
 String WebViewCore::getBodyText()
 {
     HTMLElement* body = m_mainFrame->document()->body();
+dumpDomTree(true);
     return getNodeText(body);
 }
 
