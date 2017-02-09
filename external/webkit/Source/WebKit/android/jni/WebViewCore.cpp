@@ -2733,19 +2733,33 @@ static String getNodeText(Node* root)
         int end = length;
         const int NO_END = -1;
 
+        int newlineCount = 0;
+        int spaceCount = 0;
+        int minimumIndent = INT_MAX;
+
         // iterate backward, character by character, through the text
         // remove trailing whitespace at the end of each line
         // interpret newlines at the end of the text as whitespace
         while (index > 0) {
             const UChar character = text[--index];
             const bool isNewline = character == '\n';
+            const bool isSpace = !isNewline && isSpaceOrNewline(character);
 
             if (isNewline) {
-                if (end == length) {
-                    // remove empty trailing lines
-                    continue;
+                if (end == NO_END) {
+                    end = index;
+                    newlineCount = 0;
+                } else if (end != length) {
+                    newlineCount += 1;
                 }
-            } else if (isSpaceOrNewline(character)) {
+
+                if (spaceCount < minimumIndent) minimumIndent = spaceCount;
+                spaceCount = 0;
+                continue;
+            }
+
+            if (isSpace) {
+                spaceCount += 1;
                 continue;
             }
 
@@ -2756,37 +2770,20 @@ static String getNodeText(Node* root)
                 const int count = end - from;
 
                 if (count > 0) {
-                    text.remove(from, count);
+                    String replacement = String();
+                    if (newlineCount > 0) replacement.append('\n');
+                    text.replace(from, count, replacement);
                 }
 
                 end = NO_END;
             }
 
-            if (isNewline) end = index;
+            spaceCount = 0;
         }
 
-        if (end > 0) {
-            // remove the content of the first line since it's blank
-            text.remove(0, end);
-        }
-    }
-
-    // remove leading empty lines
-    {
-        const int length = text.length();
-        int end = 0;
-
-        while (end < length) {
-            if (text[end] != '\n') {
-                break;
-            }
-
-            end += 1;
-        }
-
-        if (end > 0) {
-            text.remove(0, end);
-        }
+        if (end < length) end += 1;
+        if (end > 0) text.remove(0, end);
+        if (spaceCount < minimumIndent) minimumIndent = spaceCount;
     }
 
     return text;
