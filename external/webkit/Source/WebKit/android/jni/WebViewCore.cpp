@@ -2685,6 +2685,8 @@ bool WebViewCore::isDescendantOf(Node* parent, Node* node)
 static String getNodeText(Node* root)
 {
     String text = String();
+    const char NEW_LINE = '\n';
+    const char BLANK = ' ';
 
     {
         Node* node = root;
@@ -2698,7 +2700,7 @@ static String getNodeText(Node* root)
                 if (stripLeadingNewline) {
                     stripLeadingNewline = false;
 
-                    if ((value.length() > 0) && (value[0] == '\n')) {
+                    if ((value.length() > 0) && (value[0] == NEW_LINE)) {
                         value.remove(0);
                     }
                 }
@@ -2708,12 +2710,12 @@ static String getNodeText(Node* root)
                 // interpret <br> as a newline (but only once)
                 if (!stripLeadingNewline) {
                     stripLeadingNewline = true;
-                    int length = text.length();
+                    const int length = text.length();
 
                     // don't append a newline if the text already ends with one
                     if (length > 0) {
-                        if (text[length-1] != '\n') {
-                            text.append('\n');
+                        if (text[length-1] != NEW_LINE) {
+                            text.append(NEW_LINE);
                         }
                     }
                 }
@@ -2724,42 +2726,49 @@ static String getNodeText(Node* root)
     }
 
     // isSpaceOrNewline(c) doesn't catch U+00A0 (non-breaking space)
-    text.replace(0XA0, ' ');
+    text.replace(0XA0, BLANK);
 
     {
         const int length = text.length();
         int index = length;
 
-        int end = length;
+        int end = length; // index of end of text or current line
         const int NO_END = -1;
 
-        int newlineCount = 0;
-        int spaceCount = 0;
-        int minimumIndent = INT_MAX;
+        int newlines = 0; // number of contiguous blank lines
+        int currentIndent = length; // out of range if line is blank
+        int minimumIndent = INT_MAX; // start with a huge value
 
         // iterate backward, character by character, through the text
         // remove trailing whitespace at the end of each line
-        // interpret newlines at the end of the text as whitespace
+        // replace multiple contiguous blank lines with a single one
         while (index > 0) {
             const UChar character = text[--index];
-            const bool isNewline = character == '\n';
-            const bool isSpace = !isNewline && isSpaceOrNewline(character);
 
-            if (isNewline) {
+            if (character == NEW_LINE) {
                 if (end == NO_END) {
+                    // resume checking for trailing space and blank lines
                     end = index;
-                    newlineCount = 0;
+                    newlines = 0;
                 } else if (end != length) {
-                    newlineCount += 1;
+                    // don't insert a blank line at the end of the text
+                    newlines += 1;
                 }
 
-                if (spaceCount < minimumIndent) minimumIndent = spaceCount;
-                spaceCount = 0;
+                if (currentIndent < minimumIndent) minimumIndent = currentIndent;
+                currentIndent = length; // out of range if line is blank
                 continue;
             }
 
-            if (isSpace) {
-                spaceCount += 1;
+            // only consider actual blanks when calculating the minimum indent
+            if (character == BLANK) {
+                currentIndent += 1;
+                continue;
+            }
+
+            // otehr characters (e.g. tab) must be retained
+            if (isSpaceOrNewline(character)) {
+                currentIndent = 0;
                 continue;
             }
 
@@ -2771,19 +2780,33 @@ static String getNodeText(Node* root)
 
                 if (count > 0) {
                     String replacement = String();
-                    if (newlineCount > 0) replacement.append('\n');
+                    if (newlines > 0) replacement.append(NEW_LINE);
                     text.replace(from, count, replacement);
                 }
 
                 end = NO_END;
             }
 
-            spaceCount = 0;
+            currentIndent = 0;
         }
 
-        if (end < length) end += 1;
-        if (end > 0) text.remove(0, end);
-        if (spaceCount < minimumIndent) minimumIndent = spaceCount;
+        if (end != NO_END) {
+            if (end < length) end += 1; // the first line is blank
+            if (end > 0) text.remove(0, end);
+        }
+
+        if (currentIndent < minimumIndent) minimumIndent = currentIndent;
+
+        if ((minimumIndent > 0) && (minimumIndent < length)) {
+            String to = String();
+            to.append(NEW_LINE);
+
+            String from = to;
+            for (int i=0; i<minimumIndent; i+=1) from.append(BLANK);
+
+            text.remove(0, minimumIndent);
+            text.replace(from, to);
+        }
     }
 
     return text;
