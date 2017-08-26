@@ -74,7 +74,7 @@ setBuildDirectory() {
 }
 
 showBuildIdentifier() {
-  git "--work-tree=${programDirectory}" describe --tags --always --abbrev=1 --dirty=MODIFIED
+  git "--work-tree=${programDirectory}" describe --tags --always --abbrev=1 --dirty=-modified
 }
 
 showBuildProperty() {

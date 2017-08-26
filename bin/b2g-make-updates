@@ -1,0 +1,49 @@
+#!/bin/bash
+. "$(dirname "${0}")/b2g-prologue.sh"
+includeShellDefinitions b2g-build
+
+showHelp() {
+cat <<END_HELP
+usage: ${scriptName} [option ...] updates-directory
+-h            Show this usage summary on standard output, and then exit.
+-d directory  Specify the updates directory.
+END_HELP
+}
+
+handleOption_d() {
+  updatesDirectory="${OPTARG}"
+}
+
+handleArguments "d:h" "${@}"
+
+[ -n "${updatesDirectory}" ] || updatesDirectory="."
+updatesDirectory="$(realpath "${updatesDirectory}")"
+[ -e "${updatesDirectory}" ] || semanticError "directory not found: ${updatesDirectory}"
+[ -d "${updatesDirectory}" ] || semanticError "not a directory: ${updatesDirectory}"
+[ -w "${updatesDirectory}" ] || semanticError "directory not writable: ${updatesDirectory}"
+
+setBuildDirectory
+readonly buildIdentifier="$(showBuildIdentifier)"
+
+programMessage "cleaning the build cache"
+"${programDirectory}/b2g-build" -C
+
+makeImages() {
+  local type="${1}"
+  shift 1
+
+  local updateName="update-${type}-${buildIdentifier}"
+  local updatePrefix="${updatesDirectory}/${updateName}"
+
+  programMessage "creating the ${type} images"
+  "${programDirectory}/b2g-build" -r -a "${@}"
+  cp "b2g-build.log" "${updatePrefix}.log"
+
+  programMessage "creating the ${type} update"
+  "${programDirectory}/b2g-make-update" -n "${updatePrefix}"
+}
+
+makeImages eng -e
+makeImages user -u
+programMessage "done"
+exit 0

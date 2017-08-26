@@ -25,7 +25,7 @@ printLine() {
 
 printBanner() {
   line1="${ownerName}"
-  line2="B2G OTA $(showBuildIdentifier)"
+  line2="OTA Update $(showBuildIdentifier)"
 
   local length1="${#line1}"
   local length2="${#line2}"
