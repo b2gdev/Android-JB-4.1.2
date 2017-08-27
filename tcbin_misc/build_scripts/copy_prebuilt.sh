@@ -24,15 +24,15 @@ cp ../../../../kernel/drivers/net/usb/GobiNet.ko ./system/usr/modules/
 cp ../../../../kernel/drivers/misc/lm3553/lm3553.ko ./system/usr/modules/
 
 # other bundled apps
+cp ../../../../tcbin_misc/apks/B2G_Updater.apk system/app/
+cp ../../../../tcbin_misc/apks/NBP_Calculator.apk system/app/
+cp ../../../../tcbin_misc/apks/NBP_Editor.apk system/app/
+cp ../../../../tcbin_misc/apks/NBP_Navigator.apk system/app/
 #cp ../../../../tcbin_misc/apks/AndroSensor.apk system/app/
-cp ../../../../tcbin_misc/apks/GPSTest.apk system/app/
 cp ../../../../tcbin_misc/apks/EasyVoiceRecorder.apk system/app/
 cp ../../../../tcbin_misc/apks/ES_FileExplorer.apk system/app/
-cp ../../../../tcbin_misc/apks/B2G_Updater.apk system/app/
-cp ../../../../tcbin_misc/apks/NBP_Editor.apk system/app/
-cp ../../../../tcbin_misc/apks/NBP_Compass.apk system/app/
+cp ../../../../tcbin_misc/apks/GPSTest.apk system/app/
 cp ../../../../tcbin_misc/apks/PeriodicTable.apk system/app/
-cp ../../../../tcbin_misc/apks/NBP_Calculator.apk system/app/
 
 # Copy b2g-ui
 cp ../../../../tcbin_misc/apks/B2G_UI.apk system/app/
