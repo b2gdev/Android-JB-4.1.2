@@ -28,7 +28,6 @@ cp ../../../../tcbin_misc/apks/B2G_Updater.apk system/app/
 cp ../../../../tcbin_misc/apks/NBP_Calculator.apk system/app/
 cp ../../../../tcbin_misc/apks/NBP_Editor.apk system/app/
 cp ../../../../tcbin_misc/apks/NBP_Navigator.apk system/app/
-#cp ../../../../tcbin_misc/apks/AndroSensor.apk system/app/
 cp ../../../../tcbin_misc/apks/EasyVoiceRecorder.apk system/app/
 cp ../../../../tcbin_misc/apks/ES_FileExplorer.apk system/app/
 cp ../../../../tcbin_misc/apks/GPSTest.apk system/app/
