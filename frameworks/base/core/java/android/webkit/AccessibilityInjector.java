@@ -298,11 +298,11 @@ class AccessibilityInjector {
      * @param enabled {@code true} to enable the non-JavaScript method, or
      *            {@code false} to disable it.
      */
-    private void toggleFallbackAccessibilityInjector(boolean enabled) {
-        if (enabled && (mAccessibilityInjectorFallback == null)) {
-            mAccessibilityInjectorFallback = new AccessibilityInjectorFallback(mWebViewClassic);
-        } else {
+    private void toggleFallbackAccessibilityInjector(boolean enable) {
+        if (!enable) {
             mAccessibilityInjectorFallback = null;
+        } else if (mAccessibilityInjectorFallback == null) {
+            mAccessibilityInjectorFallback = new AccessibilityInjectorFallback(mWebViewClassic);
         }
     }
 

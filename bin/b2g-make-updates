@@ -4,7 +4,7 @@ includeShellDefinitions b2g-build
 
 showHelp() {
 cat <<END_HELP
-usage: ${scriptName} [option ...] updates-directory
+usage: ${scriptName} [option ...]
 -h            Show this usage summary on standard output, and then exit.
 -d directory  Specify the updates directory.
 END_HELP
